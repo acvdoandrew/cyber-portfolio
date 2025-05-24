@@ -1,0 +1,98 @@
+@font-face {
+  /* If you are self-hosting VT323 or other pixel font */
+  font-family: "VT323";
+  src: url("/fonts/VT323-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --bg-color: #101028; /* Deep indigo */
+  --text-color: #b0c0e0; /* Slightly brighter Pale cyan/lavender for better contrast */
+  --accent-blue: #00bfff; /* DeepSkyBlue - still vibrant but a bit deeper than pure cyan */
+  --accent-pink: #e88ae8; /* Digital pink - kept for specific highlights */
+  --muted-yellow: #c0b070; /* Desaturated amber, slightly brighter */
+  --border-color: #2a2840; /* Darker indigo for borders */
+  --ascii-color: #8090b0; /* Muted text color for ASCII, slightly brighter */
+  --header-text-color: #90a0c0; /* Specific color for header nav items */
+
+  /* Using Google Font for Share Tech Mono primarily */
+  --font-primary: "VT323", "Courier New", monospace;
+}
+
+body {
+  background-color: var(
+    --bg-color
+  ); /* This will mostly be covered by canvas or content-wrapper */
+  color: var(--text-color);
+  font-family: var(--font-primary);
+  font-size: 16px;
+  line-height: 1.7; /* Increased for readability */
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+
+  /* Subtle text shadow to lift text from busy background */
+  text-shadow:
+    0px 0px 6px rgba(0, 0, 0, 0.8),
+    0px 0px 3px rgba(0, 0, 0, 0.6);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--accent-blue);
+  /* Adjust text shadow for headings if needed, or inherit */
+  text-shadow:
+    0 0 8px var(--accent-blue),
+    0 0 5px rgba(0, 0, 0, 0.7);
+  margin-top: 1.8em;
+  margin-bottom: 0.6em;
+  font-weight: normal;
+  letter-spacing: 0.05em; /* Slight letter spacing for clarity */
+}
+
+h1 {
+  font-size: 2.8em;
+} /* Adjusted from previous examples */
+h2 {
+  font-size: 1.8em;
+}
+
+a {
+  color: var(--accent-blue); /* Main interactive color */
+  text-decoration: none; /* Underline on hover is better */
+  transition:
+    color 0.3s ease,
+    text-shadow 0.3s ease;
+}
+
+a:hover,
+a:focus {
+  color: var(--accent-pink); /* Shift to pink on hover for clear feedback */
+  text-shadow:
+    0 0 10px var(--accent-pink),
+    0 0 5px var(--accent-pink);
+  text-decoration: underline dashed;
+  outline: none; /* Custom focus outline below or remove if dashed underline is enough */
+}
+/* For better accessibility on focus, if not using outline: none */
+a:focus-visible {
+  outline: 2px dashed var(--accent-pink);
+  outline-offset: 2px;
+}
+
+.blinking-cursor::after {
+  content: "_";
+  animation: blink 1s step-end infinite;
+  margin-left: 2px; /* Give it a tiny space */
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}

@@ -1,0 +1,66 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+    title = 'SYSTEM_INTERFACE // User: Andrew',
+    description = 'Personal data node and project manifest.'
+} = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width">
+	<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+	<meta name="generator" content={Astro.generator}>
+	<title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+	<canvas id="terminal-bg"></canvas>
+	<div class="content-wrapper"> {/* Added a wrapper for content styling */}
+	    <main class="container">
+		    <slot />
+	    </main>
+    </div>
+    {/* Ensure the script is in public/scripts/ if path is /scripts/terminalBackground.js */}
+    <script is:inline src="/scripts/terminalBackground.js"></script>
+</body>
+</html>
+
+<style is:global>
+    #terminal-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.15; /* SIGNIFICANTLY REDUCED OPACITY */
+        pointer-events: none; /* Make sure it doesn't intercept mouse events */
+    }
+
+    /* Wrapper to help content stand out */
+    .content-wrapper {
+        position: relative; /* For z-index stacking if needed */
+        z-index: 1;
+        /* This gives the main content area a very subtle dark pane */
+        background-color: rgba(10, 8, 20, 0.25); /* var(--bg-color) with some alpha, or just black with alpha */
+        min-height: 100vh; /* Ensure it covers the viewport height */
+    }
+
+    .container { /* Your existing container styles */
+      width: 90%;
+      max-width: 1024px; /* Slightly wider perhaps */
+      margin: 0 auto;
+      padding: 40px 20px; /* More vertical padding */
+    }
+</style>

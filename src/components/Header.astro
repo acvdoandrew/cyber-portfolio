@@ -1,0 +1,41 @@
+---
+const navItems = [
+    { text: '//HOME', href: '#hero' },
+    { text: '//PROJECTS', href: '#projects' },
+    { text: '//SKILLS', href: '#skills' },
+    { text: '//CONTACT', href: '#contact' },
+];
+---
+<header class="main-header">
+    <nav>
+        {navItems.map(item => <a href={item.href}>{item.text}</a>)}
+    </nav>
+</header>
+
+<style>
+    .main-header {
+        padding: 15px 0;
+        margin-bottom: 30px;
+        text-align: left;
+        /* Subtle bar effect, ensuring it's above the content-wrapper's pseudo-bg if needed */
+        background-color: rgba(16, 16, 40, 0.5); /* Semi-transparent --bg-color */
+        border-bottom: 1px solid var(--border-color);
+        position: relative; /* If main content has a darker pane, header might need to sit "on" it or be distinct */
+        z-index: 10; /* Ensure header is above canvas and main content pane if they overlap weirdly */
+    }
+    nav {
+        /* This should be inside the .container's width if you want it aligned */
+        /* If header spans full width, nav itself can be constrained */
+        max-width: 1024px; /* Match .container max-width */
+        margin: 0 auto;
+        padding: 0 20px; /* Match .container padding */
+    }
+    nav a {
+        color: var(--header-text-color); /* Dedicated color for header links */
+        margin-right: 25px;
+        font-size: 1.1em; /* Slightly larger */
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    /* Hover/focus for nav links still uses global 'a' styles, which is good */
+</style>
