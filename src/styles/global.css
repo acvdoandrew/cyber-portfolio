@@ -7,14 +7,20 @@
 }
 
 :root {
-  --bg-color: #101028; /* Deep indigo */
-  --text-color: #b0c0e0; /* Slightly brighter Pale cyan/lavender for better contrast */
-  --accent-blue: #00bfff; /* DeepSkyBlue - still vibrant but a bit deeper than pure cyan */
-  --accent-pink: #e88ae8; /* Digital pink - kept for specific highlights */
-  --muted-yellow: #c0b070; /* Desaturated amber, slightly brighter */
-  --border-color: #2a2840; /* Darker indigo for borders */
-  --ascii-color: #8090b0; /* Muted text color for ASCII, slightly brighter */
-  --header-text-color: #90a0c0; /* Specific color for header nav items */
+  /* New "Wired Solitude" Palette */
+  --bg-color-rgb: 22, 19, 29; /* For rgba values */
+  --bg-color: #16131d; /* Deepest Background */
+  --content-pane-bg: rgba(
+    var(--bg-color-rgb),
+    0.45
+  ); /* Slightly more opaque pane */
+  --text-color: #b8b0c8; /* Main Text - Pale Lavender-Gray */
+  --header-text-color: #9890a8; /* Navigation Text - Muted Lavender-Gray */
+  --ascii-color: #706888; /* ASCII Art - Mid Desaturated Purple-Gray */
+  --accent-blue: #7a70a0; /* Primary Accent - Muted Lavender-Blue */
+  --accent-red-pink: #d86078; /* Secondary Accent - Desaturated Rose/Pink */
+  --muted-yellow: #a09080; /* Status Text "checking..." - Desaturated Warm Gray */
+  --border-color: #2a253a; /* Borders - Dark Purple */
 
   /* Using Google Font for Share Tech Mono primarily */
   --font-primary: "VT323", "Courier New", monospace;
@@ -33,9 +39,9 @@ body {
   overflow-x: hidden;
 
   /* Subtle text shadow to lift text from busy background */
-  text-shadow:
-    0px 0px 6px rgba(0, 0, 0, 0.8),
-    0px 0px 3px rgba(0, 0, 0, 0.6);
+  /* text-shadow: */
+  /*   0px 0px 6px rgba(0, 0, 0, 0.8), */
+  /*   0px 0px 3px rgba(0, 0, 0, 0.6); */
 }
 
 h1,
@@ -72,23 +78,23 @@ a {
 
 a:hover,
 a:focus {
-  color: var(--accent-pink); /* Shift to pink on hover for clear feedback */
-  text-shadow:
-    0 0 10px var(--accent-pink),
-    0 0 5px var(--accent-pink);
-  text-decoration: underline dashed;
-  outline: none; /* Custom focus outline below or remove if dashed underline is enough */
+  color: var(
+    --text-color
+  ); /* Hover can go to main text color for a subtle shift */
+  text-shadow: 0 0 8px var(--text-color); /* Or a subtle glow with text-color */
+  text-decoration: underline dashed var(--accent-blue); /* Keep underline */
+  outline: none;
 }
-/* For better accessibility on focus, if not using outline: none */
 a:focus-visible {
-  outline: 2px dashed var(--accent-pink);
+  outline: 2px dashed var(--accent-blue);
   outline-offset: 2px;
 }
 
 .blinking-cursor::after {
   content: "_";
   animation: blink 1s step-end infinite;
-  margin-left: 2px; /* Give it a tiny space */
+  margin-left: 2px;
+  color: var(--text-color); /* Cursor color */
 }
 
 @keyframes blink {
