@@ -90,16 +90,3 @@ a:focus-visible {
   outline: 2px dashed var(--accent-red-pink);
   outline-offset: 2px;
 }
-
-.blinking-cursor::after {
-  content: "_";
-  animation: blink 1s step-end infinite;
-  margin-left: 2px;
-  color: var(--accent-red-pink); /* Cursor color */
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}

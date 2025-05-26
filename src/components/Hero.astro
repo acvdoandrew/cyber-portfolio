@@ -170,18 +170,76 @@ const name = "Andrew";
 const location = "boston";
 const availability = "open to roles";
 const statusCheck = "AWAITING_INPUT_";
-const bio = "cs student @ wgu. programmer. i love ai/ml and robotics";
+const bio = "cs student @ wgu. programmer.";
+
+// New variables for additional fastfetch content
+const bioOS = "WGU_CS_Candidate"; // Example "OS" or Profile type
+const bioFocus = "AI/ML, Robotics, HPC"; // Your defined focus
+const bioLangs = "C++, Python, TypeScript"; // Your languages
+const bioGPU = "NVIDIA"; // Your GPU focus
+const bioMotto = "Building intelligent systems for tomorrow."; // Your motto
 ---
 <section id="hero" class="hero-section">
     <div class="ascii-art-container">
+        {/* Ensure data-text is correctly populated if asciiArt is a complex variable */}
         <pre data-text={asciiArt}>{asciiArt}</pre>
     </div>
     <div class="hero-details-text">
-        <h1 class="name">{name}<span class="blinking-cursor"></span></h1>
-        <p class="location">{location}</p>
-        <p class="status">{availability}</p>
-        <p class="status-check">{statusCheck}</p>
-        <p class="bio">{bio}</p>
+        {/* --- MODIFIED: Name and Inline Status --- */}
+        <div class="name-status-line">
+            <h1 class="name">{name}</h1>
+            {/* The existing statusCheck variable's content is used here */}
+            <p class="inline-status">
+                <span class="status-dot-char">●</span> {statusCheck}<span class="blinking-cursor"></span>
+            </p>
+        </div>
+        
+        {/* --- NEW: Fastfetch Bio Block --- */}
+        {/* The old .location, .status, .bio paragraphs are removed from here
+             and their content is moved into this fastfetch structure. */}
+        <div class="bio-fastfetch">
+            <div class="bio-line">
+                <span class="bio-key">LOCATION</span>
+                <span class="bio-separator"></span>
+                <span class="bio-value">{location}</span> {/* Reusing 'location' variable */}
+            </div>
+            <div class="bio-line">
+                <span class="bio-key">AVAILABILITY</span>
+                <span class="bio-separator"></span>
+                <span class="bio-value">{availability}</span> {/* Reusing 'availability' variable */}
+            </div>
+            <div class="bio-line">
+                <span class="bio-key">PROFILE_INFO</span> {/* Key for the old 'bio' content */}
+                <span class="bio-separator"></span>
+                <span class="bio-value">{bio}</span> {/* Reusing 'bio' variable */}
+            </div>
+            {/* You can add more lines from the previous suggestion if you want them now */}
+            <div class="bio-line">
+                <span class="bio-key">OS_TYPE</span>
+                <span class="bio-separator"></span>
+                <span class="bio-value">{bioOS}</span>
+            </div>
+            <div class="bio-line">
+                <span class="bio-key">CORE_FOCUS</span>
+                <span class="bio-separator"></span>
+                <span class="bio-value focus">{bioFocus}</span>
+            </div>
+            <div class="bio-line">
+                <span class="bio-key">LANG_STACK</span>
+                <span class="bio-separator"></span>
+                <span class="bio-value langs">{bioLangs}</span>
+            </div>
+            <div class="bio-line">
+                <span class="bio-key">TARGET_HW</span>
+                <span class="bio-separator"></span>
+                <span class="bio-value gpu">{bioGPU}</span>
+            </div>
+            <div class="bio-line">
+                <span class="bio-key">STATEMENT</span>
+                <span class="bio-separator"></span>
+                <span class="bio-value motto">{bioMotto}</span>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -315,40 +373,42 @@ const bio = "cs student @ wgu. programmer. i love ai/ml and robotics";
     .hero-details-text {
         flex-grow: 1; /* Takes up remaining space */
         min-width: 250px; /* Prevent it from getting too squished */
-        padding-top: 10px; /* Slight offset to align "Andrew" a bit lower if needed */
     }
 
-    .hero-details-text .name {
-        font-size: 2.8em;
-        color: var(--accent-blue); /* Make name stand out with accent color, as in screenshot */
-        /* text-shadow: 0 0 10px var(--accent-blue), 0 0 5px rgba(0,0,0,0.7); */ /* Removed main text-shadow from global body style, so it might be good here */
-        text-shadow: 0 0 12px var(--accent-blue), /* Brighter glow */
-                     0 0 6px var(--accent-blue),
-                     1px 1px 2px rgba(0,0,0,0.5); /* Subtle drop shadow for depth */
-        margin-bottom: 15px;
-    }
-    .hero-details-text p {
-        margin-bottom: 10px;
-        font-size: 1.25em;
-        letter-spacing: 0.03em;
-        color: var(--text-color); /* Ensure these use main text color */
-    }
-    .hero-details-text .location,
-    .hero-details-text .status {
-        opacity: 0.8; /* Slightly muted */
-    }
-    .hero-details-text .status-check {
-        color: var(--accent-red-pink);
+/* --- NEW STYLES for name and inline status line --- */
+    .name-status-line {
         display: flex;
-        align-items: center;
+        align-items: baseline;
+        flex-wrap: wrap;
+        margin-bottom: 25px; /* Space below this line, before fastfetch bio */
     }
-   .hero-details-text .status-check::before {
-        content: "●"; /* The dot character */
-        font-size: 1.2em; /* Make the dot a bit larger */
-        margin-right: 8px; /* Space between dot and text */
-        color: var(--accent-red-pink); /* Dot color */
-        animation: status-dot-blink 1.5s infinite steps(1, end); /* Blinking animation */
-        display: inline-block; /* Necessary for animation */
+
+    .hero-details-text .name { /* Mostly existing styles, adjusted margins */
+        font-size: 2.8em;
+        color: var(--accent-blue); 
+        text-shadow: 0 0 12px var(--accent-blue), 
+                     0 0 6px var(--accent-blue),
+                     1px 1px 2px rgba(0,0,0,0.5); 
+        margin-bottom: 0; /* Removed bottom margin, now on .name-status-line */
+        margin-right: 15px; /* Space between name and inline status */
+    }
+    /* The global .blinking-cursor style will apply to the span in h1.name */
+
+    .inline-status { /* Styles for the "AWAITING_INPUT_" status text */
+        font-size: 1em; /* Adjust as needed relative to name */
+        color: var(--accent-red-pink);
+        /* The text-pulse animation was on .status-check, moving it here */
+        animation: text-pulse 1.5s infinite steps(1, end); /* Keeping your text-pulse */
+        margin-bottom: 0; /* To align with name */
+    }
+    /* The global .blinking-cursor style will apply to the span in .inline-status */
+
+    .status-dot-char { /* Styles for the '●' character */
+        font-size: 1.2em;
+        margin-right: 8px;
+        color: var(--accent-red-pink);
+        animation: status-dot-blink 1.5s infinite steps(1, end);
+        display: inline-block; /* Important for animation */
     }
 
     @keyframes status-dot-blink {
@@ -356,42 +416,75 @@ const bio = "cs student @ wgu. programmer. i love ai/ml and robotics";
         50% { opacity: 0.3; } /* Dim blink, not fully off */
     }
 
-    .hero-details-text .status-check {
-        animation: text-pulse 1.5s infinite steps(1, end);
-    }
-
     @keyframes text-pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.7; }
     }
 
-    .hero-details-text .bio {
-        opacity: 0.9;
-        line-height: 1.6;
+/* --- FASTFETCH BIO STYLES (largely from previous suggestion) --- */
+    .bio-fastfetch {
+        font-family: var(--font-primary);
+        font-size: 0.95em; 
+        line-height: 1.7; 
+        /* margin-top: 20px; /* Spacing now handled by .name-status-line margin-bottom */
+    }
+    .bio-line {
+        display: flex;
+        margin-bottom: 7px; 
+    }
+    .bio-key {
+        color: var(--accent-blue); 
+        min-width: 140px; /* Adjust if your new keys are longer/shorter */
+        font-weight: normal; 
+    }
+    .bio-separator { /* Optional */ }
+    .bio-value {
+        color: var(--text-color); 
+        flex-grow: 1; 
+    }
+    .bio-value.focus,
+    .bio-value.gpu,
+    .bio-value.langs { /* Optional styling for specific values */ }
+    .bio-value.motto {
+        font-style: italic; 
+        opacity: 0.85;
     }
 
-    /* Responsive adjustments */
-    @media (max-width: 768px) { /* Breakpoint for stacking */
+/* Responsive adjustments */
+    @media (max-width: 768px) { 
         .hero-section {
             flex-direction: column;
-            align-items: center; /* Center items when stacked */
+            align-items: center; 
         }
-        .ascii-art-container {
-            width: 90%; /* Allow ASCII art to be wider on mobile */
-            max-width: 350px; /* But not excessively so */
+        .ascii-art-container { /* Your existing responsive styles */
+            width: 90%; 
+            max-width: 350px; 
             margin-bottom: 30px;
-            /* overflow-x: auto; */ /* Strongly consider enabling scroll on mobile for wide art */
-            /* Consider scrollbar styling here if enabling auto */
         }
-        .ascii-art-container pre {
-            /* font-size: 0.2em; */ /* Slightly larger relative font for mobile if art isn't too complex */
-        }
-        .hero-details-text {
+        .hero-details-text { /* Your existing responsive styles */
             width: 90%;
             max-width: 500px;
             padding-left: 0;
             padding-top: 0;
             text-align: center;
+        }
+        /* New responsive styles for name-status and fastfetch */
+        .name-status-line {
+            justify-content: center;
+        }
+        .hero-details-text .name {
+            margin-right: 0;
+            margin-bottom: 5px; /* If status wraps below */
+        }
+        .bio-key {
+            min-width: 120px; 
+        }
+        .bio-fastfetch {
+            font-size: 0.9em;
+            text-align: left; 
+            margin-left: auto; 
+            margin-right: auto;
+            /* max-width: 90%; /* Already handled by hero-details-text width */
         }
     }
 </style>
