@@ -1,0 +1,90 @@
+---
+const currentYear = new Date().getFullYear();
+const githubUser = "acvdoandrew"; // Replace with your GitHub username
+const xUser = "LitheGG";       // Replace with your X (Twitter) username
+---
+<footer class="main-footer">
+    <div class="footer-content-wrapper">
+        <div class="social-links">
+            <a href={`https://github.com/${githubUser}`} target="_blank" rel="noopener noreferrer">GITHUB</a>
+            <a href={`https://x.com/${xUser}`} target="_blank" rel="noopener noreferrer">X/TWTR</a>
+            {/* Add other links here if needed, e.g., LinkedIn */}
+            {/* <a href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer">linkedin</a> */}
+        </div>
+        <div class="credits">
+            <p>// SESSION_TERMINATED <span class="year">{currentYear}</span> // SYSTEM_STANDBY</p>
+            {/* Or something like: */}
+            {/* <p>Crafted in the digital static © {currentYear}</p> */}
+        </div>
+    </div>
+</footer>
+
+<style>
+    .main-footer {
+        margin-top: 80px; /* More space above footer */
+        padding: 0; /* Remove padding if wrapper handles it */
+        /* The distinct bar background */
+        background-color: rgba(var(--bg-color-rgb), 0.75); /* Slightly more opaque than content-pane for distinction */
+        border-top: 1px solid var(--border-color);
+        font-size: 0.9em;
+        position: relative; /* For scanlines if they are applied here directly */
+    }
+
+    .footer-content-wrapper {
+        /* Match the main .container width and padding for alignment */
+        max-width: 1366px; /* From your MainLayout.astro */
+        margin: 0 auto;
+        padding: 15px 20px; /* Vertical padding for the bar, horizontal matches container */
+        display: flex;
+        justify-content: space-between; /* Pushes social to left, credits to right */
+        align-items: center;
+        flex-wrap: wrap; /* Allow wrapping on small screens */
+    }
+
+    .social-links a {
+        color: var(--accent-blue); /* Using your muted lavender-blue */
+        text-decoration: underline; /* As per example */
+        text-decoration-color: rgba(var(--accent-blue-rgb), 0.5); /* More subtle underline */
+        text-underline-offset: 3px;
+        margin-right: 20px;
+        transition: color 0.3s ease, text-decoration-color 0.3s ease;
+    }
+
+    .social-links a:hover,
+    .social-links a:focus {
+        color: var(--text-color); /* Brighter on hover */
+        text-decoration-color: var(--text-color);
+        /* text-shadow: 0 0 5px var(--text-color); */ /* Optional subtle glow */
+        outline: none;
+    }
+    .social-links a:focus-visible {
+        outline: 1px dashed var(--text-color);
+        outline-offset: 2px;
+    }
+
+
+    .credits {
+        text-align: right;
+    }
+
+    .credits p {
+        margin: 0;
+        color: var(--header-text-color); /* A more muted text color, like nav links */
+        opacity: 0.7;
+    }
+    .credits .year {
+        /* No special styling needed unless you want to highlight it */
+    }
+
+    /* Responsive adjustments for footer */
+    @media (max-width: 600px) {
+        .footer-content-wrapper {
+            flex-direction: column; /* Stack items */
+            align-items: flex-start; /* Align to left */
+            gap: 10px; /* Space between stacked items */
+        }
+        .credits {
+            text-align: left; /* Align credits to left on mobile */
+        }
+    }
+</style>
