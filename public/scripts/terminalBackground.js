@@ -33,19 +33,19 @@ if (canvas) {
     // Adjusted background fill: Trails fade a bit more, but not too fast.
     // Using the actual --bg-color from CSS would be ideal if we could pass it,
     // but for simplicity, hardcoding a similar color.
-    ctx.fillStyle = "rgba(16, 16, 40, 0.1)"; // Dark Indigo (from CSS --bg-color) with higher alpha for faster fade
+    ctx.fillStyle = "rgba(22, 19, 29, 0.9)"; // Dark Indigo (from CSS --bg-color) with higher alpha for faster fade
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Dimmer characters for the background rain
-    ctx.fillStyle = "rgba(64, 196, 255, 0.5)"; // Dimmer version of --accent-blue (original: #40C4FF)
+    ctx.fillStyle = "rgba(152, 144, 168, 0.45)"; // Dimmer version of --accent-blue (original: #40C4FF)
     ctx.font = fontSize + 'px "Share Tech Mono", monospace';
 
     for (let i = 0; i < drops.length; i++) {
-      if (drops[i] * fontSize < 0 && Math.random() < 0.02) {
+      if (drops[i] * fontSize < 0 && Math.random() < 0.025) {
         // Chance to restart a drop that is way off screen
         drops[i] = 1;
       }
-      if (drops[i] * fontSize > canvas.height && Math.random() > 0.95) {
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.97) {
         // Slower reset
         drops[i] = 0;
       }
