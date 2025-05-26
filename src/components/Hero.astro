@@ -169,7 +169,7 @@ const asciiArt = `
 const name = "Andrew";
 const location = "boston";
 const availability = "open to roles";
-const statusCheck = "● checking status...";
+const statusCheck = "AWAITING_INPUT_";
 const bio = "cs student @ wgu. programmer. i love ai/ml and robotics";
 ---
 <section id="hero" class="hero-section">
@@ -269,7 +269,7 @@ const bio = "cs student @ wgu. programmer. i love ai/ml and robotics";
     }
 
     .ascii-art-container pre::before {
-        color: var(--accent-pink); /* Color for the first glitch layer */
+        color: var(--accent-red-pink); /* Color for the first glitch layer */
         animation: glitch-layer-1 4s infinite linear alternate-reverse;
         will-change: transform, clip-path; /* Performance hint */
     }
@@ -338,8 +338,33 @@ const bio = "cs student @ wgu. programmer. i love ai/ml and robotics";
         opacity: 0.8; /* Slightly muted */
     }
     .hero-details-text .status-check {
-        color: var(--muted-yellow);
+        color: var(--accent-red-pink);
+        display: flex;
+        align-items: center;
     }
+   .hero-details-text .status-check::before {
+        content: "●"; /* The dot character */
+        font-size: 1.2em; /* Make the dot a bit larger */
+        margin-right: 8px; /* Space between dot and text */
+        color: var(--accent-red-pink); /* Dot color */
+        animation: status-dot-blink 1.5s infinite steps(1, end); /* Blinking animation */
+        display: inline-block; /* Necessary for animation */
+    }
+
+    @keyframes status-dot-blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; } /* Dim blink, not fully off */
+    }
+
+    .hero-details-text .status-check {
+        animation: text-pulse 1.5s infinite steps(1, end);
+    }
+
+    @keyframes text-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
     .hero-details-text .bio {
         opacity: 0.9;
         line-height: 1.6;

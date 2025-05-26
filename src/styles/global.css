@@ -73,20 +73,21 @@ a {
   text-decoration: none; /* Underline on hover is better */
   transition:
     color 0.3s ease,
-    text-shadow 0.3s ease;
+    text-shadow 0.3s ease,
+    text-decoration-color 0.2s ease;
 }
 
 a:hover,
 a:focus {
   color: var(
-    --text-color
+    --accent-red-pink
   ); /* Hover can go to main text color for a subtle shift */
-  text-shadow: 0 0 8px var(--text-color); /* Or a subtle glow with text-color */
-  text-decoration: underline dashed var(--accent-blue); /* Keep underline */
+  text-shadow: 0 0 8px var(--accent-red-pink); /* Or a subtle glow with text-color */
+  text-decoration: underline dashed var(--accent-red-pink); /* Keep underline */
   outline: none;
 }
 a:focus-visible {
-  outline: 2px dashed var(--accent-blue);
+  outline: 2px dashed var(--accent-red-pink);
   outline-offset: 2px;
 }
 
@@ -94,7 +95,7 @@ a:focus-visible {
   content: "_";
   animation: blink 1s step-end infinite;
   margin-left: 2px;
-  color: var(--text-color); /* Cursor color */
+  color: var(--accent-red-pink); /* Cursor color */
 }
 
 @keyframes blink {
