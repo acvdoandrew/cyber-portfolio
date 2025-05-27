@@ -166,54 +166,48 @@ const asciiArt = `
    ..==:     -%%@@%:                           :%@@*.  -=.          : .=.  ::       ::-@@@@: .:#@@@@@@@@@@@    .*@@@@@@#-@%@@+                                   #.       *        .@@@==#%=@*.     :@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*.                                                                  
 @@@%#+-..  :*@@%=                                 -#@#:  .+:        .-  =-  -.       -@@@@%# .-*@@@@@@@@@@@:     :%@@@@@=+@%@@*               :                 .@:      =.       -@@%-+=@+%@:      :@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%-                                                                
 `; 
+// Core hero information
 const name = "Andrew";
 const location = "boston";
 const availability = "open to roles";
 const statusCheck = "AWAITING_INPUT_";
-const bio = "cs student @ wgu. programmer.";
+const bio = "cs student @ wgu. programmer."; // Base profile info
 
-// New variables for additional fastfetch content
-const bioOS = "WGU_CS_Candidate"; // Example "OS" or Profile type
-const bioFocus = "AI/ML, Robotics, HPC"; // Your defined focus
-const bioLangs = "C++, Python, TypeScript"; // Your languages
-const bioGPU = "NVIDIA"; // Your GPU focus
-const bioMotto = "Building intelligent systems for tomorrow."; // Your motto
+// Additional details for fastfetch-style display
+const bioOS = "WGU_CS_Candidate";         // Thematic "OS" or profile type
+const bioFocus = "AI/ML, Robotics, HPC";  // Key areas of interest/study
+const bioLangs = "C++, Python, TypeScript"; // Primary programming languages
+const bioGPU = "NVIDIA";                  // Hardware/API focus (e.g., CUDA)
+const bioMotto = "Building intelligent systems for tomorrow."; // Personal tagline
 ---
 <section id="hero" class="hero-section">
     <div class="ascii-art-container">
-        {/* Ensure data-text is correctly populated if asciiArt is a complex variable */}
         <pre data-text={asciiArt}>{asciiArt}</pre>
     </div>
     <div class="hero-details-text">
-        {/* --- MODIFIED: Name and Inline Status --- */}
         <div class="name-status-line">
             <h1 class="name">{name}</h1>
-            {/* The existing statusCheck variable's content is used here */}
             <p class="inline-status">
                 <span class="status-dot-char">●</span> {statusCheck}
             </p>
         </div>
         
-        {/* --- NEW: Fastfetch Bio Block --- */}
-        {/* The old .location, .status, .bio paragraphs are removed from here
-             and their content is moved into this fastfetch structure. */}
         <div class="bio-fastfetch">
             <div class="bio-line">
                 <span class="bio-key">LOCATION</span>
                 <span class="bio-separator"></span>
-                <span class="bio-value">{location}</span> {/* Reusing 'location' variable */}
+                <span class="bio-value">{location}</span>
             </div>
             <div class="bio-line">
                 <span class="bio-key">AVAILABILITY</span>
                 <span class="bio-separator"></span>
-                <span class="bio-value">{availability}</span> {/* Reusing 'availability' variable */}
+                <span class="bio-value">{availability}</span>
             </div>
             <div class="bio-line">
-                <span class="bio-key">PROFILE_INFO</span> {/* Key for the old 'bio' content */}
+                <span class="bio-key">PROFILE_INFO</span>
                 <span class="bio-separator"></span>
-                <span class="bio-value">{bio}</span> {/* Reusing 'bio' variable */}
+                <span class="bio-value">{bio}</span>
             </div>
-            {/* You can add more lines from the previous suggestion if you want them now */}
             <div class="bio-line">
                 <span class="bio-key">OS_TYPE</span>
                 <span class="bio-separator"></span>
@@ -246,111 +240,75 @@ const bioMotto = "Building intelligent systems for tomorrow."; // Your motto
 <style>
     .hero-section {
         display: flex;
-        align-items: flex-start; /* Vertically align items to the top */
-        gap: 30px; /* Space between ASCII art and text block */
+        align-items: flex-start; 
+        gap: 30px; 
         margin-bottom: 60px;
         padding: 30px 0;
         border-bottom: 1px solid var(--border-color);
     }
 
     .ascii-art-container {
-        flex: 0 0 auto; /* Don't grow, don't shrink, base size on content */
-        /* Define a visual width for the ASCII art block.
-           This should be based on how wide you want the Senku image to appear.
-           Let's aim for something like the screenshot.
-        */
-        width: 50%;  /* EXPERIMENT with this width */
-        /* max-height: 350px; */ /* Optional: if you want to constrain height too */
-        overflow: hidden; /* This will clip art that's too big if font isn't small enough */
-                          /* If you prefer scrollbars for oversized art, change to overflow: auto; */
-
-        /* Ensure the pre tag inside fits snugly */
-        line-height: 0; /* Collapse line height of container if pre has margins */
+        flex: 0 0 auto; 
+        width: 50%;  /* Adjust for desired ASCII art width vs. text column */
+        overflow: hidden; /* Clips art if font size makes it too wide for this container */
+        line-height: 0; /* Collapse container line height if pre has margins */
     }
 
     .ascii-art-container pre {
         font-family: var(--font-primary);
         color: var(--ascii-color);
-
-        /* CRITICAL FOR FITTING 300 CHARS WIDE:
-           The font-size needs to be extremely small to fit 300 characters
-           across the `width` defined for `.ascii-art-container` without scrolling,
-           if that's the strict visual goal.
-           Example: if container width is 300px, and you have 300 chars,
-           each char (incl. spacing) must average 1px wide.
-           font-size needs to be ~1.5px to 2px for this.
-           Let's try a slightly larger font size and accept that it might
-           get clipped by overflow:hidden, or use overflow:auto if needed.
-        */
-        font-size: 0.25em;   /* EXPERIMENT: Try 2px, 2.5px, 0.15em, 0.2em. This is tiny! */
-        line-height: 0.65; /* EXPERIMENT: Pack lines tightly */
+        /* CRITICAL: font-size & line-height for fitting wide ASCII art. */
+        /* Adjust these heavily based on art width and desired visual density. */
+        font-size: 0.25em;   /* EXPERIMENT: e.g., 2px, 0.15em, etc. */
+        line-height: 0.65; 
         white-space: pre;
         margin: 0;
-        padding: 5px; /* Small padding inside the ASCII art box */
-
-        /* To ensure the pre tag itself doesn't try to be wider than its container
-           if overflow:hidden is used on the container.
-           If using overflow:auto on the container, this isn't strictly needed for width.
-        */
-        /* width: 100%; */ /* Can cause issues if font size makes it too wide for container */
-        display: block; /* Or inline-block if you want it to shrink-wrap horizontally, but then container width is key */
+        padding: 5px; 
+        display: block; 
         
-        /* --- GLITCH EFFECT START --- */
+        /* --- ASCII ART GLITCH EFFECT --- */
         position: relative;
         animation: glitch-base 4s infinite linear alternate-reverse;
         will-change: transform, opacity;
-        /* --- GLITCH EFFECT END --- */
     }
 
-    /* --- GLITCH PSEUDO-ELEMENTS --- */
+    /* --- ASCII ART GLITCH PSEUDO-ELEMENTS --- */
     .ascii-art-container pre::before,
     .ascii-art-container pre::after {
-        content: attr(data-text); /* Use the content of the data-text attribute */
+        content: attr(data-text); 
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden; /* Important for clip-path */
-        
-        /* Inherit text properties to match the original <pre> */
-        font-family: inherit;
-        font-size: inherit;
-        line-height: inherit;
-        white-space: inherit;
-        padding: inherit; /* Ensure padding matches for alignment */
-        margin: inherit;  /* Ensure margin matches for alignment */
-
-        /* This makes the pseudo-elements cover the original text,
-           and their text color is what we see as the glitch. */
-        background-color: var(--bg-color); /* Or the specific background of .ascii-art-container if different */
+        top: 0; left: 0; width: 100%; height: 100%;
+        overflow: hidden; 
+        font-family: inherit; font-size: inherit; line-height: inherit;
+        white-space: inherit; padding: inherit; margin: inherit;  
+        background-color: var(--bg-color); /* Masks original text for glitch layers */
     }
 
     .ascii-art-container pre::before {
-        color: var(--accent-red-pink); /* Color for the first glitch layer */
+        color: var(--accent-red-pink); 
         animation: glitch-layer-1 4s infinite linear alternate-reverse;
-        will-change: transform, clip-path; /* Performance hint */
+        will-change: transform, clip-path; 
     }
 
     .ascii-art-container pre::after {
-        color: var(--accent-blue);  /* Color for the second glitch layer */
+        color: var(--accent-blue);  
         animation: glitch-layer-2 4s infinite linear alternate-reverse;
-        will-change: transform, clip-path; /* Performance hint */
+        will-change: transform, clip-path; 
     }
 
-    /* --- GLITCH KEYFRAMES --- */
-    @keyframes glitch-base { /* Subtle movement/flicker for the base pre text */
+    /* --- ASCII ART GLITCH KEYFRAMES --- */
+    @keyframes glitch-base { /* Base movement for ASCII art */
         0%, 100% { transform: translate(0, 0); opacity: 1; }
         2% { transform: translate(0.5px, -0.5px) skewX(-1deg); opacity: 0.95; }
         4% { transform: translate(-0.5px, 0.5px) skewX(1deg); opacity: 0.98; }
         6% { transform: translate(0, 0); opacity: 1; }
         48% { transform: translate(0,0); opacity: 1;}
-        50% { transform: translate(0.2px, -0.2px); opacity: 0.9;} /* Mid-animation small flicker */
+        50% { transform: translate(0.2px, -0.2px); opacity: 0.9;} 
         52% { transform: translate(-0.2px, 0.2px); opacity: 0.95;}
         54% { transform: translate(0,0); opacity: 1;}
     }
 
-    @keyframes glitch-layer-1 { /* Pink layer - more aggressive clipping */
+    @keyframes glitch-layer-1 { /* ASCII art glitch layer 1 (red-pink) */
         0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0, 0); }
         5% { clip-path: inset(10% 0 75% 0); transform: translate(-4px, 2px) skewX(5deg); }
         10% { clip-path: inset(60% 0 20% 0); transform: translate(4px, -3px) skewX(-5deg); }
@@ -360,7 +318,7 @@ const bioMotto = "Building intelligent systems for tomorrow."; // Your motto
         60% { clip-path: inset(0 0 0 0); transform: translate(0, 0); }
     }
 
-    @keyframes glitch-layer-2 { /* Blue layer - different clipping and movement */
+    @keyframes glitch-layer-2 { /* ASCII art glitch layer 2 (blue) */
         0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0, 0); }
         7% { clip-path: inset(85% 0 5% 0); transform: translate(3px, -2px) skewX(-4deg); }
         12% { clip-path: inset(8% 0 65% 0); transform: translate(-3px, 2px) skewX(4deg); }
@@ -371,62 +329,58 @@ const bioMotto = "Building intelligent systems for tomorrow."; // Your motto
     }
 
     .hero-details-text {
-        flex-grow: 1; /* Takes up remaining space */
-        min-width: 250px; /* Prevent it from getting too squished */
+        flex-grow: 1; 
+        min-width: 250px; 
     }
 
-/* --- NEW STYLES for name and inline status line --- */
+    /* --- Name and Inline Status Styles --- */
     .name-status-line {
         display: flex;
         align-items: baseline;
         flex-wrap: wrap;
-        margin-bottom: 25px; /* Space below this line, before fastfetch bio */
+        margin-bottom: 25px; 
     }
 
-    .hero-details-text .name { /* Mostly existing styles, adjusted margins */
+    .hero-details-text .name { 
         font-size: 2.8em;
         color: var(--accent-blue); 
         text-shadow: 0 0 12px var(--accent-blue), 
                      0 0 6px var(--accent-blue),
                      1px 1px 2px rgba(0,0,0,0.5); 
-        margin-bottom: 0; /* Removed bottom margin, now on .name-status-line */
-        margin-right: 15px; /* Space between name and inline status */
+        margin-bottom: 0; 
+        margin-right: 15px; 
     }
-    /* The global .blinking-cursor style will apply to the span in h1.name */
 
-    .inline-status { /* Styles for the "AWAITING_INPUT_" status text */
-        font-size: 1em; /* Adjust as needed relative to name */
+    .inline-status { 
+        font-size: 1em; 
         color: var(--accent-red-pink);
-        /* The text-pulse animation was on .status-check, moving it here */
-        animation: text-pulse 1.5s infinite steps(1, end); /* Keeping your text-pulse */
-        margin-bottom: 0; /* To align with name */
+        animation: text-pulse 1.5s infinite steps(1, end); 
+        margin-bottom: 0; 
     }
-    /* The global .blinking-cursor style will apply to the span in .inline-status */
 
-    .status-dot-char { /* Styles for the '●' character */
+    .status-dot-char { 
         font-size: 1.2em;
         margin-right: 8px;
-        color: var(--accent-red-pink);
+        color: var(--accent-red-pink); /* Redundant if inline-status is already this color, but explicit */
         animation: status-dot-blink 1.5s infinite steps(1, end);
-        display: inline-block; /* Important for animation */
+        display: inline-block; 
     }
 
     @keyframes status-dot-blink {
         0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; } /* Dim blink, not fully off */
+        50% { opacity: 0.3; } 
     }
 
-    @keyframes text-pulse {
+    @keyframes text-pulse { /* Animation for the "AWAITING_INPUT_" text */
         0%, 100% { opacity: 1; }
         50% { opacity: 0.7; }
     }
 
-/* --- FASTFETCH BIO STYLES (largely from previous suggestion) --- */
+    /* --- Fastfetch Bio Styles --- */
     .bio-fastfetch {
         font-family: var(--font-primary);
         font-size: 0.95em; 
         line-height: 1.7; 
-        /* margin-top: 20px; /* Spacing now handled by .name-status-line margin-bottom */
     }
     .bio-line {
         display: flex;
@@ -434,47 +388,47 @@ const bioMotto = "Building intelligent systems for tomorrow."; // Your motto
     }
     .bio-key {
         color: var(--accent-blue); 
-        min-width: 140px; /* Adjust if your new keys are longer/shorter */
+        min-width: 140px; /* Adjust based on longest key for alignment */
         font-weight: normal; 
     }
-    .bio-separator { /* Optional */ }
+    .bio-separator { /* Separator is visually handled by alignment and space */ }
     .bio-value {
         color: var(--text-color); 
         flex-grow: 1; 
     }
+    /* Optional: Specific styling for certain fastfetch values */
     .bio-value.focus,
     .bio-value.gpu,
-    .bio-value.langs { /* Optional styling for specific values */ }
+    .bio-value.langs { /* For potential emphasis */ }
     .bio-value.motto {
         font-style: italic; 
         opacity: 0.85;
     }
 
-/* Responsive adjustments */
+    /* --- Responsive Adjustments --- */
     @media (max-width: 768px) { 
         .hero-section {
             flex-direction: column;
             align-items: center; 
         }
-        .ascii-art-container { /* Your existing responsive styles */
+        .ascii-art-container { 
             width: 90%; 
             max-width: 350px; 
             margin-bottom: 30px;
         }
-        .hero-details-text { /* Your existing responsive styles */
+        .hero-details-text { 
             width: 90%;
             max-width: 500px;
             padding-left: 0;
             padding-top: 0;
             text-align: center;
         }
-        /* New responsive styles for name-status and fastfetch */
         .name-status-line {
             justify-content: center;
         }
         .hero-details-text .name {
             margin-right: 0;
-            margin-bottom: 5px; /* If status wraps below */
+            margin-bottom: 5px; 
         }
         .bio-key {
             min-width: 120px; 
@@ -484,7 +438,6 @@ const bioMotto = "Building intelligent systems for tomorrow."; // Your motto
             text-align: left; 
             margin-left: auto; 
             margin-right: auto;
-            /* max-width: 90%; /* Already handled by hero-details-text width */
         }
     }
 </style>
