@@ -1,0 +1,281 @@
+---
+// --- PROJECT DATA ---
+const projects = [
+    {
+        title: "GPU Particle Physics Engine",
+        mainLang: "C++",
+        description: "A real-time particle engine built in C++17 to simulate over 100K SPH particles at 60 FPS. Features a highly optimized CPU reference using Verlet integration and spatial-hashing to reduce collision complexity from O(n²) to O(n). Packaged with a clean CMake build and an SFML viewer for interactive fluid dynamics.",
+        tags: ["C++17", "CMake", "SFML", "Algorithms", "HPC"],
+        liveUrl: null, 
+        repoUrl: "https://github.com/acvdoandrew/gpu-particle-physics-engine" 
+    },
+    {
+        title: "Deep Audio Classification CNN",
+        mainLang: "Python",
+        description: "End-to-end sound classification system featuring a custom ResNet-style CNN. The pipeline handles audio-to-image conversion via Mel Spectrograms, robust data augmentation, and is served via a FastAPI endpoint with Pydantic validation. Deployed for serverless GPU inference on Modal, with an interactive Next.js dashboard.",
+        tags: ["PyTorch", "Next.js", "FastAPI", "Modal", "TensorBoard", "NumPy", "Tailwind"],
+        liveUrl: "#", 
+        repoUrl: "https://github.com/acvdoandrew/resnet-audio-cnn" 
+    },
+    {
+        title: "Genius AI SaaS Platform",
+        mainLang: "Next.js",
+        description: "A full-stack SaaS application built with Next.js and TypeScript, offering a suite of AI-powered content creation tools. Integrates OpenAI GPT and Replicate APIs for dynamic chat, code, audio, and video generation. Features a secure, tiered subscription model managed with the Stripe API.",
+        tags: ["Next.js", "TypeScript", "Prisma", "MySQL", "Stripe", "OpenAI API", "Replicate API"],
+        liveUrl: "https://genius-ai-khaki.vercel.app/", // Link to the live SaaS platform
+        repoUrl: "https://github.com/acvdoandrew/genius-ai" // Replace with your repo link
+    }
+];
+
+// Helper function to determine tag color based on language and technology type
+function getLangColor(lang) {
+    switch (lang.toLowerCase()) {
+        // --- High-Performance / C++ Ecosystem (Red-Pink) ---
+        case 'c++17':
+        case 'cmake':
+        case 'hpc':
+            return 'var(--accent-red-pink)';
+
+        // --- Python & ML/AI Libraries (Muted Blue) ---
+        case 'python':
+        case 'pytorch':
+        case 'numpy':
+        case 'tensorboard':
+            return 'var(--accent-blue)';
+
+        // --- Web & Full-Stack (Main Text Color for contrast) ---
+        case 'next.js':
+        case 'typescript':
+        case 'tailwind':
+        case 'fastapi':
+        case 'modal':
+            return 'var(--text-color)'; 
+
+        // --- Graphics / Specialized Libraries (Muted Lavender-Gray) ---
+        case 'sfml':
+            return 'var(--header-text-color)';
+
+        // --- Infrastructure, Databases & APIs (Muted Yellow) ---
+        case 'mysql':
+        case 'prisma':
+        case 'stripe':
+        case 'openai api':
+        case 'replicate api':
+            return 'var(--muted-yellow)';
+
+        // --- Default / General Concepts ---
+        case 'algorithms':
+        default:
+            return 'var(--ascii-color)';
+    }
+}
+---
+
+<section id="projects" class="projects-section">
+    <div class="section-header">
+        <h2 class="section-title">//PROJECTS_MANIFEST</h2>
+        <p class="section-subtitle">//SYSTEM_PORTFOLIO.exe</p>
+    </div>
+
+    <div class="projects-grid">
+        {projects.map(project => (
+            <article class="project-card">
+                {/* 
+                    This is an optional placeholder for an image, styled like the "A" box in the inspiration.
+                    You can replace the content with an actual <img> tag if you have project thumbnails.
+                */}
+                <div class="project-image-placeholder">
+                    <span>{project.title.charAt(0)}</span>
+                </div>
+
+                <div class="project-content">
+                    <header class="project-header">
+                        <h3 class="project-title">{project.title}</h3>
+                        {project.mainLang && (
+                            <span class="project-lang-tag" style={`background-color: ${getLangColor(project.mainLang)}; color: var(--bg-color);`}>
+                                {project.mainLang}
+                            </span>
+                        )}
+                    </header>
+                    <p class="project-description">{project.description}</p>
+                    <footer class="project-footer">
+                        <div class="project-tags">
+                            {project.tags.map(tag => (
+                                <span class="tag" style={`border-color: ${getLangColor(tag)}; color: ${getLangColor(tag)};`}>{tag}</span>
+                            ))}
+                        </div>
+                        <div class="project-links">
+                            {project.repoUrl && <a href={project.repoUrl} target="_blank" rel="noopener noreferrer" class="project-link repo-link">//SRC</a>}
+                            {project.liveUrl && <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" class="project-link live-link">//LIVE</a>}
+                        </div>
+                    </footer>
+                </div>
+            </article>
+        ))}
+    </div>
+</section>
+
+<style>
+    .projects-section {
+        padding: 60px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-header {
+        text-align: left;
+        margin-bottom: 40px;
+    }
+
+    .section-title {
+        font-size: 2.5em;
+        color: var(--text-color);
+        text-shadow: 0 0 8px var(--text-color);
+        margin-bottom: 5px;
+    }
+
+    .section-subtitle {
+        font-family: var(--font-primary);
+        color: var(--header-text-color);
+        font-size: 1em;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 30px;
+    }
+
+    .project-card {
+        background-color: rgba(var(--bg-color-rgb), 0.5);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 0 0px 1px rgba(var(--accent-blue-rgb), 0);
+    }
+
+    .project-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 25px rgba(var(--accent-blue-rgb), 0.1),
+                    0 0 15px 2px rgba(var(--accent-blue-rgb), 0.4);
+        border-color: var(--accent-blue);
+    }
+    
+    .project-image-placeholder {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background-color: rgba(var(--border-color-rgb, 42, 37, 58), 0.5);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        border: 2px solid transparent;
+        background-image: linear-gradient(rgba(var(--bg-color-rgb),1), rgba(var(--bg-color-rgb),1)), 
+                          linear-gradient(135deg, var(--accent-red-pink) 0%, var(--accent-blue) 100%);
+        background-origin: border-box;
+        background-clip: content-box, border-box;
+        box-shadow: 0 0 15px rgba(var(--accent-blue-rgb),0.3), 0 0 15px rgba(var(--accent-red-pink-rgb),0.3);
+    }
+    .project-image-placeholder span {
+        font-size: 3em;
+        color: var(--accent-blue);
+        font-weight: bold;
+        opacity: 0.7;
+    }
+
+    .project-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .project-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .project-title {
+        font-size: 1.4em;
+        color: var(--text-color);
+        margin: 0;
+        text-shadow: 0 0 5px var(--text-color);
+        margin-right: 10px;
+    }
+
+    .project-lang-tag {
+        font-size: 0.75em;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .project-description {
+        font-size: 0.95em;
+        color: var(--header-text-color);
+        line-height: 1.6;
+        margin-bottom: 20px;
+        flex-grow: 1;
+    }
+
+    .project-footer {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .project-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .project-tags .tag {
+        font-size: 0.8em;
+        padding: 4px 10px;
+        border: 1px solid;
+        border-radius: 15px;
+        opacity: 0.8;
+        transition: opacity 0.2s ease, background-color 0.2s ease;
+    }
+    .project-tags .tag:hover {
+        opacity: 1;
+    }
+
+    .project-links {
+        display: flex;
+        gap: 15px;
+    }
+    .project-link {
+        font-size: 0.9em;
+        color: var(--accent-blue);
+        text-transform: uppercase;
+    }
+    .project-link:hover {
+        color: var(--accent-red-pink);
+    }
+
+    @media (max-width: 480px) {
+        .projects-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .project-card {
+            padding: 20px;
+        }
+        .project-title {
+            font-size: 1.2em;
+        }
+    }
+</style>
