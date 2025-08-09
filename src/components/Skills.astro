@@ -1,0 +1,128 @@
+---
+// --- SKILLS DATA ---
+// Organized into categories for a neofetch-style display. Easy to add/remove skills.
+const skillCategories = [
+    {
+        title: "LANGUAGES",
+        skills: ["C++", "Python", "TypeScript", "SQL", "Rust"]
+    },
+    {
+        title: "AI / ML",
+        skills: ["PyTorch", "NumPy", "Scipy", "OpenCV", "Deep Learning", "Computer Vision", "Reinforcement Learning"]
+    },
+    {
+        title: "ROBOTICS & SIMULATION",
+        skills: ["ROS2", "PCL (Point Cloud Library)", "SFML", "MoveIt", "CMake"]
+    },
+    {
+        title: "WEB & DEPLOYMENT",
+        skills: ["Next.js", "FastAPI", "Node.js", "Docker", "Modal", "Vercel", "Prisma", "MySQL"]
+    },
+    {
+        title: "DEVELOPER TOOLS",
+        skills: ["Git", "GitHub", "Linux / Shell", "TensorBoard"]
+    }
+];
+---
+
+<section id="skills" class="skills-section">
+    <div class="section-header">
+        <h2 class="section-title">//CORE_MODULES</h2>
+        <p class="section-subtitle">//SYSTEM_SPECIFICATIONS_READOUT</p>
+    </div>
+
+    <div class="skills-grid">
+        {skillCategories.map(category => (
+            <div class="skill-category">
+                <h3 class="category-title">{'> ' + category.title}</h3>
+                <ul class="skills-list">
+                    {category.skills.map(skill => (
+                        <li class="skill-item">{skill}</li>
+                    ))}
+                </ul>
+            </div>
+        ))}
+    </div>
+</section>
+
+<style>
+    .skills-section {
+        padding: 60px 0;
+        /* border-bottom: 1px solid var(--border-color); */ /* Optional: if this is the last section before footer */
+    }
+
+    /* Reusing the same header style as the Projects section for consistency */
+    .section-header {
+        text-align: left;
+        margin-bottom: 40px;
+    }
+    .section-title {
+        font-size: 2.5em;
+        color: var(--text-color);
+        text-shadow: 0 0 8px var(--text-color);
+        margin-bottom: 5px;
+    }
+    .section-subtitle {
+        font-family: var(--font-primary);
+        color: var(--header-text-color);
+        font-size: 1em;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .skills-grid {
+        display: grid;
+        /* Create a responsive grid. It will fit as many columns as possible with a min width of 280px */
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+    }
+
+    .skill-category {
+        background-color: rgba(var(--bg-color-rgb), 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 20px 25px;
+        transition: border-color 0.3s ease;
+    }
+    .skill-category:hover {
+        border-color: var(--accent-blue);
+    }
+
+    .category-title {
+        font-size: 1.1em;
+        color: var(--accent-blue);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 0 0 20px 0;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 10px;
+    }
+
+    .skills-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px; /* Gap between skill pills */
+    }
+
+    .skill-item {
+        background-color: rgba(var(--border-color-rgb, 42, 37, 58), 0.6);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        opacity: 0.8;
+        padding: 5px 12px;
+        border-radius: 4px; /* Boxy pills */
+        font-size: 0.9em;
+        transition: all 0.2s ease;
+    }
+
+    .skill-item:hover {
+        opacity: 1;
+        color: var(--accent-red-pink);
+        border-color: var(--accent-red-pink);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(var(--accent-red-pink-rgb), 0.1);
+    }
+</style>
