@@ -1,0 +1,169 @@
+---
+// --- CONTACT DATA ---
+
+const email = "acvdoandrew@gmail.com"; 
+---
+
+<section id="contact" class="contact-section">
+    <div class="section-header">
+        <h2 class="section-title">//DIRECT_MESSAGE_PROTOCOL</h2>
+        <p class="section-subtitle">//EXECUTE_COMMAND_TO_CONNECT</p>
+    </div>
+
+    <div class="terminal-prompt-container">
+        <div class="terminal-prompt">
+            <span class="prompt-user">operator@uplink:~$</span>
+            <a href={`mailto:${email}`} class="command-link" id="contact-command">
+                <span class="command-text"></span>
+                <span class="blinking-cursor-inline">_</span>
+            </a>
+        </div>
+        <div class="command-feedback" id="command-feedback">
+            <!-- Feedback message will be injected here by script -->
+        </div>
+    </div>
+</section>
+
+<script define:vars={{ email }}>
+    document.addEventListener('DOMContentLoaded', () => {
+        const commandTextEl = document.getElementById('contact-command')?.querySelector('.command-text');
+        const commandLinkEl = document.getElementById('contact-command');
+        const feedbackEl = document.getElementById('command-feedback');
+        
+        if (!commandTextEl || !commandLinkEl || !feedbackEl) return;
+
+        const commandToType = `send-message --to ${email}`;
+        let i = 0;
+
+        function typeCommand() {
+            if (i < commandToType.length) {
+                commandTextEl.textContent += commandToType.charAt(i);
+                i++;
+                setTimeout(typeCommand, 60); // Adjust typing speed here
+            } else {
+                // Typing finished, cursor continues blinking via CSS
+            }
+        }
+
+        // Start typing animation when the element is scrolled into view
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                typeCommand();
+                observer.unobserve(commandLinkEl); // Stop observing after it starts
+            }
+        }, { threshold: 0.5 });
+
+        observer.observe(commandLinkEl);
+
+        // Handle click feedback
+        commandLinkEl.addEventListener('click', () => {
+            feedbackEl.textContent = `// EXECUTING... Opening mail client. Standby.`;
+            feedbackEl.classList.add('visible');
+
+            setTimeout(() => {
+                feedbackEl.classList.remove('visible');
+            }, 4000); // Hide feedback after 4 seconds
+        });
+    });
+</script>
+
+<style>
+    .contact-section {
+        padding: 80px 0 100px; /* More vertical space to make it feel final */
+        text-align: center; /* Center the whole section */
+    }
+    
+    .section-header { text-align: left; margin-bottom: 50px; max-width: 800px; margin-left: auto; margin-right: auto; }
+    .section-title { font-size: 2.5em; color: var(--text-color); text-shadow: 0 0 8px var(--text-color); margin-bottom: 5px; }
+    .section-subtitle { font-family: var(--font-primary); color: var(--header-text-color); font-size: 1em; letter-spacing: 0.05em; text-transform: uppercase; }
+
+    .terminal-prompt-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: rgba(var(--bg-color-rgb), 0.5);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 30px 35px;
+    }
+
+    .terminal-prompt {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap; /* Allow wrapping on small screens */
+        font-family: var(--font-primary);
+        font-size: 1.2em; /* Make the prompt text larger */
+        text-align: left;
+    }
+
+    .prompt-user {
+        color: var(--accent-blue); /* Muted blue for the user/host part */
+        margin-right: 10px;
+        white-space: nowrap; /* Prevent user@host from breaking */
+    }
+
+    .command-link {
+        color: var(--text-color); /* The command text color */
+        text-decoration: none;
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 5px 0; /* Add some vertical clickable area */
+        display: inline-flex;
+        align-items: center;
+        transition: color 0.2s ease, text-shadow 0.2s ease;
+    }
+    .command-link:hover {
+        color: var(--accent-red-pink);
+        text-shadow: 0 0 8px var(--accent-red-pink);
+    }
+    .command-link:hover .blinking-cursor-inline {
+        color: var(--accent-red-pink);
+    }
+    
+    .command-text {
+        /* Text will be populated by the typing script */
+    }
+
+    .blinking-cursor-inline {
+        display: inline-block;
+        background-color: var(--text-color); /* Solid block cursor */
+        width: 0.6em;
+        height: 1.1em;
+        margin-left: 5px;
+        animation: blink-solid 1s infinite steps(1, end);
+        transition: color 0.2s ease, background-color 0.2s ease;
+    }
+    .command-link:hover .blinking-cursor-inline {
+         background-color: var(--accent-red-pink);
+    }
+
+    @keyframes blink-solid {
+        50% { background-color: transparent; }
+    }
+
+    .command-feedback {
+        text-align: left;
+        margin-top: 15px;
+        color: var(--muted-yellow);
+        font-family: var(--font-primary);
+        font-size: 0.9em;
+        height: 1.2em; /* Reserve space to prevent layout shift */
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .command-feedback.visible {
+        opacity: 1;
+    }
+
+    @media (max-width: 600px) {
+        .section-title {
+            font-size: 2em;
+        }
+        .terminal-prompt {
+            font-size: 1em;
+        }
+        .prompt-user {
+            margin-bottom: 5px; /* Add space if it wraps */
+        }
+    }
+</style>
