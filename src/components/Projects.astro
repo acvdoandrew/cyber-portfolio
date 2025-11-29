@@ -4,26 +4,29 @@ const projects = [
     {
         title: "GPU Particle Physics Engine",
         mainLang: "C++",
-        description: "A real-time particle engine built in C++17 to simulate over 100K SPH particles at 60 FPS. Features a highly optimized CPU reference using Verlet integration and spatial-hashing to reduce collision complexity from O(n²) to O(n). Packaged with a clean CMake build and an SFML viewer for interactive fluid dynamics.",
-        tags: ["C++17", "CMake", "SFML", "Algorithms", "HPC"],
+        status: "online", // Active project
+        description: "A real-time particle engine built in C++17 to simulate over 100K SPH particles at 60 FPS. Features a highly optimized CPU reference using Verlet integration and spatial-hashing to reduce collision complexity from O(n²) to O(n). Packaged with a clean CMake build and an SFML viewer.",
+        tags: ["C++17", "CUDA", "SFML", "HPC", "CMake"],
         liveUrl: null, 
         repoUrl: "https://github.com/acvdoandrew/gpu-particle-physics-engine" 
     },
     {
-        title: "Deep Audio Classification CNN",
-        mainLang: "Python",
-        description: "End-to-end sound classification system featuring a custom ResNet-style CNN. The pipeline handles audio-to-image conversion via Mel Spectrograms, robust data augmentation, and is served via a FastAPI endpoint with Pydantic validation. Deployed for serverless GPU inference on Modal, with an interactive Next.js dashboard.",
-        tags: ["PyTorch", "Next.js", "FastAPI", "Modal", "TensorBoard", "NumPy", "Tailwind"],
-        liveUrl: "#", 
-        repoUrl: "https://github.com/acvdoandrew/resnet-audio-cnn" 
+        title: "Autonomous Drone Nav",
+        mainLang: "ROS 2",
+        status: "initializing", // WIP Project
+        description: "Implementation of Visual SLAM and path planning algorithms for autonomous search-and-rescue agents. Utilizing Isaac Sim for photorealistic environment training. Focus on sensor fusion (LiDAR + Camera) and traversability analysis.",
+        tags: ["ROS 2", "Isaac Sim", "Python", "Computer Vision"],
+        liveUrl: null, 
+        repoUrl: null // No link yet
     },
     {
-        title: "Genius AI SaaS Platform",
-        mainLang: "Next.js",
-        description: "A full-stack SaaS application built with Next.js and TypeScript, offering a suite of AI-powered content creation tools. Integrates OpenAI GPT and Replicate APIs for dynamic chat, code, audio, and video generation. Features a secure, tiered subscription model managed with the Stripe API.",
-        tags: ["Next.js", "TypeScript", "Prisma", "MySQL", "Stripe", "OpenAI API", "Replicate API"],
-        liveUrl: "https://genius-ai-khaki.vercel.app/", // Link to the live SaaS platform
-        repoUrl: "https://github.com/acvdoandrew/genius-ai" // Replace with your repo link
+        title: "Distributed RL Agents",
+        mainLang: "JAX",
+        status: "compiling", // WIP Project
+        description: "High-throughput Proximal Policy Optimization (PPO) implementation written from scratch in JAX/Flax. Designed for massive parallelization across GPU cores to solve continuous control environments without 'stable-baselines' dependencies.",
+        tags: ["Python", "JAX", "Flax", "Reinforcement Learning"],
+        liveUrl: null,
+        repoUrl: null // No link yet
     }
 ];
 
@@ -33,40 +36,27 @@ function getLangColor(lang) {
         // --- High-Performance / C++ Ecosystem (Red-Pink) ---
         case 'c++17':
         case 'cmake':
+        case 'cuda':
+        case 'sfml':
         case 'hpc':
             return 'var(--accent-red-pink)';
 
-        // --- Python & ML/AI Libraries (Muted Blue) ---
+        // --- Python & Research (Muted Blue/Cyan) ---
         case 'python':
-        case 'pytorch':
-        case 'numpy':
-        case 'tensorboard':
+        case 'jax':
+        case 'flax':
+        case 'computer vision':
+        case 'reinforcement learning':
             return 'var(--accent-blue)';
 
-        // --- Web & Full-Stack (Main Text Color for contrast) ---
-        case 'next.js':
-        case 'typescript':
-        case 'tailwind':
-        case 'fastapi':
-        case 'modal':
-            return 'var(--text-color)'; 
-
-        // --- Graphics / Specialized Libraries (Muted Lavender-Gray) ---
-        case 'sfml':
-            return 'var(--header-text-color)';
-
-        // --- Infrastructure, Databases & APIs (Muted Yellow) ---
-        case 'mysql':
-        case 'prisma':
-        case 'stripe':
-        case 'openai api':
-        case 'replicate api':
-            return 'var(--muted-yellow)';
+        // --- Robotics (Orange/Rust) ---
+        case 'ros 2':
+        case 'isaac sim':
+            return '#e06c75'; 
 
         // --- Default / General Concepts ---
-        case 'algorithms':
         default:
-            return 'var(--ascii-color)';
+            return 'var(--header-text-color)';
     }
 }
 ---
@@ -79,13 +69,12 @@ function getLangColor(lang) {
 
     <div class="projects-grid">
         {projects.map(project => (
-            <article class="project-card">
-                {/* 
-                    This is an optional placeholder for an image, styled like the "A" box in the inspiration.
-                    You can replace the content with an actual <img> tag if you have project thumbnails.
-                */}
-                <div class="project-image-placeholder">
+            <article class={`project-card ${project.status !== 'online' ? 'wip-card' : ''}`}>
+                
+                {/* Visual Indicator for Status */}
+                <div class={`project-image-placeholder ${project.status !== 'online' ? 'wip-image' : ''}`}>
                     <span>{project.title.charAt(0)}</span>
+                    {project.status !== 'online' && <div class="wip-overlay">// {project.status.toUpperCase()}</div>}
                 </div>
 
                 <div class="project-content">
@@ -97,16 +86,26 @@ function getLangColor(lang) {
                             </span>
                         )}
                     </header>
+                    
                     <p class="project-description">{project.description}</p>
+                    
                     <footer class="project-footer">
                         <div class="project-tags">
                             {project.tags.map(tag => (
                                 <span class="tag" style={`border-color: ${getLangColor(tag)}; color: ${getLangColor(tag)};`}>{tag}</span>
                             ))}
                         </div>
+                        
                         <div class="project-links">
-                            {project.repoUrl && <a href={project.repoUrl} target="_blank" rel="noopener noreferrer" class="project-link repo-link">//SRC</a>}
-                            {project.liveUrl && <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" class="project-link live-link">//LIVE</a>}
+                            {project.repoUrl ? (
+                                <a href={project.repoUrl} target="_blank" rel="noopener noreferrer" class="project-link repo-link">//SRC</a>
+                            ) : (
+                                <span class="project-link disabled">//AWAITING_SRC</span>
+                            )}
+
+                            {project.status === 'online' && project.liveUrl && (
+                                <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" class="project-link live-link">//LIVE</a>
+                            )}
                         </div>
                     </footer>
                 </div>
@@ -116,6 +115,27 @@ function getLangColor(lang) {
 </section>
 
 <style>
+    /* --- KEYFRAMES FOR GLITCH EFFECT --- */
+    @keyframes glitch-base {
+        0%, 100% { transform: translate(0, 0); opacity: 0.7; }
+        2% { transform: translate(0.5px, -0.5px) skewX(-1deg); opacity: 0.65; }
+        4% { transform: translate(-0.5px, 0.5px) skewX(1deg); opacity: 0.7; }
+        6% { transform: translate(0, 0); opacity: 0.7; }
+        48% { transform: translate(0,0); opacity: 0.7;}
+        50% { transform: translate(0.2px, -0.2px); opacity: 0.6;} 
+        52% { transform: translate(-0.2px, 0.2px); opacity: 0.7;}
+        54% { transform: translate(0,0); opacity: 0.7;}
+    }
+
+    /* A faster, sharper glitch for text only */
+    @keyframes text-twitch {
+        0% { text-shadow: 2px 2px var(--accent-red-pink), -2px -2px var(--accent-blue); }
+        95% { text-shadow: 2px 2px var(--accent-red-pink), -2px -2px var(--accent-blue); }
+        96% { text-shadow: -2px 1px var(--accent-red-pink), 1px -1px var(--accent-blue); transform: translate(1px, 0); }
+        97% { text-shadow: 1px -2px var(--accent-red-pink), -1px 2px var(--accent-blue); transform: translate(-1px, 0); }
+        100% { text-shadow: 2px 2px var(--accent-red-pink), -2px -2px var(--accent-blue); }
+    }
+
     .projects-section {
         padding: 60px 0;
         border-bottom: 1px solid var(--border-color);
@@ -147,6 +167,7 @@ function getLangColor(lang) {
         gap: 30px;
     }
 
+    /* --- STANDARD CARD --- */
     .project-card {
         background-color: rgba(var(--bg-color-rgb), 0.5);
         border: 1px solid var(--border-color);
@@ -158,13 +179,28 @@ function getLangColor(lang) {
         box-shadow: 0 0 0px 1px rgba(var(--accent-blue-rgb), 0);
     }
 
-    .project-card:hover {
+    .project-card:not(.wip-card):hover {
         transform: translateY(-5px);
         box-shadow: 0 5px 25px rgba(var(--accent-blue-rgb), 0.1),
                     0 0 15px 2px rgba(var(--accent-blue-rgb), 0.4);
         border-color: var(--accent-blue);
     }
-    
+
+    /* --- WIP / GLITCH CARD --- */
+    .project-card.wip-card {
+        border-style: dashed;
+        background-color: rgba(0, 0, 0, 0.3);
+        /* Apply your glitch-base animation here. 
+           5s duration ensures it's a "twitch" and not a constant shake */
+        animation: glitch-base 5s infinite; 
+    }
+
+    .project-card.wip-card:hover {
+        border-color: var(--accent-red-pink);
+        cursor: not-allowed;
+    }
+
+    /* --- IMAGES --- */
     .project-image-placeholder {
         width: 100%;
         aspect-ratio: 16 / 9;
@@ -180,12 +216,41 @@ function getLangColor(lang) {
         background-origin: border-box;
         background-clip: content-box, border-box;
         box-shadow: 0 0 15px rgba(var(--accent-blue-rgb),0.3), 0 0 15px rgba(var(--accent-red-pink-rgb),0.3);
+        position: relative;
     }
+
+    /* Gray out the WIP images */
+    .project-image-placeholder.wip-image {
+        background-image: none;
+        background-color: #0d0d0d;
+        border-color: #333;
+        box-shadow: none;
+    }
+    
+    .wip-overlay {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        font-family: monospace;
+        color: var(--header-text-color);
+        font-size: 0.8em;
+        background: rgba(0,0,0,0.9);
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        /* Add a secondary text twitch to the status text */
+        animation: text-twitch 4s infinite reverse; 
+    }
+
     .project-image-placeholder span {
         font-size: 3em;
         color: var(--accent-blue);
         font-weight: bold;
         opacity: 0.7;
+    }
+
+    .wip-image span {
+        color: #333; /* Darker letter for WIP */
     }
 
     .project-content {
@@ -257,13 +322,22 @@ function getLangColor(lang) {
         display: flex;
         gap: 15px;
     }
+    
     .project-link {
         font-size: 0.9em;
         color: var(--accent-blue);
         text-transform: uppercase;
+        font-weight: bold;
     }
     .project-link:hover {
         color: var(--accent-red-pink);
+    }
+
+    /* Disabled Link Style for WIPs */
+    .project-link.disabled {
+        color: var(--header-text-color);
+        opacity: 0.3;
+        cursor: not-allowed;
     }
 
     @media (max-width: 480px) {
@@ -273,9 +347,6 @@ function getLangColor(lang) {
         }
         .project-card {
             padding: 20px;
-        }
-        .project-title {
-            font-size: 1.2em;
         }
     }
 </style>
