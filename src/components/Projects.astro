@@ -4,60 +4,73 @@ const projects = [
     {
         title: "GPU Particle Physics Engine",
         mainLang: "C++",
-        status: "online", // Active project
-        description: "A real-time particle engine built in C++17 to simulate over 100K SPH particles at 60 FPS. Features a highly optimized CPU reference using Verlet integration and spatial-hashing to reduce collision complexity from O(n²) to O(n). Packaged with a clean CMake build and an SFML viewer.",
-        tags: ["C++17", "CUDA", "SFML", "HPC", "CMake"],
+        status: "online", 
+        description: "A real-time particle engine built in C++17 simulating 100K+ SPH particles. Features a handwritten CUDA kernel for spatial hashing and Verlet integration, reducing collision complexity from O(n²) to O(n).",
+        tags: ["C++17", "CUDA", "HPC", "CMake", "Physics"], // Swapped SFML for Physics (sounds harder)
         liveUrl: null, 
         repoUrl: "https://github.com/acvdoandrew/gpu-particle-physics-engine" 
     },
     {
-        title: "Autonomous Drone Nav",
-        mainLang: "ROS 2",
-        status: "initializing", // WIP Project
-        description: "Implementation of Visual SLAM and path planning algorithms for autonomous search-and-rescue agents. Utilizing Isaac Sim for photorealistic environment training. Focus on sensor fusion (LiDAR + Camera) and traversability analysis.",
-        tags: ["ROS 2", "Isaac Sim", "Python", "Computer Vision"],
+        title: "Rust Edge Compute Node",
+        mainLang: "Rust",
+        status: "initializing", // Signals WIP
+        description: "A fault-tolerant distributed worker node. Uses NVML to monitor real-time GPU thermals and memory, broadcasting availability via gRPC. Designed to handle heterogeneous workloads (Consumer vs Data Center GPUs) with automatic straggler detection.",
+        tags: ["Rust", "Tonic", "Tokio", "Distributed Systems"],
         liveUrl: null, 
-        repoUrl: null // No link yet
+        repoUrl: "https://github.com/acvdoandrew/rust-edge-compute"
     },
     {
-        title: "Distributed RL Agents",
-        mainLang: "JAX",
-        status: "compiling", // WIP Project
-        description: "High-throughput Proximal Policy Optimization (PPO) implementation written from scratch in JAX/Flax. Designed for massive parallelization across GPU cores to solve continuous control environments without 'stable-baselines' dependencies.",
-        tags: ["Python", "JAX", "Flax", "Reinforcement Learning"],
+        title: "Speculative Inference Proxy",
+        mainLang: "Python", // It's a mix, but Python serves the model
+        status: "compiling", // Signals WIP
+        description: "High-throughput inference gateway optimizing Time-To-First-Token (TTFT). Implements speculative decoding by pairing a Rust-based TCP proxy with a vLLM backend, validating draft tokens against a target oracle model to accelerate generation.",
+        tags: ["Rust", "Python", "vLLM", "Inference Optimization"],
         liveUrl: null,
-        repoUrl: null // No link yet
+        repoUrl: "https://github.com/acvdoandrew/speculative-inference-proxy"
     }
 ];
 
 // Helper function to determine tag color based on language and technology type
 function getLangColor(lang) {
-    switch (lang.toLowerCase()) {
-        // --- High-Performance / C++ Ecosystem (Red-Pink) ---
-        case 'c++17':
-        case 'cmake':
-        case 'cuda':
-        case 'sfml':
-        case 'hpc':
-            return 'var(--accent-red-pink)';
+    const lowerLang = lang.toLowerCase();
 
-        // --- Python & Research (Muted Blue/Cyan) ---
-        case 'python':
-        case 'jax':
-        case 'flax':
-        case 'computer vision':
-        case 'reinforcement learning':
-            return 'var(--accent-blue)';
+    // Map specific technologies to color categories
+    const colorMap = {
+        // --- Rust / Systems (Orange/Coral) ---
+        // Distinct from C++ to highlight your new focus
+        'rust': '#dea584', 
+        'tonic': '#dea584',
+        'tokio': '#dea584',
+        'distributed systems': '#dea584',
 
-        // --- Robotics (Orange/Rust) ---
-        case 'ros 2':
-        case 'isaac sim':
-            return '#e06c75'; 
+        // --- C++ / HPC (Red-Pink) ---
+        'c++': 'var(--accent-red-pink)',
+        'c++17': 'var(--accent-red-pink)',
+        'cuda': 'var(--accent-red-pink)',
+        'cmake': 'var(--accent-red-pink)',
+        'hpc': 'var(--accent-red-pink)',
+        'physics': 'var(--accent-red-pink)',
 
-        // --- Default / General Concepts ---
-        default:
-            return 'var(--header-text-color)';
-    }
+        // --- Python / AI (Cyan/Blue) ---
+        'python': 'var(--accent-blue)',
+        'pytorch': 'var(--accent-blue)',
+        'vllm': 'var(--accent-blue)',
+        'jax': 'var(--accent-blue)',
+        'inference optimization': 'var(--accent-blue)',
+        'computer vision': 'var(--accent-blue)',
+        'numpy': 'var(--accent-blue)',
+
+        // --- Robotics (Red/muted) ---
+        'ros 2': '#e06c75',
+        'isaac sim': '#e06c75',
+        
+        // --- Infra (Purple or Muted) ---
+        'docker': '#c678dd',
+        'grpc': '#c678dd'
+    };
+
+    // Return the mapped color, or default text color if not found
+    return colorMap[lowerLang] || 'var(--header-text-color)';
 }
 ---
 
