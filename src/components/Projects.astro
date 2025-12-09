@@ -2,13 +2,13 @@
 // --- PROJECT DATA ---
 const projects = [
     {
-        title: "GPU Particle Physics Engine",
+title: "High-Performance Physics Engine",
         mainLang: "C++",
         status: "online", 
-        description: "A real-time particle engine built in C++17 simulating 100K+ SPH particles. Features a handwritten CUDA kernel for spatial hashing and Verlet integration, reducing collision complexity from O(n²) to O(n).",
-        tags: ["C++17", "CUDA", "HPC", "CMake", "Physics"], // Swapped SFML for Physics (sounds harder)
+        description: "A real-time particle engine built in C++17 simulating 20K+ SPH particles at 60 FPS. Features a custom spatial-hash grid implementation to reduce collision complexity from O(n²) to O(n), optimizing single-threaded CPU throughput.",
+        tags: ["C++17", "HPC", "CMake", "Physics", "SFML"], 
         liveUrl: null, 
-        repoUrl: "https://github.com/acvdoandrew/gpu-particle-physics-engine" 
+        repoUrl: "https://github.com/acvdoandrew/high-performance-physics-engine"
     },
     {
         title: "Rust Edge Compute Node",
