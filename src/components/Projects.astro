@@ -14,7 +14,7 @@ const projects = [
         title: "Rust Edge Compute Node",
         mainLang: "Rust",
         status: "online",
-        description: "A fault-tolerant distributed worker node. Uses NVML to monitor real-time GPU thermals and memory, broadcasting availability via gRPC. Designed to handle heterogeneous workloads (Consumer vs Data Center GPUs) with automatic straggler detection.",
+        description: "A distributed telemetry control plane built with the Actor Model. Decouples hardware monitoring, TUI rendering, and gRPC networking into concurrent Tokio tasks. Features a central Orchestrator managing dynamic node heartbeats and a simulated HAL to model heterogeneous GPU clusters.",
         tags: ["Rust", "Tonic", "Tokio", "Distributed Systems"],
         liveUrl: null, 
         repoUrl: "https://github.com/acvdoandrew/rust-edge-compute"
