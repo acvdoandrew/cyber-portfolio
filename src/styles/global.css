@@ -9,6 +9,10 @@
 :root {
   /* New "Wired Solitude" Palette */
   --bg-color-rgb: 22, 19, 29; /* For rgba values */
+  --header-text-color-rgb: 152, 144, 168;
+  --accent-blue-rgb: 122, 112, 160;
+  --accent-red-pink-rgb: 216, 96, 120;
+  --border-color-rgb: 42, 37, 58;
   --bg-color: #16131d; /* Deepest Background */
   --content-pane-bg: rgba(
     var(--bg-color-rgb),
@@ -24,6 +28,20 @@
 
   /* Using Google Font for Share Tech Mono primarily */
   --font-primary: "VT323", "Courier New", monospace;
+  --crt-scanline-alpha: 0.34;
+  --crt-grid-alpha: 0.18;
+  --crt-noise-alpha: 0.095;
+  --crt-vignette-alpha: 0.42;
+  --crt-refresh-alpha: 0.22;
+  --crt-phosphor-alpha: 0.035;
+}
+
+html {
+  background-color: var(--bg-color);
+}
+
+html[data-crt="on"] {
+  color-scheme: dark;
 }
 
 body {
@@ -42,6 +60,161 @@ body {
   /* text-shadow: */
   /*   0px 0px 6px rgba(0, 0, 0, 0.8), */
   /*   0px 0px 3px rgba(0, 0, 0, 0.6); */
+}
+
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.crt-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(var(--bg-color-rgb), 0) 0,
+      rgba(var(--bg-color-rgb), 0) 1px,
+      rgba(var(--bg-color-rgb), var(--crt-scanline-alpha)) 1px,
+      rgba(var(--bg-color-rgb), var(--crt-scanline-alpha)) 3px
+    ),
+    linear-gradient(
+      to right,
+      rgba(var(--bg-color-rgb), 0) 0,
+      rgba(var(--bg-color-rgb), 0) 2px,
+      rgba(var(--bg-color-rgb), var(--crt-grid-alpha)) 2px,
+      rgba(var(--bg-color-rgb), var(--crt-grid-alpha)) 3px
+    );
+  background-size:
+    100% 4px,
+    5px 100%;
+  opacity: 0.76;
+}
+
+.crt-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-radial-gradient(
+      circle at 22% 18%,
+      rgba(var(--bg-color-rgb), var(--crt-noise-alpha)) 0 1px,
+      transparent 1px 3px
+    ),
+    radial-gradient(
+      ellipse at center,
+      transparent 0%,
+      transparent 44%,
+      rgba(var(--bg-color-rgb), var(--crt-vignette-alpha)) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent 34%,
+      rgba(var(--bg-color-rgb), var(--crt-refresh-alpha)) 48%,
+      transparent 62%,
+      transparent 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(184, 176, 200, var(--crt-phosphor-alpha)) 0,
+      transparent 1px,
+      transparent 3px
+    );
+  background-size:
+    auto,
+    auto,
+    auto,
+    5px 100%;
+  opacity: 0.78;
+  animation:
+    crt-static-shift 2.8s steps(5, end) infinite,
+    crt-refresh-roll 5.6s linear infinite;
+}
+
+html[data-crt="on"] .crt-overlay {
+  opacity: 1;
+  animation: crt-flicker 3.8s steps(1, end) infinite;
+}
+
+html[data-crt="off"] .crt-overlay {
+  opacity: 0;
+  animation: none;
+}
+
+@keyframes crt-static-shift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate3d(-0.5px, 0.5px, 0);
+  }
+  50% {
+    transform: translate3d(0.5px, -0.5px, 0);
+  }
+  75% {
+    transform: translate3d(0.5px, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes crt-refresh-roll {
+  0% {
+    background-position:
+      0 0,
+      0 0,
+      0 -100vh,
+      0 0;
+  }
+  100% {
+    background-position:
+      11px 7px,
+      0 0,
+      0 100vh,
+      0 0;
+  }
+}
+
+@keyframes crt-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  8% {
+    opacity: 0.92;
+  }
+  9% {
+    opacity: 1;
+  }
+  43% {
+    opacity: 0.96;
+  }
+  44% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 0.96;
+  }
+  79% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-overlay {
+    animation: none;
+  }
+
+  .crt-overlay::after {
+    animation: none;
+  }
 }
 
 h1,

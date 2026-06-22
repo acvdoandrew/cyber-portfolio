@@ -8,7 +8,13 @@ const navItems = [
 ---
 <header class="main-header">
     <nav>
-        {navItems.map(item => <a href={item.href}>{item.text}</a>)}
+        <div class="nav-links">
+            {navItems.map(item => <a href={item.href}>{item.text}</a>)}
+        </div>
+        <button id="crt-toggle" class="crt-toggle" type="button" aria-pressed="true" aria-label="Toggle CRT filter">
+            <span class="crt-toggle__status" aria-hidden="true"></span>
+            <span data-crt-toggle-label>CRT_ON</span>
+        </button>
     </nav>
 </header>
 
@@ -29,13 +35,83 @@ const navItems = [
         max-width: 1024px; /* Match .container max-width */
         margin: 0 auto;
         padding: 0 20px; /* Match .container padding */
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+    }
+    .nav-links {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px 25px;
     }
     nav a {
         color: var(--header-text-color); /* Dedicated color for header links */
-        margin-right: 25px;
         font-size: 1.1em; /* Slightly larger */
         text-transform: uppercase;
         letter-spacing: 0.08em;
     }
+    .crt-toggle {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        flex: 0 0 auto;
+        border: 1px solid rgba(var(--accent-red-pink-rgb), 0.45);
+        border-radius: 3px;
+        background: rgba(var(--bg-color-rgb), 0.55);
+        color: var(--header-text-color);
+        cursor: pointer;
+        font-family: var(--font-primary);
+        font-size: 0.95em;
+        letter-spacing: 0.08em;
+        line-height: 1;
+        padding: 7px 9px;
+        text-transform: uppercase;
+        text-shadow: 0 0 6px rgba(var(--accent-blue-rgb), 0.35);
+        transition:
+            border-color 0.2s ease,
+            color 0.2s ease,
+            box-shadow 0.2s ease,
+            text-shadow 0.2s ease;
+    }
+    .crt-toggle__status {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent-red-pink);
+        box-shadow: 0 0 8px rgba(var(--accent-red-pink-rgb), 0.85);
+    }
+    .crt-toggle:hover,
+    .crt-toggle:focus {
+        border-color: var(--accent-red-pink);
+        color: var(--text-color);
+        box-shadow: 0 0 12px rgba(var(--accent-red-pink-rgb), 0.18);
+        outline: none;
+        text-shadow: 0 0 8px rgba(var(--accent-red-pink-rgb), 0.65);
+    }
+    .crt-toggle:focus-visible {
+        outline: 1px dashed var(--accent-red-pink);
+        outline-offset: 3px;
+    }
+    .crt-toggle[aria-pressed="false"] {
+        border-color: rgba(var(--accent-blue-rgb), 0.35);
+        color: rgba(var(--header-text-color-rgb), 0.75);
+    }
+    .crt-toggle[aria-pressed="false"] .crt-toggle__status {
+        background: var(--accent-blue);
+        box-shadow: 0 0 6px rgba(var(--accent-blue-rgb), 0.5);
+        opacity: 0.65;
+    }
     /* Hover/focus for nav links still uses global 'a' styles, which is good */
+    @media (max-width: 640px) {
+        nav {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+        .crt-toggle {
+            align-self: flex-start;
+        }
+    }
 </style>
