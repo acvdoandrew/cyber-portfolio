@@ -2,6 +2,26 @@
 // --- CONTACT DATA ---
 
 const email = "acvdoandrew@gmail.com"; 
+const contactLinks = [
+    {
+        command: "connect --github",
+        label: "github.com/acvdoandrew",
+        href: "https://github.com/acvdoandrew",
+        external: true
+    },
+    {
+        command: "connect --x",
+        label: "x.com/etobyte",
+        href: "https://x.com/etobyte",
+        external: true
+    },
+    {
+        command: "send --email",
+        label: email,
+        href: `mailto:${email}`,
+        external: false
+    }
+];
 ---
 
 <section id="contact" class="contact-section">
@@ -10,59 +30,92 @@ const email = "acvdoandrew@gmail.com";
         <p class="section-subtitle">//EXECUTE_COMMAND_TO_CONNECT</p>
     </div>
 
-    <div class="terminal-prompt-container">
-        <div class="terminal-prompt">
-            <span class="prompt-user">operator@uplink:~$</span>
-            <a href={`mailto:${email}`} class="command-link" id="contact-command">
-                <span class="command-text"></span>
-                <span class="blinking-cursor-inline">_</span>
-            </a>
+    <div class="terminal-prompt-container" id="contact-terminal">
+        <div class="terminal-session" aria-label="Contact links">
+            {contactLinks.map(link => (
+                <div class="terminal-entry" data-command={link.command}>
+                    <div class="terminal-prompt">
+                        <span class="prompt-user">operator@uplink:~$</span>
+                        <span class="command-text" data-command-text></span>
+                        <span class="blinking-cursor-inline" data-command-cursor aria-hidden="true"></span>
+                    </div>
+                    <div class="terminal-response" data-command-response hidden>
+                        <span class="response-arrow">-&gt;</span>
+                        <a
+                            href={link.href}
+                            class="contact-link"
+                            target={link.external ? "_blank" : undefined}
+                            rel={link.external ? "noopener noreferrer" : undefined}
+                        >
+                            {link.label}
+                        </a>
+                    </div>
+                </div>
+            ))}
         </div>
-        <div class="command-feedback" id="command-feedback">
-            <!-- Feedback message will be injected here by script -->
-        </div>
+        <div class="command-feedback" id="command-feedback" aria-live="polite"></div>
     </div>
 </section>
 
-<script define:vars={{ email }}>
+<script>
     document.addEventListener('DOMContentLoaded', () => {
-        const commandTextEl = document.getElementById('contact-command')?.querySelector('.command-text');
-        const commandLinkEl = document.getElementById('contact-command');
+        const terminalEl = document.getElementById('contact-terminal');
+        const entries = Array.from(document.querySelectorAll('[data-command]'));
         const feedbackEl = document.getElementById('command-feedback');
         
-        if (!commandTextEl || !commandLinkEl || !feedbackEl) return;
+        if (!terminalEl || entries.length === 0 || !feedbackEl) return;
 
-        const commandToType = `send-message --to ${email}`;
-        let i = 0;
+        let hasTyped = false;
 
-        function typeCommand() {
-            if (i < commandToType.length) {
-                commandTextEl.textContent += commandToType.charAt(i);
-                i++;
-                setTimeout(typeCommand, 60); // Adjust typing speed here
-            } else {
-                // Typing finished, cursor continues blinking via CSS
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function typeEntry(entry) {
+            const command = entry.dataset.command || '';
+            const textEl = entry.querySelector('[data-command-text]');
+            const cursorEl = entry.querySelector('[data-command-cursor]');
+            const responseEl = entry.querySelector('[data-command-response]');
+
+            if (!textEl || !cursorEl || !responseEl) return;
+
+            cursorEl.classList.add('is-active');
+
+            for (const char of command) {
+                textEl.textContent += char;
+                await sleep(45);
+            }
+
+            cursorEl.classList.remove('is-active');
+            responseEl.hidden = false;
+            await sleep(180);
+        }
+
+        async function typeSession() {
+            for (const entry of entries) {
+                await typeEntry(entry);
             }
         }
 
-        // Start typing animation when the element is scrolled into view
         const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
-                typeCommand();
-                observer.unobserve(commandLinkEl); // Stop observing after it starts
+            if (entries[0].isIntersecting && !hasTyped) {
+                hasTyped = true;
+                typeSession();
+                observer.unobserve(terminalEl);
             }
         }, { threshold: 0.5 });
 
-        observer.observe(commandLinkEl);
+        observer.observe(terminalEl);
 
-        // Handle click feedback
-        commandLinkEl.addEventListener('click', () => {
-            feedbackEl.textContent = `// EXECUTING... Opening mail client. Standby.`;
-            feedbackEl.classList.add('visible');
+        terminalEl.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                feedbackEl.textContent = `// EXECUTING... ${link.textContent?.trim() || 'uplink'} selected.`;
+                feedbackEl.classList.add('visible');
 
-            setTimeout(() => {
-                feedbackEl.classList.remove('visible');
-            }, 4000); // Hide feedback after 4 seconds
+                setTimeout(() => {
+                    feedbackEl.classList.remove('visible');
+                }, 4000);
+            });
         });
     });
 </script>
@@ -86,12 +139,23 @@ const email = "acvdoandrew@gmail.com";
         padding: 30px 35px;
     }
 
+    .terminal-session {
+        display: grid;
+        gap: 18px;
+        text-align: left;
+    }
+
+    .terminal-entry {
+        display: grid;
+        gap: 4px;
+    }
+
     .terminal-prompt {
         display: flex;
         align-items: center;
         flex-wrap: wrap; /* Allow wrapping on small screens */
         font-family: var(--font-primary);
-        font-size: 1.2em; /* Make the prompt text larger */
+        font-size: 1.12em;
         text-align: left;
     }
 
@@ -101,31 +165,13 @@ const email = "acvdoandrew@gmail.com";
         white-space: nowrap; /* Prevent user@host from breaking */
     }
 
-    .command-link {
-        color: var(--text-color); /* The command text color */
-        text-decoration: none;
-        background-color: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 5px 0; /* Add some vertical clickable area */
-        display: inline-flex;
-        align-items: center;
-        transition: color 0.2s ease, text-shadow 0.2s ease;
-    }
-    .command-link:hover {
-        color: var(--accent-red-pink);
-        text-shadow: 0 0 8px var(--accent-red-pink);
-    }
-    .command-link:hover .blinking-cursor-inline {
-        color: var(--accent-red-pink);
-    }
-    
     .command-text {
-        /* Text will be populated by the typing script */
+        color: var(--text-color);
+        min-height: 1.2em;
     }
 
     .blinking-cursor-inline {
-        display: inline-block;
+        display: none;
         background-color: var(--text-color); /* Solid block cursor */
         width: 0.6em;
         height: 1.1em;
@@ -133,8 +179,8 @@ const email = "acvdoandrew@gmail.com";
         animation: blink-solid 1s infinite steps(1, end);
         transition: color 0.2s ease, background-color 0.2s ease;
     }
-    .command-link:hover .blinking-cursor-inline {
-         background-color: var(--accent-red-pink);
+    .blinking-cursor-inline.is-active {
+        display: inline-block;
     }
 
     @keyframes blink-solid {
@@ -155,6 +201,31 @@ const email = "acvdoandrew@gmail.com";
         opacity: 1;
     }
 
+    .terminal-response {
+        font-family: var(--font-primary);
+        font-size: 1.05em;
+        padding-left: 24px;
+    }
+
+    .contact-link {
+        color: var(--accent-blue);
+        overflow-wrap: anywhere;
+        text-decoration: underline;
+        text-decoration-color: rgba(var(--accent-blue-rgb), 0.45);
+        text-underline-offset: 3px;
+    }
+
+    .contact-link:hover,
+    .contact-link:focus {
+        color: var(--accent-red-pink);
+        text-decoration-color: var(--accent-red-pink);
+    }
+
+    .response-arrow {
+        color: var(--muted-yellow);
+        margin-right: 8px;
+    }
+
     @media (max-width: 600px) {
         .section-title {
             font-size: 2em;
@@ -164,6 +235,12 @@ const email = "acvdoandrew@gmail.com";
         }
         .prompt-user {
             margin-bottom: 5px; /* Add space if it wraps */
+        }
+        .terminal-prompt-container {
+            padding: 24px 22px;
+        }
+        .terminal-response {
+            padding-left: 0;
         }
     }
 </style>

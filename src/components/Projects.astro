@@ -2,29 +2,35 @@
 // --- PROJECT DATA ---
 const projects = [
     {
-title: "High-Performance Physics Engine",
-        mainLang: "C++",
-        status: "online", 
-        description: "A real-time particle engine built in C++17 simulating 20K+ SPH particles at 60 FPS. Features a custom spatial-hash grid implementation to reduce collision complexity from O(n²) to O(n), optimizing single-threaded CPU throughput.",
-        tags: ["C++17", "HPC", "CMake", "Physics", "SFML"], 
-        liveUrl: null, 
-        repoUrl: "https://github.com/acvdoandrew/high-performance-physics-engine"
-    },
-    {
         title: "Rust Edge Compute Node",
         mainLang: "Rust",
         status: "online",
-        description: "A distributed telemetry control plane built with the Actor Model. Decouples hardware monitoring, TUI rendering, and gRPC networking into concurrent Tokio tasks. Features a central Orchestrator managing dynamic node heartbeats and a simulated HAL to model heterogeneous GPU clusters.",
-        tags: ["Rust", "Tonic", "Tokio", "Distributed Systems"],
-        liveUrl: null, 
+        statusDisplay: "SHIPPED_MVP",
+        statusTone: "complete",
+        description: "A Rust/Tokio control plane for simulated decentralized compute nodes. Streams telemetry over gRPC, tracks node lifecycle, and models GPU worker orchestration with a pluggable hardware abstraction layer.",
+        tags: ["Rust", "Tokio", "Tonic", "gRPC", "Distributed Systems", "Telemetry"],
+        liveUrl: null,
         repoUrl: "https://github.com/acvdoandrew/rust-edge-compute"
     },
     {
+        title: "High-Performance Physics Engine",
+        mainLang: "C++",
+        status: "online",
+        statusDisplay: "NEEDS_BENCHMARKS",
+        statusTone: "caution",
+        description: "A C++17 particle simulation engine using Verlet integration and spatial hashing for broad-phase collision detection. Built as a systems/performance lab for understanding simulation loops, memory, and optimization tradeoffs.",
+        tags: ["C++17", "CMake", "Simulation", "Spatial Hashing", "SFML"],
+        liveUrl: null,
+        repoUrl: "https://github.com/acvdoandrew/high-performance-physics-engine"
+    },
+    {
         title: "Speculative Inference Proxy",
-        mainLang: "Python", // It's a mix, but Python serves the model
-        status: "compiling", // Signals WIP
-        description: "High-throughput inference gateway optimizing Time-To-First-Token (TTFT). Implements speculative decoding by pairing a Rust-based TCP proxy with a vLLM backend, validating draft tokens against a target oracle model to accelerate generation.",
-        tags: ["Rust", "Python", "vLLM", "Inference Optimization"],
+        mainLang: "Rust",
+        status: "compiling",
+        statusDisplay: "COMPILING",
+        statusTone: "glitch",
+        description: "Design-stage Rust/Python inference gateway exploring speculative decoding, TTFT benchmarking, and vLLM-compatible serving. Currently compiling the monster; MVP starts with mock draft/oracle backends before touching real models.",
+        tags: ["Rust", "Python", "vLLM", "Inference", "WIP"],
         liveUrl: null,
         repoUrl: "https://github.com/acvdoandrew/speculative-inference-proxy"
     }
@@ -36,35 +42,25 @@ function getLangColor(lang) {
 
     // Map specific technologies to color categories
     const colorMap = {
-        // --- Rust / Systems (Orange/Coral) ---
-        // Distinct from C++ to highlight your new focus
         'rust': '#dea584', 
         'tonic': '#dea584',
         'tokio': '#dea584',
         'distributed systems': '#dea584',
+        'telemetry': '#dea584',
 
-        // --- C++ / HPC (Red-Pink) ---
         'c++': 'var(--accent-red-pink)',
         'c++17': 'var(--accent-red-pink)',
-        'cuda': 'var(--accent-red-pink)',
         'cmake': 'var(--accent-red-pink)',
-        'hpc': 'var(--accent-red-pink)',
-        'physics': 'var(--accent-red-pink)',
+        'simulation': 'var(--accent-red-pink)',
+        'spatial hashing': 'var(--accent-red-pink)',
+        'sfml': 'var(--accent-red-pink)',
 
-        // --- Python / AI (Cyan/Blue) ---
         'python': 'var(--accent-blue)',
         'pytorch': 'var(--accent-blue)',
         'vllm': 'var(--accent-blue)',
-        'jax': 'var(--accent-blue)',
-        'inference optimization': 'var(--accent-blue)',
-        'computer vision': 'var(--accent-blue)',
-        'numpy': 'var(--accent-blue)',
-
-        // --- Robotics (Red/muted) ---
-        'ros 2': '#e06c75',
-        'isaac sim': '#e06c75',
+        'inference': 'var(--accent-blue)',
+        'wip': 'var(--accent-blue)',
         
-        // --- Infra (Purple or Muted) ---
         'docker': '#c678dd',
         'grpc': '#c678dd'
     };
@@ -87,17 +83,18 @@ function getLangColor(lang) {
                 {/* Visual Indicator for Status */}
                 <div class={`project-image-placeholder ${project.status !== 'online' ? 'wip-image' : ''}`}>
                     <span>{project.title.charAt(0)}</span>
-                    {project.status !== 'online' && <div class="wip-overlay">// {project.status.toUpperCase()}</div>}
+                    <div class={`status-overlay status-overlay--${project.statusTone}`}>// {project.statusDisplay}</div>
                 </div>
 
                 <div class="project-content">
                     <header class="project-header">
-                        <h3 class="project-title">{project.title}</h3>
-                        {project.mainLang && (
-                            <span class="project-lang-tag" style={`background-color: ${getLangColor(project.mainLang)}; color: var(--bg-color);`}>
-                                {project.mainLang}
-                            </span>
-                        )}
+                        <div>
+                            <h3 class="project-title">{project.title}</h3>
+                            <p class="project-status">STATUS: {project.statusDisplay}</p>
+                        </div>
+                        <span class="project-lang-tag" style={`background-color: ${getLangColor(project.mainLang)}; color: var(--bg-color);`}>
+                            {project.mainLang}
+                        </span>
                     </header>
                     
                     <p class="project-description">{project.description}</p>
@@ -240,7 +237,7 @@ function getLangColor(lang) {
         box-shadow: none;
     }
     
-    .wip-overlay {
+    .status-overlay {
         position: absolute;
         bottom: 10px;
         right: 10px;
@@ -251,7 +248,23 @@ function getLangColor(lang) {
         padding: 4px 8px;
         border-radius: 4px;
         border: 1px solid var(--border-color);
-        /* Add a secondary text twitch to the status text */
+    }
+
+    .status-overlay--complete {
+        color: #8fbf9f;
+        border-color: rgba(143, 191, 159, 0.75);
+        box-shadow: 0 0 10px rgba(143, 191, 159, 0.18);
+        text-shadow: 0 0 7px rgba(143, 191, 159, 0.55);
+    }
+
+    .status-overlay--caution {
+        color: var(--muted-yellow);
+        border-color: rgba(160, 144, 128, 0.75);
+        box-shadow: 0 0 10px rgba(160, 144, 128, 0.16);
+        text-shadow: 0 0 7px rgba(160, 144, 128, 0.5);
+    }
+
+    .status-overlay--glitch {
         animation: text-twitch 4s infinite reverse; 
     }
 
@@ -282,9 +295,17 @@ function getLangColor(lang) {
     .project-title {
         font-size: 1.4em;
         color: var(--text-color);
-        margin: 0;
+        margin: 0 0 4px;
         text-shadow: 0 0 5px var(--text-color);
         margin-right: 10px;
+    }
+
+    .project-status {
+        color: var(--muted-yellow);
+        font-size: 0.85em;
+        letter-spacing: 0.08em;
+        margin: 0;
+        text-transform: uppercase;
     }
 
     .project-lang-tag {
