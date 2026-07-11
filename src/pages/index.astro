@@ -1,20 +1,28 @@
 ---
-import MainLayout from '../layouts/MainLayout.astro';
-import Header from '../components/Header.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TopBar from '../components/TopBar.astro';
 import Hero from '../components/Hero.astro';
 import Projects from '../components/Projects.astro';
-import Skills from '../components/Skills.astro';
+import Capabilities from '../components/Capabilities.astro';
+import Principles from '../components/Principles.astro';
 import Contact from '../components/Contact.astro';
+import CommandDeck from '../components/CommandDeck.astro';
 import Footer from '../components/Footer.astro';
-
-const pageTitle = "ANDREW_TERMINAL // vOS 2.7"; // Example
-const pageDescription = "Andrew’s personal terminal — systems programmer in Boston building Rust, Python, and TypeScript proof-of-work across AI infrastructure, security, and distributed systems.";
 ---
-<MainLayout title={pageTitle} description={pageDescription}>
-    <Header />
-    <Hero />
-    <Projects />
-    <Skills />
-    <Contact />
+<BaseLayout
+  title="ANDREW_TERMINAL // V2"
+  description="Andrew builds systems, breaks them on purpose, and writes down what survived. Rust, distributed compute, AI infrastructure, security labs, and strange machines."
+>
+  <div class="site-shell" id="top">
+    <TopBar />
+    <main id="main-content">
+      <Hero />
+      <Projects />
+      <Capabilities />
+      <Principles />
+      <Contact />
+    </main>
     <Footer />
-</MainLayout>
+  </div>
+  <CommandDeck />
+</BaseLayout>

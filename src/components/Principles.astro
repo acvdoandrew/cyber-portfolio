@@ -1,0 +1,74 @@
+---
+const principles = [
+  {
+    code: 'P.01',
+    title: 'MAKE IT STRANGE.',
+    accent: 'KEEP IT TRUE.',
+    note: 'The surface can be strange. The claims underneath should stay exact.',
+  },
+  {
+    code: 'P.02',
+    title: 'BENCHMARK BEFORE',
+    accent: 'BRAGGING.',
+    note: 'Without a measurement, the performance claim is just a mood board.',
+  },
+  {
+    code: 'P.03',
+    title: 'FOLLOW THE',
+    accent: 'FAILURE.',
+    note: 'The broken path usually explains the system better than the happy one.',
+  },
+  {
+    code: 'P.04',
+    title: 'LEAVE THE',
+    accent: 'SOURCE OPEN.',
+    note: 'Work should be inspectable, unfinished states included.',
+  },
+];
+---
+<section class="principles section-shell" id="log" data-section="log">
+  <header class="section-heading reveal" data-reveal>
+    <div>
+      <span class="section-index">03 / OPERATING_PRINCIPLES</span>
+      <h2>Notes, not thought leadership.</h2>
+    </div>
+    <p>
+      Four rules learned the slow way. Zero carousel posts required.
+    </p>
+  </header>
+
+  <div class="principle-grid">
+    {principles.map((principle, index) => (
+      <article class="principle-card reveal" data-reveal style={`--delay:${index * 55}ms`}>
+        <span class="principle-code">{principle.code}</span>
+        <h3>{principle.title}<br /><em>{principle.accent}</em></h3>
+        <p>{principle.note}</p>
+        <span class="principle-bracket" aria-hidden="true">[ MARGIN_NOTE ]</span>
+      </article>
+    ))}
+  </div>
+
+  <div class="ops-log reveal" data-reveal>
+    <div class="ops-log-head">
+      <span>// OPS_LOG</span>
+      <span>READ_ONLY</span>
+    </div>
+    <ol>
+      <li>
+        <time>NOW</time>
+        <span class="log-pip log-pip--green"></span>
+        <div><strong>Rust edge compute MVP shipped</strong><p>Hardening scheduling and recovery. No launch thread survived.</p></div>
+      </li>
+      <li>
+        <time>BUILDING</time>
+        <span class="log-pip log-pip--pink"></span>
+        <div><strong>ARES design pass</strong><p>Defining the simulation core; resisting the urge to call it a platform.</p></div>
+      </li>
+      <li>
+        <time>NEXT</time>
+        <span class="log-pip log-pip--amber"></span>
+        <div><strong>Benchmarks before adjectives</strong><p>Physics broad-phase and inference TTFT traces are next in queue.</p></div>
+      </li>
+    </ol>
+  </div>
+</section>

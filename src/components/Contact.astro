@@ -1,246 +1,48 @@
----
-// --- CONTACT DATA ---
-
-const email = "acvdoandrew@gmail.com"; 
-const contactLinks = [
-    {
-        command: "connect --github",
-        label: "github.com/acvdoandrew",
-        href: "https://github.com/acvdoandrew",
-        external: true
-    },
-    {
-        command: "connect --x",
-        label: "x.com/etobyte",
-        href: "https://x.com/etobyte",
-        external: true
-    },
-    {
-        command: "send --email",
-        label: email,
-        href: `mailto:${email}`,
-        external: false
-    }
-];
----
-
-<section id="contact" class="contact-section">
-    <div class="section-header">
-        <h2 class="section-title">//DIRECT_MESSAGE_PROTOCOL</h2>
-        <p class="section-subtitle">//EXECUTE_COMMAND_TO_CONNECT</p>
+<section class="contact section-shell" id="contact" data-section="contact">
+  <div class="contact-panel reveal" data-reveal>
+    <div class="contact-copy">
+      <span class="section-index">04 / CONTACT</span>
+      <h2>You can just<br /><em>email me.</em></h2>
+      <p>
+        No funnel. No synergy ritual. If you are building something technical,
+        strange, or difficult to explain in a stand-up, send a message. Plain text is ideal.
+      </p>
+      <div class="availability-line"><i></i><span>RECEIVING // REAL_PROBLEMS / PLAIN_TEXT</span></div>
     </div>
 
-    <div class="terminal-prompt-container" id="contact-terminal">
-        <div class="terminal-session" aria-label="Contact links">
-            {contactLinks.map(link => (
-                <div class="terminal-entry" data-command={link.command}>
-                    <div class="terminal-prompt">
-                        <span class="prompt-user">operator@uplink:~$</span>
-                        <span class="command-text" data-command-text></span>
-                        <span class="blinking-cursor-inline" data-command-cursor aria-hidden="true"></span>
-                    </div>
-                    <div class="terminal-response" data-command-response hidden>
-                        <span class="response-arrow">-&gt;</span>
-                        <a
-                            href={link.href}
-                            class="contact-link"
-                            target={link.external ? "_blank" : undefined}
-                            rel={link.external ? "noopener noreferrer" : undefined}
-                        >
-                            {link.label}
-                        </a>
-                    </div>
-                </div>
-            ))}
+    <div class="terminal-contact" aria-label="Contact methods">
+      <div class="terminal-titlebar">
+        <span>operator@uplink:~</span>
+        <div aria-hidden="true"><i></i><i></i><i></i></div>
+      </div>
+      <div class="terminal-body">
+        <p class="terminal-line"><span class="prompt">andrew@signal:~$</span> ./connect --available</p>
+        <p class="terminal-output">Scanning public channels... <strong>3 FOUND // NO NETWORKING EVENT REQUIRED</strong></p>
+
+        <a class="contact-command" href="mailto:acvdoandrew@gmail.com">
+          <span><small>01 // EMAIL</small><strong>acvdoandrew@gmail.com</strong></span>
+          <span aria-hidden="true">↗</span>
+        </a>
+        <a class="contact-command" href="https://github.com/acvdoandrew" target="_blank" rel="noopener noreferrer">
+          <span><small>02 // SOURCE_NODE</small><strong>github.com/acvdoandrew</strong></span>
+          <span aria-hidden="true">↗</span>
+        </a>
+        <a class="contact-command" href="https://x.com/etobyte" target="_blank" rel="noopener noreferrer">
+          <span><small>03 // SHORTWAVE</small><strong>x.com/etobyte</strong></span>
+          <span aria-hidden="true">↗</span>
+        </a>
+
+        <div class="terminal-actions">
+          <button class="copy-button" type="button" data-copy-email="acvdoandrew@gmail.com">
+            <span data-copy-label>COPY_EMAIL</span><span aria-hidden="true">[ ]</span>
+          </button>
+          <button class="copy-button" type="button" data-command-open>
+            OPEN_COMMAND_DECK<span aria-hidden="true">⌘K</span>
+          </button>
         </div>
-        <div class="command-feedback" id="command-feedback" aria-live="polite"></div>
+        <p class="terminal-cursor" aria-hidden="true"><span class="prompt">andrew@signal:~$</span> <i></i></p>
+        <p class="sr-only" id="copy-status" aria-live="polite"></p>
+      </div>
     </div>
+  </div>
 </section>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const terminalEl = document.getElementById('contact-terminal');
-        const entries = Array.from(document.querySelectorAll('[data-command]'));
-        const feedbackEl = document.getElementById('command-feedback');
-        
-        if (!terminalEl || entries.length === 0 || !feedbackEl) return;
-
-        let hasTyped = false;
-
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        async function typeEntry(entry) {
-            const command = entry.dataset.command || '';
-            const textEl = entry.querySelector('[data-command-text]');
-            const cursorEl = entry.querySelector('[data-command-cursor]');
-            const responseEl = entry.querySelector('[data-command-response]');
-
-            if (!textEl || !cursorEl || !responseEl) return;
-
-            cursorEl.classList.add('is-active');
-
-            for (const char of command) {
-                textEl.textContent += char;
-                await sleep(45);
-            }
-
-            cursorEl.classList.remove('is-active');
-            responseEl.hidden = false;
-            await sleep(180);
-        }
-
-        async function typeSession() {
-            for (const entry of entries) {
-                await typeEntry(entry);
-            }
-        }
-
-        const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting && !hasTyped) {
-                hasTyped = true;
-                typeSession();
-                observer.unobserve(terminalEl);
-            }
-        }, { threshold: 0.5 });
-
-        observer.observe(terminalEl);
-
-        terminalEl.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                feedbackEl.textContent = `// EXECUTING... ${link.textContent?.trim() || 'uplink'} selected.`;
-                feedbackEl.classList.add('visible');
-
-                setTimeout(() => {
-                    feedbackEl.classList.remove('visible');
-                }, 4000);
-            });
-        });
-    });
-</script>
-
-<style>
-    .contact-section {
-        padding: 80px 0 100px; /* More vertical space to make it feel final */
-        text-align: center; /* Center the whole section */
-    }
-    
-    .section-header { text-align: left; margin-bottom: 50px; max-width: 800px; margin-left: auto; margin-right: auto; }
-    .section-title { font-size: 2.5em; color: var(--text-color); text-shadow: 0 0 8px var(--text-color); margin-bottom: 5px; }
-    .section-subtitle { font-family: var(--font-primary); color: var(--header-text-color); font-size: 1em; letter-spacing: 0.05em; text-transform: uppercase; }
-
-    .terminal-prompt-container {
-        max-width: 800px;
-        margin: 0 auto;
-        background-color: rgba(var(--bg-color-rgb), 0.5);
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        padding: 30px 35px;
-    }
-
-    .terminal-session {
-        display: grid;
-        gap: 18px;
-        text-align: left;
-    }
-
-    .terminal-entry {
-        display: grid;
-        gap: 4px;
-    }
-
-    .terminal-prompt {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap; /* Allow wrapping on small screens */
-        font-family: var(--font-primary);
-        font-size: 1.12em;
-        text-align: left;
-    }
-
-    .prompt-user {
-        color: var(--accent-blue); /* Muted blue for the user/host part */
-        margin-right: 10px;
-        white-space: nowrap; /* Prevent user@host from breaking */
-    }
-
-    .command-text {
-        color: var(--text-color);
-        min-height: 1.2em;
-    }
-
-    .blinking-cursor-inline {
-        display: none;
-        background-color: var(--text-color); /* Solid block cursor */
-        width: 0.6em;
-        height: 1.1em;
-        margin-left: 5px;
-        animation: blink-solid 1s infinite steps(1, end);
-        transition: color 0.2s ease, background-color 0.2s ease;
-    }
-    .blinking-cursor-inline.is-active {
-        display: inline-block;
-    }
-
-    @keyframes blink-solid {
-        50% { background-color: transparent; }
-    }
-
-    .command-feedback {
-        text-align: left;
-        margin-top: 15px;
-        color: var(--muted-yellow);
-        font-family: var(--font-primary);
-        font-size: 0.9em;
-        height: 1.2em; /* Reserve space to prevent layout shift */
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .command-feedback.visible {
-        opacity: 1;
-    }
-
-    .terminal-response {
-        font-family: var(--font-primary);
-        font-size: 1.05em;
-        padding-left: 24px;
-    }
-
-    .contact-link {
-        color: var(--accent-blue);
-        overflow-wrap: anywhere;
-        text-decoration: underline;
-        text-decoration-color: rgba(var(--accent-blue-rgb), 0.45);
-        text-underline-offset: 3px;
-    }
-
-    .contact-link:hover,
-    .contact-link:focus {
-        color: var(--accent-red-pink);
-        text-decoration-color: var(--accent-red-pink);
-    }
-
-    .response-arrow {
-        color: var(--muted-yellow);
-        margin-right: 8px;
-    }
-
-    @media (max-width: 600px) {
-        .section-title {
-            font-size: 2em;
-        }
-        .terminal-prompt {
-            font-size: 1em;
-        }
-        .prompt-user {
-            margin-bottom: 5px; /* Add space if it wraps */
-        }
-        .terminal-prompt-container {
-            padding: 24px 22px;
-        }
-        .terminal-response {
-            padding-left: 0;
-        }
-    }
-</style>
