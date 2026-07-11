@@ -244,6 +244,48 @@ html[data-entity="off"] .gpu-stage {
   pointer-events: none;
 }
 
+.signal-rain {
+  position: fixed;
+  inset: -18% -4%;
+  z-index: 1;
+  overflow: hidden;
+  opacity: 0.14;
+  transform: skewX(-5deg);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.signal-rain i {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 52px, rgba(238, 236, 232, 0.34) 52px 53px, transparent 53px 106px);
+  mask-image: repeating-linear-gradient(180deg, transparent 0 54px, black 55px 70px, transparent 71px 146px);
+  mask-size: 100% 146px;
+  animation: signal-rain-fall 5.8s linear infinite;
+}
+
+.signal-rain i:nth-child(2) {
+  background: repeating-linear-gradient(90deg, transparent 0 87px, rgba(169, 190, 192, 0.3) 87px 88px, transparent 88px 174px);
+  mask-image: repeating-linear-gradient(180deg, transparent 0 102px, black 103px 110px, transparent 111px 238px);
+  mask-size: 100% 238px;
+  opacity: 0.62;
+  animation-duration: 8.6s;
+  animation-delay: -3.2s;
+}
+
+.signal-rain i:nth-child(3) {
+  background: repeating-linear-gradient(90deg, transparent 0 137px, rgba(169, 109, 134, 0.24) 137px 138px, transparent 138px 274px);
+  mask-image: repeating-linear-gradient(180deg, transparent 0 31px, black 32px 37px, transparent 38px 183px);
+  mask-size: 100% 183px;
+  opacity: 0.42;
+  animation-duration: 11.4s;
+  animation-delay: -6.7s;
+}
+
+@keyframes signal-rain-fall {
+  to { mask-position: 0 584px; }
+}
+
 .transmission-fragments {
   position: fixed;
   inset: 0;
@@ -258,9 +300,6 @@ html[data-entity="off"] .gpu-stage {
   position: absolute;
   display: block;
   border: 1px solid rgba(238, 236, 232, 0.22);
-  background:
-    radial-gradient(circle, rgba(238, 236, 232, 0.72) 0 0.7px, transparent 0.9px) 0 0 / 4px 4px,
-    repeating-linear-gradient(90deg, transparent 0 13px, rgba(238, 236, 232, 0.16) 13px 14px);
   filter: contrast(1.8);
   animation: fragment-jump 9s steps(1, end) infinite;
 }
@@ -272,11 +311,36 @@ html[data-entity="off"] .gpu-stage {
   content: "";
 }
 
-.fragment--one { top: 13%; left: -35px; width: 190px; height: 96px; clip-path: polygon(0 0, 100% 12%, 73% 100%, 12% 76%); }
-.fragment--two { top: 28%; right: -45px; width: 170px; height: 230px; clip-path: polygon(18% 0, 100% 9%, 84% 91%, 0 100%, 21% 48%); animation-delay: -2s; }
-.fragment--three { top: 59%; left: -60px; width: 210px; height: 150px; clip-path: polygon(0 16%, 84% 0, 100% 72%, 19% 100%); animation-delay: -4s; }
-.fragment--four { right: 2%; bottom: 9%; width: 150px; height: 90px; clip-path: polygon(8% 0, 100% 13%, 78% 100%, 0 81%); animation-delay: -6s; }
-.fragment--five { top: 43%; left: 49%; width: 86px; height: 86px; transform: rotate(45deg); opacity: 0.4; animation-delay: -7s; }
+.fragment--one {
+  top: 13%; left: -35px; width: 190px; height: 96px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, transparent 0 20%, rgba(238, 236, 232, 0.78) 21% 23%, transparent 24% 43%, rgba(238, 236, 232, 0.5) 44% 46%, transparent 47%), radial-gradient(circle, rgba(238, 236, 232, 0.65) 0 0.6px, transparent 0.85px) 0 0 / 4px 4px;
+}
+.fragment--two {
+  top: 28%; right: -45px; width: 170px; height: 230px;
+  clip-path: polygon(41% 0, 61% 0, 100% 100%, 0 100%);
+  background: repeating-linear-gradient(0deg, transparent 0 12px, rgba(238, 236, 232, 0.6) 12px 14px), linear-gradient(90deg, transparent 45%, rgba(238, 236, 232, 0.72) 46% 54%, transparent 55%);
+  animation-delay: -2s;
+}
+.fragment--three {
+  top: 59%; left: -60px; width: 210px; height: 150px;
+  clip-path: polygon(0 34%, 35% 34%, 50% 0, 64% 34%, 100% 34%, 74% 56%, 86% 100%, 50% 71%, 14% 100%, 26% 56%);
+  background: repeating-conic-gradient(from 45deg, rgba(238, 236, 232, 0.62) 0 3deg, transparent 3deg 18deg), radial-gradient(circle, rgba(238, 236, 232, 0.58) 0 0.7px, transparent 0.9px) 0 0 / 5px 5px;
+  animation-delay: -4s;
+}
+.fragment--four {
+  right: 2%; bottom: 9%; width: 150px; height: 90px;
+  clip-path: polygon(0 45%, 41% 45%, 41% 0, 59% 0, 59% 45%, 100% 45%, 100% 55%, 59% 55%, 59% 100%, 41% 100%, 41% 55%, 0 55%);
+  background: repeating-linear-gradient(90deg, transparent 0 8px, rgba(238, 236, 232, 0.66) 8px 9px), repeating-linear-gradient(0deg, transparent 0 8px, rgba(238, 236, 232, 0.36) 8px 9px);
+  animation-delay: -6s;
+}
+.fragment--five {
+  top: 43%; left: 49%; width: 86px; height: 86px;
+  transform: rotate(45deg);
+  background: conic-gradient(from 45deg, transparent 0 12.5%, rgba(238, 236, 232, 0.65) 12.5% 13.5%, transparent 13.5% 37.5%, rgba(238, 236, 232, 0.65) 37.5% 38.5%, transparent 38.5% 100%), radial-gradient(circle, rgba(238, 236, 232, 0.62) 0 0.65px, transparent 0.9px) 0 0 / 4px 4px;
+  opacity: 0.4;
+  animation-delay: -7s;
+}
 
 @keyframes fragment-jump {
   0%, 92%, 100% { translate: 0 0; opacity: 0.7; }
@@ -396,7 +460,7 @@ html.reveal-enabled .reveal.is-visible {
 
 .header-shell {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   width: min(calc(100% - 32px), 1360px);
   min-height: var(--header-h);
@@ -454,7 +518,7 @@ html.reveal-enabled .reveal.is-visible {
 
 .primary-nav {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: clamp(12px, 1.5vw, 25px);
 }
@@ -1145,7 +1209,7 @@ html[data-entity-released="on"] .containment-lock i {
   position: absolute;
   top: 0;
   left: 50%;
-  width: min(100vw, 1600px);
+  width: min(100%, 1600px);
   height: 1px;
   transform: translateX(-50%);
   background: linear-gradient(90deg, transparent, var(--line) 20%, var(--line) 80%, transparent);
@@ -1813,7 +1877,7 @@ html[data-renderer="webgl"] .casefile-visual::before { opacity: 0.2; }
   position: absolute;
   top: 0;
   left: 50%;
-  width: min(100vw, 1600px);
+  width: min(100%, 1600px);
   height: 1px;
   transform: translateX(-50%);
   background: linear-gradient(90deg, transparent, var(--line) 20%, var(--line) 80%, transparent);
@@ -2369,15 +2433,15 @@ html[data-renderer="webgl"] .casefile-visual::before { opacity: 0.2; }
 
 @media (max-width: 1220px) {
   .header-status { display: none; }
-  .header-shell { grid-template-columns: auto 1fr auto; }
-  .primary-nav { justify-content: flex-end; }
+  .header-shell { grid-template-columns: minmax(0, 1fr) auto; }
+  .primary-nav { justify-content: flex-start; }
 }
 
 @media (max-width: 1020px) {
   :root { --header-h: 70px; }
 
   .header-shell {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     min-height: var(--header-h);
   }
 
@@ -2489,9 +2553,6 @@ html[data-renderer="webgl"] .casefile-visual::before { opacity: 0.2; }
     max-width: 100%;
   }
 
-  .brand-mark { width: 42px; height: 42px; }
-  .brand-copy strong { font-size: 0.68rem; }
-
   .primary-nav {
     grid-template-columns: 1fr;
   }
@@ -2575,7 +2636,6 @@ html[data-renderer="webgl"] .casefile-visual::before { opacity: 0.2; }
 
 @media (max-width: 540px) {
   .header-shell { width: calc(100% - 20px); gap: 7px; }
-  .brand-copy { display: none; }
   .header-controls { gap: 5px; }
   .command-button { gap: 0; padding-inline: 7px; }
   .command-button > span { display: none; }

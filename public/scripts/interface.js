@@ -67,7 +67,7 @@
     window.addEventListener('resize', requestScrollUpdate, { passive: true });
     updateScroll();
 
-    // Cursor illumination is subtle and independent from the Braille entity repulsion.
+    // Cursor illumination is subtle and independent from the Watcher repulsion.
     let pointerFrame = 0;
     let pointerX = window.innerWidth / 2;
     let pointerY = window.innerHeight / 3;

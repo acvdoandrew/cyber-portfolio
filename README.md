@@ -1,6 +1,6 @@
 # Andrew Signal Console
 
-A ground-up redesign of Andrew Acevedo Mirena's cyberpunk portfolio. The build keeps the original terminal voice while shifting the visual language toward monochrome bitmap transmission, restrained mauve signal accents, and accessible technical storytelling.
+A ground-up redesign of Andrew's cyberpunk portfolio. The build keeps the original terminal voice while shifting the visual language toward monochrome bitmap transmission, restrained mauve signal accents, and accessible technical storytelling.
 
 ![Signal Console preview](./preview.png)
 

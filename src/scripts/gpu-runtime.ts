@@ -232,19 +232,39 @@ const SOURCE_SHADER = /* glsl */ `
 
   float captureField(vec2 local, float seed) {
     float t = uTime * 0.28 + seed;
-    float radius = length(local / vec2(0.72, 0.86));
-    float orbit = lineMask(abs(radius - 0.72), 0.025);
-    float spine = lineMask(abs(local.x + sin(local.y * 5.0 + t) * 0.05), 0.026);
-    float wings = exp(-pow((abs(local.x) - 0.48 - sin(t) * 0.07) / 0.28, 2.0) * 4.0) *
-      exp(-pow((local.y + abs(local.x) * 0.24) / 0.16, 2.0) * 3.0);
-    float feather = step(0.88, abs(sin(local.x * 31.0 + local.y * 13.0 - t))) * wings;
-    float bloom = exp(-dot(local - vec2(sin(t) * 0.18, cos(t * 0.7) * 0.16),
-      local - vec2(sin(t) * 0.18, cos(t * 0.7) * 0.16)) * 7.0);
-    float tail = lineMask(abs(local.x + sin(local.y * 9.0 + t) * 0.04), 0.018) * step(-0.05, local.y);
-    float filament = lineMask(abs(sin(local.x * 9.0 + local.y * 7.0 + t)), 0.07) * step(radius, 0.9);
     float noise = hash21(floor((local + 1.0) * 45.0) + floor(uTime * 7.0 + seed));
-    return clamp(orbit * step(0.3, noise) + spine * 0.56 + wings * 0.76 + feather * 0.42 +
-      bloom * 0.32 + tail * 0.38 + filament * 0.2 + step(0.88, noise) * 0.32, 0.0, 1.0);
+    if (seed < 5.0) {
+      float eyeRadius = length(local / vec2(0.78, 0.42));
+      float outerEye = lineMask(abs(eyeRadius - 0.74), 0.025);
+      float iris = lineMask(abs(length(local / vec2(0.18, 0.27)) - 1.0), 0.045);
+      float pupil = 1.0 - smoothstep(0.08, 0.15, length(local));
+      float lashes = step(0.9, abs(sin(atan(local.y, local.x) * 13.0 + t))) * step(0.58, eyeRadius) * step(eyeRadius, 0.9);
+      return clamp(outerEye * 0.82 + iris + pupil + lashes * 0.42 + step(0.9, noise) * step(eyeRadius, 0.8) * 0.34, 0.0, 1.0);
+    }
+    if (seed < 9.0) {
+      float tower = step(abs(local.x), 0.24) * step(abs(local.y), 0.82);
+      float taper = step(abs(local.x), 0.1 + (local.y + 1.0) * 0.16) * step(-0.88, local.y) * step(local.y, 0.72);
+      float ribs = step(0.86, abs(sin(local.y * 31.0 + t))) * tower;
+      float antenna = lineMask(sdSegment(local, vec2(0.0, -0.96), vec2(sin(t) * 0.08, -0.56)), 0.022);
+      float sideSignal = lineMask(abs(abs(local.x) - 0.48), 0.018) * step(abs(local.y), 0.46);
+      return clamp(taper * 0.5 + ribs * 0.74 + antenna + sideSignal * step(0.48, noise), 0.0, 1.0);
+    }
+    if (seed < 15.0) {
+      float trunk = lineMask(abs(local.x + sin(local.y * 5.0 + t) * 0.07), 0.025) * step(-0.82, local.y);
+      float branches = lineMask(sdSegment(local, vec2(0.0, -0.25), vec2(-0.68, 0.18)), 0.022);
+      branches += lineMask(sdSegment(local, vec2(0.02, -0.05), vec2(0.72, 0.35)), 0.022);
+      branches += lineMask(sdSegment(local, vec2(-0.02, 0.2), vec2(-0.56, 0.68)), 0.018);
+      branches += lineMask(sdSegment(local, vec2(0.01, 0.3), vec2(0.5, 0.78)), 0.018);
+      float spores = step(0.91, noise) * step(length(local), 0.94);
+      return clamp(trunk * 0.86 + branches * 0.72 + spores * 0.52, 0.0, 1.0);
+    }
+    float radius = length(local / vec2(0.76, 0.7));
+    float rings = lineMask(abs(radius - 0.42), 0.018) + lineMask(abs(radius - 0.76), 0.018);
+    float cross = lineMask(abs(local.x), 0.014) * step(abs(local.y), 0.88) + lineMask(abs(local.y), 0.014) * step(abs(local.x), 0.88);
+    vec2 satelliteCenter = vec2(cos(t) * 0.56, sin(t) * 0.48);
+    float satellite = 1.0 - smoothstep(0.035, 0.075, length(local - satelliteCenter));
+    float ticks = step(0.94, abs(sin(atan(local.y, local.x) * 18.0 - t))) * step(0.66, radius) * step(radius, 0.9);
+    return clamp(rings * step(0.26, noise) + cross * 0.46 + satellite + ticks * 0.62, 0.0, 1.0);
   }
 
   float capturePlate(vec2 uv, vec2 center, vec2 size, float seed) {

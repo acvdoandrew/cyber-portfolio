@@ -1,7 +1,7 @@
 {
-  "name": "Andrew // Signal Console",
-  "short_name": "A/OS",
-  "description": "Systems programmer building distributed systems, AI infrastructure, and security experiments.",
+  "name": "ANDREW_TERMINAL // V2",
+  "short_name": "ANDREW_V2",
+  "description": "Andrew builds systems, breaks them on purpose, and writes down what survived.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050505",

@@ -1,12 +1,12 @@
 <section class="projects section-shell" id="work" data-section="work">
   <header class="section-heading reveal" data-reveal>
     <div>
-      <span class="section-index">01 / DEPLOYMENTS</span>
-      <h2>Things I keep building.</h2>
+      <span class="section-index">01 / WORK</span>
+      <h2>Things I built instead of posting about building.</h2>
     </div>
     <p>
-      A small archive of systems experiments. Some work. Some are still becoming
-      legible. The source is there when it exists.
+      No visionary roadmap. No ten-part launch thread. Just code, benchmarks,
+      unfinished experiments, and source when it is fit for witnesses.
     </p>
   </header>
 
@@ -24,9 +24,9 @@
         <p class="quest-name">Airspace Reasoning &amp; Evaluation Sandbox</p>
       </div>
       <p>
-        A deterministic simulation and AI-evaluation sandbox for reasoning about
-        contested airspace. Rust underneath, Python for evals, TypeScript and MapLibre
-        at the surface. Still taking shape.
+        A deterministic simulation and AI-evaluation sandbox for contested airspace,
+        because apparently that became a normal question to ask on a weekend. Rust
+        underneath, Python for evals, TypeScript and MapLibre where humans can see it.
       </p>
     </div>
     <div class="quest-stack" aria-label="ARES technology stack">
@@ -101,8 +101,8 @@
       <h3>Rust Edge Compute Node</h3>
       <p class="casefile-summary">
         A fault-tolerant control plane for simulated decentralized compute nodes.
-        Workers stream hardware telemetry over gRPC while the orchestrator tracks
-        lifecycle, leases, priorities, and failure recovery.
+        Workers stream telemetry over gRPC; the orchestrator tracks leases, priorities,
+        and failures. If a worker disappears, the system notices without scheduling a retrospective.
       </p>
       <div class="build-notes">
         <span>BUILD_NOTES</span>
@@ -145,8 +145,9 @@
         </div>
         <h3>High-Performance Physics Engine</h3>
         <p class="casefile-summary">
-          A C++17 particle engine built to study simulation loops, memory layout, and
-          optimization tradeoffs through Verlet integration and spatial hashing.
+          A C++17 particle engine for studying simulation loops, memory layout, and
+          optimization tradeoffs. The particles do not care about personal branding,
+          which is refreshing.
         </p>
         <div class="milestone"><span>NEXT_MILESTONE</span><strong>benchmark collision broad-phase</strong></div>
         <div class="casefile-footer">
@@ -175,8 +176,9 @@
         </div>
         <h3>Speculative Inference Proxy</h3>
         <p class="casefile-summary">
-          A design-stage Rust/Python gateway exploring speculative decoding,
-          time-to-first-token benchmarks, and vLLM-compatible model serving.
+          A Rust/Python gateway exploring speculative decoding, TTFT benchmarks, and
+          vLLM-compatible serving. First prove it works, then measure it. The launch
+          announcement remains bravely unscheduled.
         </p>
         <div class="milestone"><span>BUILD_ORDER</span><strong>mock draft/oracle → benchmark → real models</strong></div>
         <div class="casefile-footer">
