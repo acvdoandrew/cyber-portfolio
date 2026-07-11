@@ -258,13 +258,24 @@ const SOURCE_SHADER = /* glsl */ `
       float spores = step(0.91, noise) * step(length(local), 0.94);
       return clamp(trunk * 0.86 + branches * 0.72 + spores * 0.52, 0.0, 1.0);
     }
-    float radius = length(local / vec2(0.76, 0.7));
-    float rings = lineMask(abs(radius - 0.42), 0.018) + lineMask(abs(radius - 0.76), 0.018);
-    float cross = lineMask(abs(local.x), 0.014) * step(abs(local.y), 0.88) + lineMask(abs(local.y), 0.014) * step(abs(local.x), 0.88);
-    vec2 satelliteCenter = vec2(cos(t) * 0.56, sin(t) * 0.48);
-    float satellite = 1.0 - smoothstep(0.035, 0.075, length(local - satelliteCenter));
-    float ticks = step(0.94, abs(sin(atan(local.y, local.x) * 18.0 - t))) * step(0.66, radius) * step(radius, 0.9);
-    return clamp(rings * step(0.26, noise) + cross * 0.46 + satellite + ticks * 0.62, 0.0, 1.0);
+    if (seed < 22.0) {
+      float radius = length(local / vec2(0.76, 0.7));
+      float rings = lineMask(abs(radius - 0.42), 0.018) + lineMask(abs(radius - 0.76), 0.018);
+      float cross = lineMask(abs(local.x), 0.014) * step(abs(local.y), 0.88) + lineMask(abs(local.y), 0.014) * step(abs(local.x), 0.88);
+      vec2 satelliteCenter = vec2(cos(t) * 0.56, sin(t) * 0.48);
+      float satellite = 1.0 - smoothstep(0.035, 0.075, length(local - satelliteCenter));
+      float ticks = step(0.94, abs(sin(atan(local.y, local.x) * 18.0 - t))) * step(0.66, radius) * step(radius, 0.9);
+      return clamp(rings * step(0.26, noise) + cross * 0.46 + satellite + ticks * 0.62, 0.0, 1.0);
+    }
+    float galaxyRadius = length(local / vec2(0.94, 0.58));
+    float galaxyAngle = atan(local.y, local.x);
+    float spiral = lineMask(abs(sin(galaxyAngle * 2.0 - galaxyRadius * 10.0 + t * 0.3)), 0.085);
+    spiral *= step(0.14, galaxyRadius) * step(galaxyRadius, 0.94);
+    float core = exp(-dot(local / vec2(0.2, 0.12), local / vec2(0.2, 0.12)) * 2.2);
+    float starField = step(0.93, noise) * step(galaxyRadius, 1.0);
+    vec2 planetCenter = vec2(cos(t * 0.8) * 0.68, sin(t * 0.8) * 0.4);
+    float planet = 1.0 - smoothstep(0.025, 0.065, length(local - planetCenter));
+    return clamp(spiral * 0.82 + core + starField * 0.56 + planet, 0.0, 1.0);
   }
 
   float capturePlate(vec2 uv, vec2 center, vec2 size, float seed) {
@@ -320,6 +331,7 @@ const SOURCE_SHADER = /* glsl */ `
     capture = max(capture, capturePlate(uv, vec2(0.985, 0.58), vec2(0.13, 0.23), 7.0));
     capture = max(capture, capturePlate(uv, vec2(0.1, 0.23), vec2(0.16, 0.12), 11.0));
     capture = max(capture, capturePlate(uv, vec2(0.88, 0.13), vec2(0.12, 0.09), 19.0));
+    capture = max(capture, capturePlate(uv, vec2(0.72, 0.9), vec2(0.12, 0.075), 23.0));
     color += vec3(0.84, 0.83, 0.81) * capture * 0.42;
     alpha = max(alpha, capture * 0.36);
 
