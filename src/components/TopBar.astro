@@ -1,0 +1,52 @@
+---
+const navItems = [
+  { index: '00', label: 'HOME', href: '#home', section: 'home' },
+  { index: '01', label: 'DEPLOYMENTS', href: '#work', section: 'work' },
+  { index: '02', label: 'SYSTEM_MAP', href: '#stack', section: 'stack' },
+  { index: '03', label: 'OPS_LOG', href: '#log', section: 'log' },
+  { index: '04', label: 'UPLINK', href: '#contact', section: 'contact' },
+];
+---
+<header class="site-header" data-header>
+  <div class="header-shell">
+    <a class="brand" href="#home" aria-label="Andrew home">
+      <span class="brand-mark" aria-hidden="true">A<span>/</span>Ø</span>
+      <span class="brand-copy">
+        <strong>ANDREW_TERMINAL</strong>
+        <small>signal_console // v3.0</small>
+      </span>
+    </a>
+
+    <nav class="primary-nav" id="primary-nav" aria-label="Primary navigation">
+      {navItems.map((item) => (
+        <a href={item.href} data-nav-target={item.section}>
+          <span>{item.index}</span>{item.label}
+        </a>
+      ))}
+    </nav>
+
+    <div class="header-status" aria-label="System status">
+      <span class="status-pip"></span>
+      <span>ENTITY_07 / <strong id="entity-state">DOCKED</strong></span>
+      <time id="local-time">--:--:-- ET</time>
+    </div>
+
+    <div class="header-controls">
+      <button class="hud-button command-button" type="button" data-command-open aria-label="Open command deck">
+        <span>CMD</span><kbd>⌘K</kbd>
+      </button>
+      <button class="hud-button icon-toggle" id="crt-toggle" type="button" aria-pressed="true" aria-label="Toggle CRT texture">
+        <span class="toggle-light" aria-hidden="true"></span>
+        <span data-crt-label>CRT_ON</span>
+      </button>
+      <button class="hud-button icon-toggle" id="entity-toggle" type="button" aria-pressed="true" aria-label="Toggle roaming Braille entity">
+        <span class="toggle-light toggle-light--entity" aria-hidden="true"></span>
+        <span data-entity-label>ENT_ON</span>
+      </button>
+      <button class="mobile-menu-button" type="button" data-menu-toggle aria-expanded="false" aria-controls="primary-nav">
+        <span class="sr-only">Toggle navigation</span>
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>

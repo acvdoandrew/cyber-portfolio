@@ -1,0 +1,51 @@
+<dialog class="command-deck" id="command-deck" aria-labelledby="command-title">
+  <div class="command-deck__shell">
+    <div class="command-deck__header">
+      <div>
+        <span class="command-glyph" aria-hidden="true">&gt;_</span>
+        <div><strong id="command-title">COMMAND_DECK</strong><small>navigate / connect / configure</small></div>
+      </div>
+      <form method="dialog"><button type="submit" aria-label="Close command deck">ESC</button></form>
+    </div>
+
+    <label class="command-search">
+      <span class="sr-only">Filter commands</span>
+      <span aria-hidden="true">andrew@signal:~$</span>
+      <input id="command-input" type="text" autocomplete="off" spellcheck="false" placeholder="type a command..." aria-describedby="command-selection" />
+      <i aria-hidden="true"></i>
+    </label>
+    <p class="sr-only" id="command-selection" aria-live="polite"></p>
+
+    <div class="command-list" id="command-list" role="group" aria-label="Available commands">
+      <button type="button" data-command="home top intro" data-target="home">
+        <span class="command-key">/home</span><span>Return to operator intro</span><kbd>00</kbd>
+      </button>
+      <button type="button" data-command="deployments projects work source" data-target="work">
+        <span class="command-key">/deployments</span><span>Inspect shipped and active builds</span><kbd>01</kbd>
+      </button>
+      <button type="button" data-command="stack skills modules system map" data-target="stack">
+        <span class="command-key">/system-map</span><span>Read capability modules</span><kbd>02</kbd>
+      </button>
+      <button type="button" data-command="log principles philosophy ops" data-target="log">
+        <span class="command-key">/ops-log</span><span>Read operating principles</span><kbd>03</kbd>
+      </button>
+      <button type="button" data-command="contact email uplink message" data-target="contact">
+        <span class="command-key">/uplink</span><span>Open contact channels</span><kbd>04</kbd>
+      </button>
+      <button type="button" data-command="github code repositories source" data-href="https://github.com/acvdoandrew">
+        <span class="command-key">/github</span><span>Open public source node</span><kbd>↗</kbd>
+      </button>
+      <button type="button" data-command="crt effects texture toggle" data-action="crt">
+        <span class="command-key">/toggle-crt</span><span>Toggle display texture</span><kbd>FX</kbd>
+      </button>
+      <button type="button" data-command="entity face braille watcher toggle" data-action="entity">
+        <span class="command-key">/toggle-entity</span><span>Toggle uploaded entity</span><kbd>07</kbd>
+      </button>
+      <button type="button" data-command="release recall entity sandbox roam pet" data-action="release">
+        <span class="command-key">/release-entity</span><span>Open or reseal the sandbox</span><kbd>Y/N</kbd>
+      </button>
+    </div>
+    <p class="command-empty" id="command-empty" hidden>NO_MATCH // try “projects”, “contact”, or “entity”</p>
+    <div class="command-deck__footer"><span>↑↓ SELECT</span><span>ENTER EXECUTE</span><span>ESC CLOSE</span></div>
+  </div>
+</dialog>

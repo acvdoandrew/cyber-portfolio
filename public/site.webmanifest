@@ -1,0 +1,12 @@
+{
+  "name": "Andrew // Signal Console",
+  "short_name": "A/OS",
+  "description": "Systems programmer building distributed systems, AI infrastructure, and security experiments.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

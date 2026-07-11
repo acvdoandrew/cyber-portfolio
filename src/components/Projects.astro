@@ -1,386 +1,189 @@
----
-// --- PROJECT DATA ---
-const projects = [
-    {
-        title: "Rust Edge Compute Node",
-        mainLang: "Rust",
-        status: "online",
-        statusDisplay: "SHIPPED_MVP",
-        statusTone: "complete",
-        description: "A Rust/Tokio control plane for simulated decentralized compute nodes. Streams telemetry over gRPC, tracks node lifecycle, and models GPU worker orchestration with a pluggable hardware abstraction layer.",
-        tags: ["Rust", "Tokio", "Tonic", "gRPC", "Distributed Systems", "Telemetry"],
-        liveUrl: null,
-        repoUrl: "https://github.com/acvdoandrew/rust-edge-compute"
-    },
-    {
-        title: "High-Performance Physics Engine",
-        mainLang: "C++",
-        status: "online",
-        statusDisplay: "NEEDS_BENCHMARKS",
-        statusTone: "caution",
-        description: "A C++17 particle simulation engine using Verlet integration and spatial hashing for broad-phase collision detection. Built as a systems/performance lab for understanding simulation loops, memory, and optimization tradeoffs.",
-        tags: ["C++17", "CMake", "Simulation", "Spatial Hashing", "SFML"],
-        liveUrl: null,
-        repoUrl: "https://github.com/acvdoandrew/high-performance-physics-engine"
-    },
-    {
-        title: "Speculative Inference Proxy",
-        mainLang: "Rust",
-        status: "compiling",
-        statusDisplay: "COMPILING",
-        statusTone: "glitch",
-        description: "Design-stage Rust/Python inference gateway exploring speculative decoding, TTFT benchmarking, and vLLM-compatible serving. Currently compiling the monster; MVP starts with mock draft/oracle backends before touching real models.",
-        tags: ["Rust", "Python", "vLLM", "Inference", "WIP"],
-        liveUrl: null,
-        repoUrl: "https://github.com/acvdoandrew/speculative-inference-proxy"
-    }
-];
+<section class="projects section-shell" id="work" data-section="work">
+  <header class="section-heading reveal" data-reveal>
+    <div>
+      <span class="section-index">01 / DEPLOYMENTS</span>
+      <h2>Things I keep building.</h2>
+    </div>
+    <p>
+      A small archive of systems experiments. Some work. Some are still becoming
+      legible. The source is there when it exists.
+    </p>
+  </header>
 
-// Helper function to determine tag color based on language and technology type
-function getLangColor(lang) {
-    const lowerLang = lang.toLowerCase();
+  <article class="quest-banner reveal" data-reveal>
+    <div class="quest-signal" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="quest-meta">
+      <span class="case-index">CURRENT_QUEST // OBJ_00</span>
+      <div class="status-chip status-chip--pink"><i></i>DESIGNING</div>
+    </div>
+    <div class="quest-copy">
+      <div>
+        <h3>ARES</h3>
+        <p class="quest-name">Airspace Reasoning &amp; Evaluation Sandbox</p>
+      </div>
+      <p>
+        A deterministic simulation and AI-evaluation sandbox for reasoning about
+        contested airspace. Rust underneath, Python for evals, TypeScript and MapLibre
+        at the surface. Still taking shape.
+      </p>
+    </div>
+    <div class="quest-stack" aria-label="ARES technology stack">
+      <span>RUST</span><span>PYTHON</span><span>TYPESCRIPT</span><span>FASTAPI</span><span>MAPLIBRE</span>
+    </div>
+    <div class="quest-state">REPOSITORY // STAGING</div>
+  </article>
 
-    // Map specific technologies to color categories
-    const colorMap = {
-        'rust': '#dea584', 
-        'tonic': '#dea584',
-        'tokio': '#dea584',
-        'distributed systems': '#dea584',
-        'telemetry': '#dea584',
-
-        'c++': 'var(--accent-red-pink)',
-        'c++17': 'var(--accent-red-pink)',
-        'cmake': 'var(--accent-red-pink)',
-        'simulation': 'var(--accent-red-pink)',
-        'spatial hashing': 'var(--accent-red-pink)',
-        'sfml': 'var(--accent-red-pink)',
-
-        'python': 'var(--accent-blue)',
-        'pytorch': 'var(--accent-blue)',
-        'vllm': 'var(--accent-blue)',
-        'inference': 'var(--accent-blue)',
-        'wip': 'var(--accent-blue)',
-        
-        'docker': '#c678dd',
-        'grpc': '#c678dd'
-    };
-
-    // Return the mapped color, or default text color if not found
-    return colorMap[lowerLang] || 'var(--header-text-color)';
-}
----
-
-<section id="projects" class="projects-section">
-    <div class="section-header">
-        <h2 class="section-title">//PROJECTS_MANIFEST</h2>
-        <p class="section-subtitle">//SYSTEM_PORTFOLIO.exe</p>
+  <article class="casefile casefile--flagship reveal" data-reveal data-tilt>
+    <div class="casefile-visual network-visual" aria-hidden="true">
+      <div class="visual-toolbar">
+        <span>EDGE_MESH // LIVE_MODEL</span>
+        <span>HEARTBEAT: 01.0s</span>
+      </div>
+      <svg viewBox="0 0 720 330" role="presentation">
+        <defs>
+          <linearGradient id="mesh-line" x1="0" x2="1">
+            <stop offset="0" stop-color="#d6d1ce" stop-opacity=".15" />
+            <stop offset=".52" stop-color="#a9bec0" stop-opacity=".9" />
+            <stop offset="1" stop-color="#a96d86" stop-opacity=".2" />
+          </linearGradient>
+          <filter id="soft-glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <g class="mesh-grid">
+          <path d="M0 55H720M0 110H720M0 165H720M0 220H720M0 275H720" />
+          <path d="M90 0V330M180 0V330M270 0V330M360 0V330M450 0V330M540 0V330M630 0V330" />
+        </g>
+        <g class="mesh-routes">
+          <path d="M120 92 C250 92 240 165 360 165" />
+          <path d="M120 245 C245 245 252 165 360 165" />
+          <path d="M360 165 C470 165 482 78 605 78" />
+          <path d="M360 165 C468 165 500 252 605 252" />
+        </g>
+        <g class="mesh-packets" filter="url(#soft-glow)">
+          <circle r="4"><animateMotion dur="2.6s" repeatCount="indefinite" path="M120 92 C250 92 240 165 360 165" /></circle>
+          <circle r="4"><animateMotion dur="3.1s" repeatCount="indefinite" path="M120 245 C245 245 252 165 360 165" /></circle>
+          <circle r="4"><animateMotion dur="2.2s" repeatCount="indefinite" path="M360 165 C470 165 482 78 605 78" /></circle>
+          <circle r="4"><animateMotion dur="2.9s" repeatCount="indefinite" path="M360 165 C468 165 500 252 605 252" /></circle>
+        </g>
+        <g class="mesh-node mesh-node--worker" transform="translate(70 56)">
+          <rect width="100" height="72" />
+          <text x="12" y="24">NODE_17</text><text x="12" y="47">GPU / SIM</text>
+          <circle cx="83" cy="18" r="4" />
+        </g>
+        <g class="mesh-node mesh-node--worker" transform="translate(70 209)">
+          <rect width="100" height="72" />
+          <text x="12" y="24">NODE_42</text><text x="12" y="47">GPU / NVML</text>
+          <circle cx="83" cy="18" r="4" />
+        </g>
+        <g class="mesh-node mesh-node--core" transform="translate(296 125)">
+          <rect width="128" height="80" />
+          <text x="16" y="28">ORCHESTRATOR</text><text x="16" y="54">gRPC : 50051</text>
+          <circle cx="108" cy="20" r="5" />
+        </g>
+        <g class="mesh-node" transform="translate(555 42)">
+          <rect width="100" height="72" />
+          <text x="12" y="24">JOB_QUEUE</text><text x="12" y="47">LEASE / TTL</text>
+        </g>
+        <g class="mesh-node" transform="translate(555 216)">
+          <rect width="100" height="72" />
+          <text x="12" y="24">TELEMETRY</text><text x="12" y="47">STREAM / TUI</text>
+        </g>
+      </svg>
+      <div class="visual-statusline"><span>4 CHANNELS ACTIVE</span><span>FAULT_TOLERANCE // ARMED</span></div>
     </div>
 
-    <div class="projects-grid">
-        {projects.map(project => (
-            <article class={`project-card ${project.status !== 'online' ? 'wip-card' : ''}`}>
-                
-                {/* Visual Indicator for Status */}
-                <div class={`project-image-placeholder ${project.status !== 'online' ? 'wip-image' : ''}`}>
-                    <span>{project.title.charAt(0)}</span>
-                    <div class={`status-overlay status-overlay--${project.statusTone}`}>// {project.statusDisplay}</div>
-                </div>
-
-                <div class="project-content">
-                    <header class="project-header">
-                        <div>
-                            <h3 class="project-title">{project.title}</h3>
-                            <p class="project-status">STATUS: {project.statusDisplay}</p>
-                        </div>
-                        <span class="project-lang-tag" style={`background-color: ${getLangColor(project.mainLang)}; color: var(--bg-color);`}>
-                            {project.mainLang}
-                        </span>
-                    </header>
-                    
-                    <p class="project-description">{project.description}</p>
-                    
-                    <footer class="project-footer">
-                        <div class="project-tags">
-                            {project.tags.map(tag => (
-                                <span class="tag" style={`border-color: ${getLangColor(tag)}; color: ${getLangColor(tag)};`}>{tag}</span>
-                            ))}
-                        </div>
-                        
-                        <div class="project-links">
-                            {project.repoUrl ? (
-                                <a href={project.repoUrl} target="_blank" rel="noopener noreferrer" class="project-link repo-link">//SRC</a>
-                            ) : (
-                                <span class="project-link disabled">//AWAITING_SRC</span>
-                            )}
-
-                            {project.status === 'online' && project.liveUrl && (
-                                <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" class="project-link live-link">//LIVE</a>
-                            )}
-                        </div>
-                    </footer>
-                </div>
-            </article>
-        ))}
+    <div class="casefile-copy">
+      <div class="casefile-topline">
+        <span class="case-index">DEPLOYMENT_01 // DISTRIBUTED_COMPUTE</span>
+        <span class="status-chip status-chip--green"><i></i>SHIPPED_MVP</span>
+      </div>
+      <h3>Rust Edge Compute Node</h3>
+      <p class="casefile-summary">
+        A fault-tolerant control plane for simulated decentralized compute nodes.
+        Workers stream hardware telemetry over gRPC while the orchestrator tracks
+        lifecycle, leases, priorities, and failure recovery.
+      </p>
+      <div class="build-notes">
+        <span>BUILD_NOTES</span>
+        <ul>
+          <li>Async actor model with Tokio + Tonic</li>
+          <li>Runtime-selectable telemetry HAL</li>
+          <li>Jittered reconnect and stale-node eviction</li>
+          <li>CI gates: fmt, clippy, tests, smoke run</li>
+        </ul>
+      </div>
+      <div class="casefile-footer">
+        <div class="stack-list"><span>RUST</span><span>TOKIO</span><span>TONIC</span><span>gRPC</span><span>RATATUI</span></div>
+        <a class="text-link" href="https://github.com/acvdoandrew/rust-edge-compute" target="_blank" rel="noopener noreferrer">
+          VIEW_SOURCE <span aria-hidden="true">↗</span>
+        </a>
+      </div>
     </div>
+  </article>
+
+  <div class="casefile-grid">
+    <article class="casefile casefile--compact reveal" data-reveal data-tilt>
+      <div class="casefile-visual particle-visual" aria-hidden="true">
+        <div class="visual-toolbar"><span>PHYSICS_LOOP // FRAME_N</span><span>HASH: 12×08</span></div>
+        <div class="particle-stage">
+          <div class="hash-grid"></div>
+          <i style="--x: 12%; --y: 25%; --dx: 48px; --dy: 36px"></i>
+          <i style="--x: 27%; --y: 66%; --dx: -22px; --dy: -41px"></i>
+          <i style="--x: 43%; --y: 39%; --dx: 34px; --dy: -19px"></i>
+          <i style="--x: 61%; --y: 72%; --dx: -42px; --dy: -31px"></i>
+          <i style="--x: 78%; --y: 31%; --dx: 18px; --dy: 42px"></i>
+          <i style="--x: 88%; --y: 62%; --dx: -36px; --dy: 18px"></i>
+          <span class="vector vector--one"></span><span class="vector vector--two"></span>
+        </div>
+        <div class="visual-statusline"><span>VERLET_INTEGRATION</span><span>BROAD_PHASE // ON</span></div>
+      </div>
+      <div class="casefile-copy">
+        <div class="casefile-topline">
+          <span class="case-index">DEPLOYMENT_02 // SIMULATION</span>
+          <span class="status-chip status-chip--amber"><i></i>NEEDS_BENCHMARKS</span>
+        </div>
+        <h3>High-Performance Physics Engine</h3>
+        <p class="casefile-summary">
+          A C++17 particle engine built to study simulation loops, memory layout, and
+          optimization tradeoffs through Verlet integration and spatial hashing.
+        </p>
+        <div class="milestone"><span>NEXT_MILESTONE</span><strong>benchmark collision broad-phase</strong></div>
+        <div class="casefile-footer">
+          <div class="stack-list"><span>C++17</span><span>CMAKE</span><span>SFML</span></div>
+          <a class="text-link" href="https://github.com/acvdoandrew/high-performance-physics-engine" target="_blank" rel="noopener noreferrer">VIEW_SOURCE <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </article>
+
+    <article class="casefile casefile--compact casefile--wip reveal" data-reveal data-tilt>
+      <div class="casefile-visual token-visual" aria-hidden="true">
+        <div class="visual-toolbar"><span>INFERENCE_PROXY // TRACE</span><span>TTFT: TEST</span></div>
+        <div class="token-stage">
+          <div class="model-node"><span>DRAFT</span><strong>1B</strong></div>
+          <div class="token-stream token-stream--draft"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="model-node model-node--verify"><span>ORACLE</span><strong>70B</strong></div>
+          <div class="token-stream token-stream--verify"><i></i><i></i><i></i><i></i></div>
+          <div class="stream-output"><span>SSE</span><b></b><b></b><b></b></div>
+        </div>
+        <div class="visual-statusline"><span>SPECULATIVE_BATCH: 05</span><span>MOCK_BACKEND // FIRST</span></div>
+      </div>
+      <div class="casefile-copy">
+        <div class="casefile-topline">
+          <span class="case-index">DEPLOYMENT_03 // AI_INFRA</span>
+          <span class="status-chip status-chip--pink"><i></i>COMPILING</span>
+        </div>
+        <h3>Speculative Inference Proxy</h3>
+        <p class="casefile-summary">
+          A design-stage Rust/Python gateway exploring speculative decoding,
+          time-to-first-token benchmarks, and vLLM-compatible model serving.
+        </p>
+        <div class="milestone"><span>BUILD_ORDER</span><strong>mock draft/oracle → benchmark → real models</strong></div>
+        <div class="casefile-footer">
+          <div class="stack-list"><span>RUST</span><span>PYTHON</span><span>AXUM</span><span>vLLM</span></div>
+          <a class="text-link" href="https://github.com/acvdoandrew/speculative-inference-proxy" target="_blank" rel="noopener noreferrer">VIEW_SOURCE <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </article>
+  </div>
 </section>
-
-<style>
-    /* --- KEYFRAMES FOR GLITCH EFFECT --- */
-    @keyframes glitch-base {
-        0%, 100% { transform: translate(0, 0); opacity: 0.7; }
-        2% { transform: translate(0.5px, -0.5px) skewX(-1deg); opacity: 0.65; }
-        4% { transform: translate(-0.5px, 0.5px) skewX(1deg); opacity: 0.7; }
-        6% { transform: translate(0, 0); opacity: 0.7; }
-        48% { transform: translate(0,0); opacity: 0.7;}
-        50% { transform: translate(0.2px, -0.2px); opacity: 0.6;} 
-        52% { transform: translate(-0.2px, 0.2px); opacity: 0.7;}
-        54% { transform: translate(0,0); opacity: 0.7;}
-    }
-
-    /* A faster, sharper glitch for text only */
-    @keyframes text-twitch {
-        0% { text-shadow: 2px 2px var(--accent-red-pink), -2px -2px var(--accent-blue); }
-        95% { text-shadow: 2px 2px var(--accent-red-pink), -2px -2px var(--accent-blue); }
-        96% { text-shadow: -2px 1px var(--accent-red-pink), 1px -1px var(--accent-blue); transform: translate(1px, 0); }
-        97% { text-shadow: 1px -2px var(--accent-red-pink), -1px 2px var(--accent-blue); transform: translate(-1px, 0); }
-        100% { text-shadow: 2px 2px var(--accent-red-pink), -2px -2px var(--accent-blue); }
-    }
-
-    .projects-section {
-        padding: 60px 0;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .section-header {
-        text-align: left;
-        margin-bottom: 40px;
-    }
-
-    .section-title {
-        font-size: 2.5em;
-        color: var(--text-color);
-        text-shadow: 0 0 8px var(--text-color);
-        margin-bottom: 5px;
-    }
-
-    .section-subtitle {
-        font-family: var(--font-primary);
-        color: var(--header-text-color);
-        font-size: 1em;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-    }
-
-    .projects-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-        gap: 30px;
-    }
-
-    /* --- STANDARD CARD --- */
-    .project-card {
-        background-color: rgba(var(--bg-color-rgb), 0.5);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 25px;
-        display: flex;
-        flex-direction: column;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        box-shadow: 0 0 0px 1px rgba(var(--accent-blue-rgb), 0);
-    }
-
-    .project-card:not(.wip-card):hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 25px rgba(var(--accent-blue-rgb), 0.1),
-                    0 0 15px 2px rgba(var(--accent-blue-rgb), 0.4);
-        border-color: var(--accent-blue);
-    }
-
-    /* --- WIP / GLITCH CARD --- */
-    .project-card.wip-card {
-        border-style: dashed;
-        background-color: rgba(0, 0, 0, 0.3);
-        /* Apply your glitch-base animation here. 
-           5s duration ensures it's a "twitch" and not a constant shake */
-        animation: glitch-base 5s infinite; 
-    }
-
-    .project-card.wip-card:hover {
-        border-color: var(--accent-red-pink);
-        cursor: not-allowed;
-    }
-
-    /* --- IMAGES --- */
-    .project-image-placeholder {
-        width: 100%;
-        aspect-ratio: 16 / 9;
-        background-color: rgba(var(--border-color-rgb, 42, 37, 58), 0.5);
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-        border: 2px solid transparent;
-        background-image: linear-gradient(rgba(var(--bg-color-rgb),1), rgba(var(--bg-color-rgb),1)), 
-                          linear-gradient(135deg, var(--accent-red-pink) 0%, var(--accent-blue) 100%);
-        background-origin: border-box;
-        background-clip: content-box, border-box;
-        box-shadow: 0 0 15px rgba(var(--accent-blue-rgb),0.3), 0 0 15px rgba(var(--accent-red-pink-rgb),0.3);
-        position: relative;
-    }
-
-    /* Gray out the WIP images */
-    .project-image-placeholder.wip-image {
-        background-image: none;
-        background-color: #0d0d0d;
-        border-color: #333;
-        box-shadow: none;
-    }
-    
-    .status-overlay {
-        position: absolute;
-        bottom: 10px;
-        right: 10px;
-        font-family: monospace;
-        color: var(--header-text-color);
-        font-size: 0.8em;
-        background: rgba(0,0,0,0.9);
-        padding: 4px 8px;
-        border-radius: 4px;
-        border: 1px solid var(--border-color);
-    }
-
-    .status-overlay--complete {
-        color: #8fbf9f;
-        border-color: rgba(143, 191, 159, 0.75);
-        box-shadow: 0 0 10px rgba(143, 191, 159, 0.18);
-        text-shadow: 0 0 7px rgba(143, 191, 159, 0.55);
-    }
-
-    .status-overlay--caution {
-        color: var(--muted-yellow);
-        border-color: rgba(160, 144, 128, 0.75);
-        box-shadow: 0 0 10px rgba(160, 144, 128, 0.16);
-        text-shadow: 0 0 7px rgba(160, 144, 128, 0.5);
-    }
-
-    .status-overlay--glitch {
-        animation: text-twitch 4s infinite reverse; 
-    }
-
-    .project-image-placeholder span {
-        font-size: 3em;
-        color: var(--accent-blue);
-        font-weight: bold;
-        opacity: 0.7;
-    }
-
-    .wip-image span {
-        color: #333; /* Darker letter for WIP */
-    }
-
-    .project-content {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .project-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 15px;
-    }
-
-    .project-title {
-        font-size: 1.4em;
-        color: var(--text-color);
-        margin: 0 0 4px;
-        text-shadow: 0 0 5px var(--text-color);
-        margin-right: 10px;
-    }
-
-    .project-status {
-        color: var(--muted-yellow);
-        font-size: 0.85em;
-        letter-spacing: 0.08em;
-        margin: 0;
-        text-transform: uppercase;
-    }
-
-    .project-lang-tag {
-        font-size: 0.75em;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-weight: bold;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-
-    .project-description {
-        font-size: 0.95em;
-        color: var(--header-text-color);
-        line-height: 1.6;
-        margin-bottom: 20px;
-        flex-grow: 1;
-    }
-
-    .project-footer {
-        margin-top: auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    
-    .project-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .project-tags .tag {
-        font-size: 0.8em;
-        padding: 4px 10px;
-        border: 1px solid;
-        border-radius: 15px;
-        opacity: 0.8;
-        transition: opacity 0.2s ease, background-color 0.2s ease;
-    }
-    .project-tags .tag:hover {
-        opacity: 1;
-    }
-
-    .project-links {
-        display: flex;
-        gap: 15px;
-    }
-    
-    .project-link {
-        font-size: 0.9em;
-        color: var(--accent-blue);
-        text-transform: uppercase;
-        font-weight: bold;
-    }
-    .project-link:hover {
-        color: var(--accent-red-pink);
-    }
-
-    /* Disabled Link Style for WIPs */
-    .project-link.disabled {
-        color: var(--header-text-color);
-        opacity: 0.3;
-        cursor: not-allowed;
-    }
-
-    @media (max-width: 480px) {
-        .projects-grid {
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        .project-card {
-            padding: 20px;
-        }
-    }
-</style>

@@ -1,0 +1,81 @@
+---
+const modules = [
+  {
+    id: '01',
+    title: 'SYSTEMS_PROGRAMMING',
+    state: 'SHIPPING',
+    tone: 'green',
+    verb: 'Build the control plane. Trace the failure. Own the loop.',
+    skills: ['Rust', 'C++', 'Linux', 'Bash', 'Tokio'],
+  },
+  {
+    id: '02',
+    title: 'AI_INFRA',
+    state: 'INSTALLING',
+    tone: 'pink',
+    verb: 'Measure serving behavior before claiming the speedup.',
+    skills: ['Python', 'PyTorch', 'vLLM', 'FastAPI', 'Eval Harnesses'],
+  },
+  {
+    id: '03',
+    title: 'DISTRIBUTED_INFRA',
+    state: 'FIELD_TESTED',
+    tone: 'cyan',
+    verb: 'Orchestrate workers, leases, telemetry, and recovery.',
+    skills: ['Docker', 'gRPC', 'Tonic', 'GitHub Actions'],
+  },
+  {
+    id: '04',
+    title: 'SECURITY_LABS',
+    state: 'ACTIVE_LAB',
+    tone: 'amber',
+    verb: 'Model the threat. Break the assumption. Record the evidence.',
+    skills: ['Hack The Box', 'Web Security', 'Prompt Injection', 'Threat Modeling'],
+  },
+  {
+    id: '05',
+    title: 'PRODUCT_SURFACE',
+    state: 'BUILDING',
+    tone: 'violet',
+    verb: 'Give complicated systems a precise operator surface.',
+    skills: ['TypeScript', 'React', 'MapLibre', 'Dashboards'],
+  },
+];
+---
+<section class="capabilities section-shell" id="stack" data-section="stack">
+  <header class="section-heading reveal" data-reveal>
+    <div>
+      <span class="section-index">02 / SYSTEM_MAP</span>
+      <h2>Systems I return to.</h2>
+    </div>
+    <p>
+      Not a score and not a claim of mastery. Just the tools and problem spaces that
+      keep showing up in the work.
+    </p>
+  </header>
+
+  <div class="system-map reveal" data-reveal>
+    <div class="system-bus" aria-hidden="true">
+      <span>INPUT</span><i></i><strong>ANDREW_KERNEL</strong><i></i><span>OUTPUT</span>
+    </div>
+    <div class="module-list">
+      {modules.map((module) => (
+        <article class="module-row">
+          <div class="module-number">MOD_{module.id}</div>
+          <div class="module-name">
+            <h3>{module.title}</h3>
+            <p>{module.verb}</p>
+          </div>
+          <div class="module-skills">
+            {module.skills.map((skill) => <span>{skill}</span>)}
+          </div>
+          <div class={`module-state module-state--${module.tone}`}><i></i>{module.state}</div>
+        </article>
+      ))}
+    </div>
+    <div class="system-map-footer">
+      <span>PACKETS_ACCEPTED: CURIOUS_PROBLEMS</span>
+      <span>OUTPUT_MODE: BUILD / BENCHMARK / BREAK / EXPLAIN</span>
+    </div>
+  </div>
+</section>
