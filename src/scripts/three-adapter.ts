@@ -8,6 +8,7 @@ export {
   Scene,
   ShaderMaterial,
   SRGBColorSpace,
+  TextureLoader,
   UnsignedByteType,
   Vector2,
   Vector4,

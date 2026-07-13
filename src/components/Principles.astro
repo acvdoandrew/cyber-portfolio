@@ -1,28 +1,30 @@
 ---
+import SectionSpecimen from './SectionSpecimen.astro';
+
 const principles = [
   {
     code: 'P.01',
     title: 'MAKE IT STRANGE.',
     accent: 'KEEP IT TRUE.',
-    note: 'The surface can be strange. The claims underneath should stay exact.',
+    note: 'Make the interface distinct. Keep every claim exact.',
   },
   {
     code: 'P.02',
     title: 'BENCHMARK BEFORE',
     accent: 'BRAGGING.',
-    note: 'Without a measurement, the performance claim is just a mood board.',
+    note: 'Measure first. Then describe the result.',
   },
   {
     code: 'P.03',
     title: 'FOLLOW THE',
     accent: 'FAILURE.',
-    note: 'The broken path usually explains the system better than the happy one.',
+    note: 'Failures expose the real system.',
   },
   {
     code: 'P.04',
     title: 'LEAVE THE',
     accent: 'SOURCE OPEN.',
-    note: 'Work should be inspectable, unfinished states included.',
+    note: 'Useful work should be inspectable.',
   },
 ];
 ---
@@ -30,10 +32,11 @@ const principles = [
   <header class="section-heading reveal" data-reveal>
     <div>
       <span class="section-index">03 / OPERATING_PRINCIPLES</span>
-      <h2>Notes, not thought leadership.</h2>
+      <h2>How I work.</h2>
     </div>
+    <SectionSpecimen kind="orbit" />
     <p>
-      Four rules learned the slow way. Zero carousel posts required.
+      The rules I use when systems get complicated.
     </p>
   </header>
 

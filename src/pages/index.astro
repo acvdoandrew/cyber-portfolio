@@ -8,14 +8,16 @@ import Principles from '../components/Principles.astro';
 import Contact from '../components/Contact.astro';
 import CommandDeck from '../components/CommandDeck.astro';
 import Footer from '../components/Footer.astro';
+import SessionLogin from '../components/SessionLogin.astro';
 ---
 <BaseLayout
-  title="ANDREW_TERMINAL // V2"
-  description="Andrew builds systems, breaks them on purpose, and writes down what survived. Rust, distributed compute, AI infrastructure, security labs, and strange machines."
+  title="ANDREW_TERMINAL // vOS"
+  description="Andrew is a systems programmer and AI enthusiast building in Rust, distributed compute, simulation, security, and AI infrastructure."
 >
+  <SessionLogin />
   <div class="site-shell" id="top">
     <TopBar />
-    <main id="main-content">
+    <main id="main-content" tabindex="-1">
       <Hero />
       <Projects />
       <Capabilities />

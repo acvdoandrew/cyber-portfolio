@@ -1,11 +1,19 @@
+---
+import SectionSpecimen from './SectionSpecimen.astro';
+---
 <section class="contact section-shell" id="contact" data-section="contact">
   <div class="contact-panel reveal" data-reveal>
     <div class="contact-copy">
-      <span class="section-index">04 / CONTACT</span>
-      <h2>You can just<br /><em>email me.</em></h2>
+      <div class="contact-heading-row">
+        <div>
+          <span class="section-index">04 / CONTACT</span>
+          <h2>Email me.</h2>
+        </div>
+        <SectionSpecimen kind="relay" />
+      </div>
       <p>
-        No funnel. No synergy ritual. If you are building something technical,
-        strange, or difficult to explain in a stand-up, send a message. Plain text is ideal.
+        Working on infrastructure, security, or an odd technical problem?
+        Tell me what you are building and where it is stuck.
       </p>
       <div class="availability-line"><i></i><span>RECEIVING // REAL_PROBLEMS / PLAIN_TEXT</span></div>
     </div>
@@ -16,8 +24,8 @@
         <div aria-hidden="true"><i></i><i></i><i></i></div>
       </div>
       <div class="terminal-body">
-        <p class="terminal-line"><span class="prompt">andrew@signal:~$</span> ./connect --available</p>
-        <p class="terminal-output">Scanning public channels... <strong>3 FOUND // NO NETWORKING EVENT REQUIRED</strong></p>
+        <p class="terminal-line"><span class="prompt"><span data-session-user>guest</span>@signal:~$</span> ./connect --available</p>
+        <p class="terminal-output">Scanning public channels... <strong>3 FOUND</strong></p>
 
         <a class="contact-command" href="mailto:acvdoandrew@gmail.com">
           <span><small>01 // EMAIL</small><strong>acvdoandrew@gmail.com</strong></span>
@@ -37,10 +45,10 @@
             <span data-copy-label>COPY_EMAIL</span><span aria-hidden="true">[ ]</span>
           </button>
           <button class="copy-button" type="button" data-command-open>
-            OPEN_COMMAND_DECK<span aria-hidden="true">⌘K</span>
+            OPEN_COMMAND_DECK<span aria-hidden="true" data-command-shortcut>CTRL K</span>
           </button>
         </div>
-        <p class="terminal-cursor" aria-hidden="true"><span class="prompt">andrew@signal:~$</span> <i></i></p>
+        <p class="terminal-cursor" aria-hidden="true"><span class="prompt"><span data-session-user>guest</span>@signal:~$</span> <i></i></p>
         <p class="sr-only" id="copy-status" aria-live="polite"></p>
       </div>
     </div>

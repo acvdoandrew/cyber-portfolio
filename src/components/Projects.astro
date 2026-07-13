@@ -1,12 +1,15 @@
+---
+import SectionSpecimen from './SectionSpecimen.astro';
+---
 <section class="projects section-shell" id="work" data-section="work">
   <header class="section-heading reveal" data-reveal>
     <div>
       <span class="section-index">01 / WORK</span>
-      <h2>Things I built instead of posting about building.</h2>
+      <h2>Built, broken, still running.</h2>
     </div>
+    <SectionSpecimen kind="black-hole" />
     <p>
-      No visionary roadmap. No ten-part launch thread. Just code, benchmarks,
-      unfinished experiments, and source when it is fit for witnesses.
+      The source is there. So are the rough edges.
     </p>
   </header>
 
@@ -24,9 +27,8 @@
         <p class="quest-name">Airspace Reasoning &amp; Evaluation Sandbox</p>
       </div>
       <p>
-        A deterministic simulation and AI-evaluation sandbox for contested airspace,
-        because apparently that became a normal question to ask on a weekend. Rust
-        underneath, Python for evals, TypeScript and MapLibre where humans can see it.
+        A deterministic sandbox for simulating contested airspace and evaluating AI agents.
+        Rust simulation core, Python evals, and a TypeScript/MapLibre interface.
       </p>
     </div>
     <div class="quest-stack" aria-label="ARES technology stack">
@@ -35,7 +37,7 @@
     <div class="quest-state">REPOSITORY // STAGING</div>
   </article>
 
-  <article class="casefile casefile--flagship reveal" data-reveal data-tilt>
+  <article class="casefile casefile--flagship signal-bay reveal" data-reveal data-tilt data-visual-bay data-case="01">
     <div class="casefile-visual network-visual" aria-hidden="true">
       <div class="visual-toolbar">
         <span>EDGE_MESH // LIVE_MODEL</span>
@@ -100,9 +102,8 @@
       </div>
       <h3>Rust Edge Compute Node</h3>
       <p class="casefile-summary">
-        A fault-tolerant control plane for simulated decentralized compute nodes.
-        Workers stream telemetry over gRPC; the orchestrator tracks leases, priorities,
-        and failures. If a worker disappears, the system notices without scheduling a retrospective.
+        A fault-tolerant control plane for distributed compute. Workers stream telemetry
+        over gRPC while the orchestrator manages leases, priorities, and recovery.
       </p>
       <div class="build-notes">
         <span>BUILD_NOTES</span>
@@ -123,7 +124,7 @@
   </article>
 
   <div class="casefile-grid">
-    <article class="casefile casefile--compact reveal" data-reveal data-tilt>
+    <article class="casefile casefile--compact signal-bay reveal" data-reveal data-tilt data-visual-bay data-case="02">
       <div class="casefile-visual particle-visual" aria-hidden="true">
         <div class="visual-toolbar"><span>PHYSICS_LOOP // FRAME_N</span><span>HASH: 12×08</span></div>
         <div class="particle-stage">
@@ -145,9 +146,8 @@
         </div>
         <h3>High-Performance Physics Engine</h3>
         <p class="casefile-summary">
-          A C++17 particle engine for studying simulation loops, memory layout, and
-          optimization tradeoffs. The particles do not care about personal branding,
-          which is refreshing.
+          A C++17 particle engine for studying simulation loops, memory layout,
+          and broad-phase collision performance.
         </p>
         <div class="milestone"><span>NEXT_MILESTONE</span><strong>benchmark collision broad-phase</strong></div>
         <div class="casefile-footer">
@@ -157,7 +157,7 @@
       </div>
     </article>
 
-    <article class="casefile casefile--compact casefile--wip reveal" data-reveal data-tilt>
+    <article class="casefile casefile--compact casefile--wip signal-bay reveal" data-reveal data-tilt data-visual-bay data-case="03">
       <div class="casefile-visual token-visual" aria-hidden="true">
         <div class="visual-toolbar"><span>INFERENCE_PROXY // TRACE</span><span>TTFT: TEST</span></div>
         <div class="token-stage">
@@ -176,9 +176,8 @@
         </div>
         <h3>Speculative Inference Proxy</h3>
         <p class="casefile-summary">
-          A Rust/Python gateway exploring speculative decoding, TTFT benchmarks, and
-          vLLM-compatible serving. First prove it works, then measure it. The launch
-          announcement remains bravely unscheduled.
+          A Rust/Python gateway for speculative decoding, TTFT benchmarking, and
+          vLLM-compatible serving. Mock backends first; real models after the metrics hold up.
         </p>
         <div class="milestone"><span>BUILD_ORDER</span><strong>mock draft/oracle → benchmark → real models</strong></div>
         <div class="casefile-footer">

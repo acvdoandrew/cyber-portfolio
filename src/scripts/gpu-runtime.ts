@@ -3,6 +3,7 @@ import type {
   PlaneGeometry,
   Scene,
   ShaderMaterial,
+  Texture,
   Vector2,
   Vector4,
   WebGLRenderTarget,
@@ -36,8 +37,12 @@ interface SharedVisualState {
 declare global {
   interface Window {
     __ANDREW_VISUAL_STATE__?: SharedVisualState;
+    __ANDREW_GPU_DISPOSE__?: () => void;
   }
 }
+
+window.__ANDREW_GPU_DISPOSE__?.();
+delete window.__ANDREW_GPU_DISPOSE__;
 
 const VERTEX_SHADER = /* glsl */ `
   varying vec2 vUv;
@@ -56,10 +61,14 @@ const SOURCE_SHADER = /* glsl */ `
   uniform vec4 uEntity;
   uniform vec2 uEntitySize;
   uniform vec4 uEntityMeta;
+  uniform vec4 uCaptures[5];
+  uniform float uCaptureSeeds[5];
   uniform vec4 uPortals[3];
   uniform float uPortalCount;
   uniform float uGlitch;
   uniform float uReleasePulse;
+  uniform sampler2D uWatcherTexture;
+  uniform float uWatcherReady;
 
   float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -110,6 +119,8 @@ const SOURCE_SHADER = /* glsl */ `
     if (uEntityMeta.x < 0.5) return vec4(0.0);
     vec2 size = max(uEntitySize, vec2(0.02));
     vec2 p = (uv - uEntity.xy) / (size * 0.5);
+    p.x += sin(p.y * 13.0 + uTime * 1.65) * 0.012;
+    p.x += sin(p.y * 41.0 - uTime * 0.82) * 0.005;
 
     vec2 pointerDelta = uv - uPointer;
     float pointerDistance = length(pointerDelta * vec2(uResolution.x / uResolution.y, 1.0));
@@ -119,6 +130,51 @@ const SOURCE_SHADER = /* glsl */ `
     float disruption = clamp(uEntityMeta.z + uEntityMeta.w + uReleasePulse, 0.0, 1.0);
     float rowNoise = hash21(vec2(floor((p.y + 1.0) * 30.0), floor(uTime * 17.0)));
     p.x += (rowNoise - 0.5) * disruption * 0.32;
+
+    if (uWatcherReady > 0.5) {
+      float portraitRow = floor((p.y + 1.0) * 96.0);
+      float rowTear = hash21(vec2(portraitRow, floor(uTime * 13.0)));
+      vec2 faceUv = vec2(p.x * 0.5 + 0.5, p.y * 0.5 + 0.5);
+      faceUv.x += sin(p.y * 11.0 + uTime * 1.2) * 0.0028;
+      faceUv.x += (rowTear - 0.5) * disruption * 0.085;
+      vec3 portraitSample = texture2D(uWatcherTexture, clamp(faceUv, vec2(0.001), vec2(0.999))).rgb;
+      float portrait = dot(portraitSample, vec3(0.299, 0.587, 0.114));
+      portrait = pow(max(0.0, portrait), 0.82);
+
+      float portraitBounds = step(abs(p.x), 1.0) * step(abs(p.y), 1.0);
+      float portraitThreshold = 0.025 + bayer4(gl_FragCoord.xy) * 0.12;
+      float material = smoothstep(portraitThreshold, portraitThreshold + 0.075, portrait) * portraitBounds;
+      float scanline = mix(0.08, 1.0, step(0.28, fract(gl_FragCoord.y * 0.5 + uTime * 0.045)));
+      float fineSignal = 0.88 + sin(p.y * 170.0 - uTime * 2.0) * 0.12;
+      float damagedRow = step(0.955, hash21(vec2(portraitRow, floor(uTime * 6.0))));
+      material *= scanline * fineSignal * (1.0 - damagedRow * 0.82);
+
+      // The portrait has deliberately neutral eyes; this live signal is the gaze.
+      // Keep the core precise, then let a larger low-frequency aura make it feel
+      // luminous instead of pasted on top of the face.
+      vec2 gaze = vec2(uEntity.z * 0.018, uEntity.w * 0.01);
+      vec2 leftEye = (p - vec2(-0.185, 0.13) - gaze) * vec2(0.72, 1.65);
+      vec2 rightEye = (p - vec2(0.215, 0.13) - gaze) * vec2(0.72, 1.65);
+      float leftCore = 1.0 - smoothstep(0.009, 0.038, length(leftEye));
+      float rightCore = 1.0 - smoothstep(0.009, 0.038, length(rightEye));
+      float leftAura = 1.0 - smoothstep(0.026, 0.094, length(leftEye));
+      float rightAura = 1.0 - smoothstep(0.026, 0.094, length(rightEye));
+      float gazeCore = max(leftCore, rightCore) * portraitBounds;
+      float gazeAura = max(leftAura, rightAura) * portraitBounds;
+      float portraitSupport = smoothstep(0.035, 0.28, portrait);
+      gazeAura *= mix(0.55, 1.0, portraitSupport);
+      float signalPulse = 0.94 + sin(uTime * 1.7) * 0.06;
+
+      vec3 bone = vec3(0.9, 0.88, 0.84);
+      vec3 frost = vec3(0.73, 0.79, 0.78);
+      vec3 mauve = vec3(0.66, 0.43, 0.55);
+      vec3 color = mix(bone, frost, smoothstep(0.28, 0.88, portrait));
+      color = mix(color, mauve, disruption * 0.42);
+      vec3 gazeColor = mix(frost, bone, 0.68);
+      color = color * material + gazeColor * (gazeAura * 0.36 + gazeCore * 1.18) * signalPulse;
+      float alpha = max(material * (0.48 + portrait * 0.52), max(gazeAura * 0.58, gazeCore * 0.98));
+      return vec4(color, alpha);
+    }
 
     float blinkClock = mod(uTime + 0.31, 4.9);
     float blink = blinkClock > 4.52 && blinkClock < 4.72
@@ -221,6 +277,13 @@ const SOURCE_SHADER = /* glsl */ `
     irisMask *= 1.0 - scanGap * 0.3;
     scleraMask *= signalHold;
 
+    float phosphorRow = mix(0.16, 1.0, step(0.42, fract(gl_FragCoord.y * 0.5 + uTime * 0.18)));
+    float fluidGain = 0.92 + sin(p.y * 126.0 - uTime * 2.1) * 0.08;
+    bodyMask *= phosphorRow * fluidGain;
+    eyeMask *= phosphorRow;
+    irisMask *= mix(0.58, 1.0, phosphorRow);
+    scleraMask *= phosphorRow;
+
     vec3 bone = vec3(0.9, 0.88, 0.84);
     vec3 frost = vec3(0.73, 0.79, 0.78);
     vec3 signal = mix(bone, vec3(0.7, 0.48, 0.58), disruption * 0.62);
@@ -234,12 +297,15 @@ const SOURCE_SHADER = /* glsl */ `
     float t = uTime * 0.28 + seed;
     float noise = hash21(floor((local + 1.0) * 45.0) + floor(uTime * 7.0 + seed));
     if (seed < 5.0) {
-      float eyeRadius = length(local / vec2(0.78, 0.42));
-      float outerEye = lineMask(abs(eyeRadius - 0.74), 0.025);
-      float iris = lineMask(abs(length(local / vec2(0.18, 0.27)) - 1.0), 0.045);
-      float pupil = 1.0 - smoothstep(0.08, 0.15, length(local));
-      float lashes = step(0.9, abs(sin(atan(local.y, local.x) * 13.0 + t))) * step(0.58, eyeRadius) * step(eyeRadius, 0.9);
-      return clamp(outerEye * 0.82 + iris + pupil + lashes * 0.42 + step(0.9, noise) * step(eyeRadius, 0.8) * 0.34, 0.0, 1.0);
+      float discRadius = length(local / vec2(0.9, 0.3));
+      float outerDisc = lineMask(abs(discRadius - 0.78), 0.026);
+      float innerDisc = lineMask(abs(discRadius - 0.5), 0.02);
+      float horizonRadius = length(local / vec2(0.19, 0.27));
+      float horizon = lineMask(abs(horizonRadius - 1.0), 0.055);
+      float accretion = lineMask(abs(local.y + sin(local.x * 7.0 + t) * 0.025), 0.022) * step(abs(local.x), 0.82);
+      float lensing = lineMask(abs(length(local / vec2(0.48, 0.68)) - 1.0), 0.018) * step(0.24, noise);
+      float starNoise = step(0.94, noise) * step(1.14, horizonRadius) * step(discRadius, 1.0);
+      return clamp(outerDisc * 0.82 + innerDisc * 0.48 + horizon + accretion * 0.72 + lensing * 0.55 + starNoise * 0.34, 0.0, 1.0);
     }
     if (seed < 9.0) {
       float tower = step(abs(local.x), 0.24) * step(abs(local.y), 0.82);
@@ -278,18 +344,29 @@ const SOURCE_SHADER = /* glsl */ `
     return clamp(spiral * 0.82 + core + starField * 0.56 + planet, 0.0, 1.0);
   }
 
-  float capturePlate(vec2 uv, vec2 center, vec2 size, float seed) {
-    vec2 p = (uv - center) / size;
+  vec2 capturePlate(vec2 uv, vec2 center, vec2 size, float seed) {
+    vec2 p = (uv - center) / max(size, vec2(0.0001));
+    if (abs(p.x) > 1.04 || abs(p.y) > 1.04) return vec2(0.0);
+    float entityNear = uEntityMeta.y * (1.0 - smoothstep(
+      0.035,
+      0.2,
+      length((center - uEntity.xy) * vec2(uResolution.x / uResolution.y, 1.0))
+    ));
+    vec2 entityLocal = (uEntity.xy - center) / size;
+    float wakeRadius = fract(uTime * 0.52 + seed * 0.037) * 1.42;
+    float wake = lineMask(abs(length(p - entityLocal) - wakeRadius), 0.024) * entityNear;
+    p.x += sin(p.y * 24.0 - uTime * 4.2) * entityNear * 0.045;
     float inside = step(abs(p.x), 1.0) * step(abs(p.y), 1.0);
     float tearRow = step(abs(p.y - sin(seed * 2.3) * 0.38), 0.07) * uGlitch;
     p.x += tearRow * (0.18 + hash21(vec2(seed, floor(uTime * 17.0))) * 0.22);
     float field = captureField(p, seed);
-    float threshold = 0.18 + bayer4(gl_FragCoord.xy) * 0.64;
+    float threshold = 0.18 + bayer4(gl_FragCoord.xy) * 0.64 - entityNear * 0.12;
     float sideCorners = lineMask(abs(abs(p.x) - 0.94), 0.012) * step(0.69, abs(p.y));
     float topCorners = lineMask(abs(abs(p.y) - 0.94), 0.012) * step(0.69, abs(p.x));
     float frame = clamp(sideCorners + topCorners, 0.0, 1.0);
     float scanBreak = step(0.91, sin((p.y + uTime * 0.08) * 74.0)) * step(0.72, hash21(floor(p * 40.0) + seed));
-    return inside * max(step(threshold, field), max(frame * 0.85, scanBreak * 0.35));
+    float mask = inside * max(step(threshold, field), max(frame * 0.85, max(scanBreak * 0.35, wake * 0.8)));
+    return vec2(mask, mask * entityNear);
   }
 
   float portalPattern(vec2 p, int index) {
@@ -326,14 +403,19 @@ const SOURCE_SHADER = /* glsl */ `
     vec3 color = vec3(0.0);
     float alpha = 0.0;
 
-    float capture = 0.0;
-    capture = max(capture, capturePlate(uv, vec2(0.015, 0.79), vec2(0.15, 0.13), 3.0));
-    capture = max(capture, capturePlate(uv, vec2(0.985, 0.58), vec2(0.13, 0.23), 7.0));
-    capture = max(capture, capturePlate(uv, vec2(0.1, 0.23), vec2(0.16, 0.12), 11.0));
-    capture = max(capture, capturePlate(uv, vec2(0.88, 0.13), vec2(0.12, 0.09), 19.0));
-    capture = max(capture, capturePlate(uv, vec2(0.72, 0.9), vec2(0.12, 0.075), 23.0));
-    color += vec3(0.84, 0.83, 0.81) * capture * 0.42;
-    alpha = max(alpha, capture * 0.36);
+    vec2 captureSignal = vec2(0.0);
+    for (int i = 0; i < 5; i++) {
+      vec4 captureRect = uCaptures[i];
+      if (captureRect.z <= 0.0 || captureRect.w <= 0.0) continue;
+      captureSignal = max(
+        captureSignal,
+        capturePlate(uv, captureRect.xy, captureRect.zw, uCaptureSeeds[i])
+      );
+    }
+    color += vec3(0.84, 0.83, 0.81) * captureSignal.x * 0.42;
+    color += vec3(0.66, 0.43, 0.55) * captureSignal.y * 0.62;
+    alpha = max(alpha, captureSignal.x * 0.36);
+    alpha = max(alpha, captureSignal.y * 0.68);
 
     for (int i = 0; i < 3; i++) {
       if (float(i) >= uPortalCount) continue;
@@ -413,6 +495,7 @@ const COMPOSITE_SHADER = /* glsl */ `
   uniform float uTime;
   uniform float uCrt;
   uniform float uQuality;
+  uniform float uLightTheme;
 
   float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -437,6 +520,12 @@ const COMPOSITE_SHADER = /* glsl */ `
     float grain = (hash21(gl_FragCoord.xy + floor(uTime * 12.0)) - 0.5) * 0.025 * uCrt;
     combined.rgb = max(vec3(0.0), combined.rgb * scan + grain * combined.a);
     combined.rgb *= smoothstep(0.003, 0.025, combined.a);
+    float warmSignal = smoothstep(0.015, 0.16, combined.r - combined.g);
+    vec3 graphiteInk = vec3(0.12, 0.105, 0.12);
+    vec3 frostInk = vec3(0.27, 0.39, 0.41);
+    vec3 mauveInk = vec3(0.52, 0.31, 0.41);
+    vec3 lightInk = mix(mix(graphiteInk, frostInk, 0.38), mauveInk, warmSignal);
+    combined.rgb = mix(combined.rgb, lightInk, uLightTheme * step(0.002, combined.a));
     gl_FragColor = combined;
   }
 `;
@@ -445,22 +534,35 @@ const root = document.documentElement;
 const canvas = document.getElementById('gpu-stage') as HTMLCanvasElement | null;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
-const forcedCanvas = new URLSearchParams(location.search).get('renderer') === 'canvas';
+const query = new URLSearchParams(location.search);
+const forcedCanvas = query.get('renderer') === 'canvas';
+const qualityOverride = query.get('quality');
+const coarsePointer = matchMedia('(pointer: coarse)');
+const specimenCaptures = [
+  { kind: 'black-hole', seed: 3 },
+  { kind: 'relay', seed: 7 },
+  { kind: 'graph', seed: 11 },
+  { kind: 'orbit', seed: 19 },
+  { kind: 'galaxy', seed: 23 },
+] as const;
 
 let restoreAttempts = 0;
+let lastRestoreAt = 0;
 let runtime: GpuRuntime | null = null;
 let threeModule: typeof import('./three-adapter') | null = null;
 
 function chooseQuality(): QualityTier {
   if (reducedMotion.matches || saveData) return 'static';
-  if (innerWidth < 800 || (navigator.hardwareConcurrency || 8) <= 4) return 'low';
+  if (qualityOverride === 'high' || qualityOverride === 'low' || qualityOverride === 'static') return qualityOverride;
+  if (coarsePointer.matches || innerWidth < 900 || (navigator.hardwareConcurrency || 8) <= 4) return 'low';
   return 'high';
 }
 
-function setRendererMode(mode: 'webgl' | 'canvas', quality = chooseQuality()) {
+function setRendererMode(mode: 'webgl' | 'canvas', quality = chooseQuality(), reason = 'ready') {
   root.dataset.renderer = mode;
   root.dataset.fxQuality = quality;
-  window.dispatchEvent(new CustomEvent('andrew:renderer-change', { detail: { mode, quality } }));
+  root.dataset.fxReason = reason;
+  window.dispatchEvent(new CustomEvent('andrew:renderer-change', { detail: { mode, quality, reason } }));
 }
 
 class GpuRuntime {
@@ -477,17 +579,23 @@ class GpuRuntime {
   private sourceTarget: WebGLRenderTarget;
   private feedbackRead: WebGLRenderTarget;
   private feedbackWrite: WebGLRenderTarget;
+  private watcherTexture: Texture | null = null;
   private quality: QualityTier;
   private viewport = { width: 1, height: 1, dpr: 1 };
   private elapsed = 0;
   private lastTime = 0;
   private lastRenderedAt = 0;
-  private renderSamples = 0;
-  private renderCost = 0;
   private cadenceStartedAt = 0;
   private cadenceFrames = 0;
-  private slowLowWindows = 0;
+  private slowActiveWindows = 0;
+  private stableLowWindows = 0;
+  private lastQualityChangeAt = performance.now();
+  private wasIdle = false;
+  private lastInteractionAt = performance.now();
+  private resizeTimer = 0;
   private portalDirty = true;
+  private specimenDirty = true;
+  private staticRenderRequest = 0;
   private releasePulse = 0;
   private previousReleased = false;
   private previousEnabled = true;
@@ -497,14 +605,42 @@ class GpuRuntime {
   private stopped = true;
   private disposed = false;
   private portalElements: HTMLElement[];
-  private onScroll = () => { this.portalDirty = true; };
-  private onResize = () => { this.resize(); };
+  private specimenElements: Array<HTMLElement | null>;
+  private onScroll = () => {
+    this.portalDirty = true;
+    this.specimenDirty = true;
+    this.lastInteractionAt = performance.now();
+    this.requestStaticRender();
+  };
+  private onResize = () => {
+    window.clearTimeout(this.resizeTimer);
+    this.resizeTimer = window.setTimeout(() => {
+      const recommended = chooseQuality();
+      if (recommended !== this.quality && (recommended === 'static' || (recommended === 'low' && this.quality === 'high'))) {
+        this.setQuality(recommended, 'viewport-capability');
+      } else {
+        this.resize();
+      }
+      this.requestStaticRender();
+    }, 180);
+  };
   private onVisibility = () => { document.hidden ? this.stop() : this.start(); };
+  private onPageHide = () => { this.stop(); };
+  private onPageShow = () => { if (!document.hidden) this.start(); };
   private onEntityState = () => {
+    this.clearFeedback();
     if (this.quality === 'static') this.renderFrame(0);
+  };
+  private onSpecimenState = () => {
+    this.specimenDirty = true;
+    this.requestStaticRender();
   };
   private onMotionChange = () => {
     this.setQuality(chooseQuality());
+    this.start();
+  };
+  private onSessionOpen = () => {
+    this.setQuality(chooseQuality(), 'session-open');
     this.start();
   };
   private themeObserver: MutationObserver;
@@ -513,6 +649,10 @@ class GpuRuntime {
     this.THREE = THREE;
     this.quality = chooseQuality();
     this.portalElements = [...document.querySelectorAll<HTMLElement>('.casefile-visual')].slice(0, 3);
+    this.specimenElements = specimenCaptures.map(({ kind }) => {
+      const specimen = document.querySelector<HTMLElement>(`[data-specimen="${kind}"]`);
+      return specimen?.querySelector<HTMLElement>('[data-specimen-visual], .section-specimen__visual') || specimen;
+    });
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: stage,
@@ -522,13 +662,14 @@ class GpuRuntime {
       depth: false,
       stencil: false,
       premultipliedAlpha: false,
-      powerPreference: 'high-performance',
+      powerPreference: this.quality === 'high' ? 'high-performance' : 'default',
     });
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     this.geometry = new THREE.PlaneGeometry(2, 2);
 
+    const captures = specimenCaptures.map(() => new THREE.Vector4(-2, -2, 0, 0));
     const portals = [new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4()];
     this.sourceMaterial = new THREE.ShaderMaterial({
       vertexShader: VERTEX_SHADER,
@@ -544,10 +685,14 @@ class GpuRuntime {
         uEntity: { value: new THREE.Vector4(0.72, 0.5, 0, 0) },
         uEntitySize: { value: new THREE.Vector2(0.28, 0.3) },
         uEntityMeta: { value: new THREE.Vector4(1, 0, 0, 0) },
+        uCaptures: { value: captures },
+        uCaptureSeeds: { value: specimenCaptures.map(({ seed }) => seed) },
         uPortals: { value: portals },
         uPortalCount: { value: 0 },
         uGlitch: { value: 0 },
         uReleasePulse: { value: 0 },
+        uWatcherTexture: { value: null },
+        uWatcherReady: { value: 0 },
       },
     });
 
@@ -583,6 +728,7 @@ class GpuRuntime {
         uTime: { value: 0 },
         uCrt: { value: 1 },
         uQuality: { value: 1 },
+        uLightTheme: { value: 0 },
       },
     });
 
@@ -597,7 +743,8 @@ class GpuRuntime {
     this.feedbackRead = this.makeTarget(1, 1);
     this.feedbackWrite = this.makeTarget(1, 1);
     this.themeObserver = new MutationObserver(() => {
-      if (this.quality === 'static') this.renderFrame(0);
+      this.clearFeedback();
+      this.requestStaticRender();
     });
   }
 
@@ -613,6 +760,14 @@ class GpuRuntime {
   }
 
   async initialise() {
+    try {
+      this.watcherTexture = await new this.THREE.TextureLoader().loadAsync('/assets/watcher-face-v3.webp');
+      this.watcherTexture.colorSpace = this.THREE.SRGBColorSpace;
+      this.sourceMaterial.uniforms.uWatcherTexture.value = this.watcherTexture;
+      this.sourceMaterial.uniforms.uWatcherReady.value = 1;
+    } catch (error) {
+      console.warn('[visual-runtime] Watcher portrait unavailable; using procedural fallback.', error);
+    }
     this.resize();
     const compile = this.renderer.compileAsync?.bind(this.renderer);
     if (compile) {
@@ -628,27 +783,45 @@ class GpuRuntime {
     }
     this.clearFeedback();
     this.renderFrame(0);
-    setRendererMode('webgl', this.quality);
+    setRendererMode('webgl', this.quality, this.quality === 'static' ? 'intro' : 'ready');
     addEventListener('scroll', this.onScroll, { passive: true });
     addEventListener('resize', this.onResize, { passive: true });
     document.addEventListener('visibilitychange', this.onVisibility);
+    addEventListener('pagehide', this.onPageHide);
+    addEventListener('pageshow', this.onPageShow);
     addEventListener('andrew:entity-state', this.onEntityState);
+    addEventListener('andrew:specimen-change', this.onSpecimenState);
+    addEventListener('andrew:session-open', this.onSessionOpen);
     reducedMotion.addEventListener?.('change', this.onMotionChange);
-    this.themeObserver.observe(root, { attributes: true, attributeFilter: ['data-crt'] });
+    this.themeObserver.observe(root, { attributes: true, attributeFilter: ['data-crt', 'data-theme-resolved'] });
     this.start();
   }
 
   private resize() {
     if (this.disposed) return;
-    this.quality = chooseQuality();
-    const dpr = this.quality === 'high' ? Math.min(devicePixelRatio || 1, 1.5) : 1;
-    this.viewport = { width: Math.max(1, innerWidth), height: Math.max(1, innerHeight), dpr };
+    const nextWidth = Math.max(1, innerWidth);
+    const nextHeight = Math.max(1, innerHeight);
+    const baseDpr = this.quality === 'high' ? Math.min(devicePixelRatio || 1, 1.5) : 1;
+    const pixelBudgetDpr = Math.sqrt(2_000_000 / Math.max(1, nextWidth * nextHeight));
+    const dpr = Math.min(baseDpr, pixelBudgetDpr);
+    if (coarsePointer.matches && this.viewport.width === nextWidth && Math.abs(this.viewport.height - nextHeight) < 180) {
+      this.viewport.height = nextHeight;
+      this.portalDirty = true;
+      this.specimenDirty = true;
+      return;
+    }
+    this.viewport = { width: nextWidth, height: nextHeight, dpr };
+    const renderScale = this.quality === 'high' ? 1 : this.quality === 'low' ? (coarsePointer.matches ? 0.62 : 0.75) : 0.55;
     this.renderer.setPixelRatio(dpr);
-    this.renderer.setSize(this.viewport.width, this.viewport.height, false);
+    this.renderer.setSize(
+      Math.max(1, Math.round(this.viewport.width * renderScale)),
+      Math.max(1, Math.round(this.viewport.height * renderScale)),
+      false,
+    );
     const drawingSize = new this.THREE.Vector2();
     this.renderer.getDrawingBufferSize(drawingSize);
     this.sourceTarget.setSize(Math.max(1, drawingSize.x), Math.max(1, drawingSize.y));
-    const feedbackScale = this.quality === 'low' ? 0.35 : 0.5;
+    const feedbackScale = this.quality === 'high' ? 0.5 : this.quality === 'low' ? 0.3 : 0.2;
     const feedbackWidth = Math.max(1, Math.round(drawingSize.x * feedbackScale));
     const feedbackHeight = Math.max(1, Math.round(drawingSize.y * feedbackScale));
     this.feedbackRead.setSize(feedbackWidth, feedbackHeight);
@@ -660,13 +833,18 @@ class GpuRuntime {
     this.compositeMaterial.uniforms.uQuality.value = this.quality === 'high' ? 1 : 0;
     root.dataset.fxQuality = this.quality;
     this.portalDirty = true;
+    this.specimenDirty = true;
     this.clearFeedback();
   }
 
-  private setQuality(quality: QualityTier) {
+  private setQuality(quality: QualityTier, reason = 'adaptive') {
     if (quality === this.quality) return;
     this.quality = quality;
+    this.lastQualityChangeAt = performance.now();
+    this.slowActiveWindows = 0;
+    this.stableLowWindows = 0;
     this.resize();
+    setRendererMode('webgl', this.quality, reason);
   }
 
   private clearFeedback() {
@@ -678,6 +856,39 @@ class GpuRuntime {
     this.renderer.setRenderTarget(this.feedbackWrite);
     this.renderer.clear();
     this.renderer.setRenderTarget(previous);
+  }
+
+  private requestStaticRender() {
+    if (this.quality !== 'static' || this.disposed || this.staticRenderRequest) return;
+    this.staticRenderRequest = requestAnimationFrame(() => {
+      this.staticRenderRequest = 0;
+      if (this.quality === 'static' && !this.disposed && !document.hidden) this.renderFrame(0);
+    });
+  }
+
+  private updateSpecimens() {
+    if (!this.specimenDirty) return;
+    this.specimenDirty = false;
+    const captures = this.sourceMaterial.uniforms.uCaptures.value as Vector4[];
+    this.specimenElements.forEach((element, index) => {
+      if (!element?.isConnected) {
+        captures[index].set(-2, -2, 0, 0);
+        return;
+      }
+      const rect = element.getBoundingClientRect();
+      const visible = rect.bottom > 0 && rect.top < this.viewport.height && rect.right > 0 &&
+        rect.left < this.viewport.width && rect.width > 0 && rect.height > 0;
+      if (!visible) {
+        captures[index].set(-2, -2, 0, 0);
+        return;
+      }
+      captures[index].set(
+        (rect.left + rect.width * 0.5) / this.viewport.width,
+        1 - (rect.top + rect.height * 0.5) / this.viewport.height,
+        rect.width * 0.5 / this.viewport.width,
+        rect.height * 0.5 / this.viewport.height,
+      );
+    });
   }
 
   private updatePortals() {
@@ -722,7 +933,7 @@ class GpuRuntime {
         this.glitch = 0;
         this.clearFeedback();
       }
-      const containedScale = entity.released ? 1 : 1.16;
+      const containedScale = 1;
       (this.sourceMaterial.uniforms.uEntity.value as Vector4).set(
         entity.x / this.viewport.width,
         1 - entity.y / this.viewport.height,
@@ -761,12 +972,13 @@ class GpuRuntime {
     this.feedbackMaterial.uniforms.uReleasePulse.value = this.releasePulse;
     const crt = root.dataset.crt === 'off' ? 0 : 1;
     this.compositeMaterial.uniforms.uCrt.value = crt;
+    this.compositeMaterial.uniforms.uLightTheme.value = root.dataset.themeResolved === 'light' ? 1 : 0;
+    this.updateSpecimens();
     this.updatePortals();
   }
 
   private renderFrame(delta: number) {
     if (this.disposed) return;
-    const startedAt = performance.now();
     this.updateUniforms(delta);
 
     this.renderer.setRenderTarget(this.sourceTarget);
@@ -787,23 +999,23 @@ class GpuRuntime {
     this.renderer.setRenderTarget(null);
     this.renderer.clear();
     this.renderer.render(this.compositeScene, this.camera);
-
-    if (this.quality === 'high') {
-      this.renderSamples += 1;
-      this.renderCost += performance.now() - startedAt;
-      if (this.renderSamples >= 120) {
-        const average = this.renderCost / this.renderSamples;
-        this.renderSamples = 0;
-        this.renderCost = 0;
-        if (average > 12) this.setQuality('low');
-      }
-    }
   }
 
   private tick = (time: number) => {
     if (this.stopped || this.disposed || document.hidden) return;
-    const interval = this.quality === 'low' ? 1000 / 30 : 1000 / 60;
-    if (this.lastRenderedAt && time - this.lastRenderedAt < interval) return;
+    const pointerLastAt = window.__ANDREW_VISUAL_STATE__?.pointer?.lastAt || 0;
+    const idle = time - Math.max(this.lastInteractionAt, pointerLastAt) > 12000;
+    const activeRate = this.quality === 'low' ? (coarsePointer.matches ? 20 : 24) : 60;
+    const requestedRate = idle ? (this.quality === 'low' ? 10 : 20) : activeRate;
+    if (idle !== this.wasIdle) {
+      this.wasIdle = idle;
+      this.cadenceStartedAt = time;
+      this.cadenceFrames = 0;
+      this.slowActiveWindows = 0;
+      this.stableLowWindows = 0;
+    }
+    const interval = 1000 / requestedRate;
+    if (this.lastRenderedAt && time - this.lastRenderedAt < interval - 0.5) return;
     const delta = this.lastTime ? (time - this.lastTime) / 1000 : 1 / 60;
     this.lastTime = time;
     this.lastRenderedAt = time;
@@ -816,24 +1028,28 @@ class GpuRuntime {
       const fps = this.cadenceFrames / (cadenceWindow / 1000);
       this.cadenceStartedAt = time;
       this.cadenceFrames = 0;
-      if (this.quality === 'high' && fps < 45) {
-        this.setQuality('low');
-      } else if (this.quality === 'low' && fps < 22) {
-        this.slowLowWindows += 1;
-        if (this.slowLowWindows >= 2) {
-          this.stop();
-          setTimeout(() => {
-            if (runtime !== this) return;
-            this.dispose();
-            runtime = null;
-            setRendererMode('canvas');
-          }, 0);
+      if (!idle && time - this.lastQualityChangeAt > 8000) {
+        if (this.quality === 'high') {
+          this.slowActiveWindows = fps < requestedRate * 0.72 ? this.slowActiveWindows + 1 : 0;
+          if (this.slowActiveWindows >= 2) this.setQuality('low', 'adaptive-low');
+        } else if (this.quality === 'low' && chooseQuality() === 'high') {
+          this.stableLowWindows = fps >= requestedRate * 0.9 ? this.stableLowWindows + 1 : 0;
+          if (this.stableLowWindows >= 6 && time - this.lastQualityChangeAt > 30000) {
+            this.setQuality('high', 'adaptive-retry');
+          }
         }
-      } else {
-        this.slowLowWindows = 0;
       }
     }
   };
+
+  recoverContext() {
+    if (this.disposed) return;
+    this.resize();
+    this.clearFeedback();
+    this.renderFrame(0);
+    setRendererMode('webgl', this.quality, 'context-restored');
+    this.start();
+  }
 
   start() {
     if (this.disposed) return;
@@ -842,6 +1058,7 @@ class GpuRuntime {
     this.lastRenderedAt = 0;
     this.cadenceStartedAt = 0;
     this.cadenceFrames = 0;
+    this.wasIdle = false;
     if (this.quality === 'static') {
       this.renderer.setAnimationLoop(null);
       this.renderFrame(0);
@@ -862,12 +1079,19 @@ class GpuRuntime {
     removeEventListener('scroll', this.onScroll);
     removeEventListener('resize', this.onResize);
     document.removeEventListener('visibilitychange', this.onVisibility);
+    removeEventListener('pagehide', this.onPageHide);
+    removeEventListener('pageshow', this.onPageShow);
     removeEventListener('andrew:entity-state', this.onEntityState);
+    removeEventListener('andrew:specimen-change', this.onSpecimenState);
+    removeEventListener('andrew:session-open', this.onSessionOpen);
     reducedMotion.removeEventListener?.('change', this.onMotionChange);
+    window.clearTimeout(this.resizeTimer);
+    cancelAnimationFrame(this.staticRenderRequest);
     this.themeObserver.disconnect();
     this.sourceTarget.dispose();
     this.feedbackRead.dispose();
     this.feedbackWrite.dispose();
+    this.watcherTexture?.dispose();
     this.sourceMaterial.dispose();
     this.feedbackMaterial.dispose();
     this.compositeMaterial.dispose();
@@ -878,7 +1102,7 @@ class GpuRuntime {
 
 async function initialiseGpu() {
   if (!canvas || forcedCanvas) {
-    setRendererMode('canvas');
+    setRendererMode('canvas', chooseQuality(), forcedCanvas ? 'forced-canvas' : 'canvas-missing');
     return;
   }
 
@@ -888,11 +1112,11 @@ async function initialiseGpu() {
     depth: false,
     stencil: false,
     premultipliedAlpha: false,
-    powerPreference: 'high-performance',
+    powerPreference: chooseQuality() === 'high' ? 'high-performance' : 'default',
     failIfMajorPerformanceCaveat: true,
   });
   if (!context) {
-    setRendererMode('canvas');
+    setRendererMode('canvas', chooseQuality(), 'webgl2-unavailable');
     return;
   }
 
@@ -905,22 +1129,60 @@ async function initialiseGpu() {
     console.warn('[visual-runtime] WebGL initialisation failed; using Canvas fallback.', error);
     runtime?.dispose();
     runtime = null;
-    setRendererMode('canvas');
+    setRendererMode('canvas', chooseQuality(), 'init-failed');
   }
 }
 
-canvas?.addEventListener('webglcontextlost', (event) => {
+const onContextLost = (event: Event) => {
   event.preventDefault();
   runtime?.stop();
-  setRendererMode('canvas');
-});
+  setRendererMode('canvas', chooseQuality(), 'context-lost');
+  console.warn('[visual-runtime] WebGL context lost; waiting for browser restoration.');
+};
 
-canvas?.addEventListener('webglcontextrestored', () => {
-  if (restoreAttempts >= 1) return;
+const onContextRestored = () => {
+  const now = performance.now();
+  if (now - lastRestoreAt > 30000) restoreAttempts = 0;
+  if (restoreAttempts >= 2) {
+    setRendererMode('canvas', chooseQuality(), 'restore-limit');
+    return;
+  }
   restoreAttempts += 1;
+  lastRestoreAt = now;
+  window.setTimeout(() => {
+    try {
+      if (runtime) runtime.recoverContext();
+      else void initialiseGpu();
+    } catch (error) {
+      console.warn('[visual-runtime] Context recovery failed; recreating renderer.', error);
+      runtime?.dispose();
+      runtime = null;
+      void initialiseGpu();
+    }
+  }, 0);
+};
+
+canvas?.addEventListener('webglcontextlost', onContextLost);
+canvas?.addEventListener('webglcontextrestored', onContextRestored);
+function startInitialGpu() { void initialiseGpu(); }
+
+const disposeGpuModule = () => {
+  canvas?.removeEventListener('webglcontextlost', onContextLost);
+  canvas?.removeEventListener('webglcontextrestored', onContextRestored);
+  document.removeEventListener('DOMContentLoaded', startInitialGpu);
   runtime?.dispose();
   runtime = null;
-  void initialiseGpu();
+};
+
+window.__ANDREW_GPU_DISPOSE__ = disposeGpuModule;
+import.meta.hot?.dispose(() => {
+  if (window.__ANDREW_GPU_DISPOSE__ !== disposeGpuModule) return;
+  disposeGpuModule();
+  delete window.__ANDREW_GPU_DISPOSE__;
 });
 
-void initialiseGpu();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startInitialGpu, { once: true });
+} else {
+  startInitialGpu();
+}

@@ -1,0 +1,74 @@
+<section
+  class="session-gate"
+  id="session-gate"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="session-title"
+  aria-describedby="session-note"
+>
+  <div class="session-gate__terminal">
+    <div class="session-gate__bar">
+      <span>ANDREW_TERMINAL // vOS</span>
+      <span>GATE_07 // MANUAL_HANDSHAKE</span>
+    </div>
+
+    <div class="session-gate__body">
+      <div class="session-gate__transcript">
+        <p class="session-gate__eyebrow">INBOUND_SIGNAL // <span data-session-user>guest</span></p>
+        <h2 id="session-title">Welcome to<br />my world.</h2>
+        <p class="session-gate__note" id="session-note">
+          Watcher verifies the link. You decide when the terminal opens.
+        </p>
+
+        <div class="session-gate__boot" aria-hidden="true">
+          <span data-boot-line>CHANNEL <b>GUEST // INBOUND</b></span>
+          <span data-boot-line>WATCHER_07 <b id="session-guard-state">CONTAINED</b></span>
+          <span data-boot-line>CLEARANCE <b>AWAITING INPUT</b></span>
+        </div>
+
+        <p class="session-gate__command" aria-hidden="true">
+          <span>guest@vos:~$</span> request --entry<i></i>
+        </p>
+      </div>
+
+      <aside class="session-gate__containment" aria-label="Watcher 07 live containment monitor">
+        <div class="session-gate__field-bar">
+          <span>CONTAINMENT_FIELD // 07</span>
+          <span><i></i>LIVE_PROCESS</span>
+        </div>
+
+        <div class="session-gate__entity-dock" data-session-entity-dock aria-hidden="true">
+          <span class="session-gate__grid"></span>
+          <span class="session-gate__reticle"><i></i></span>
+          <span class="session-gate__orbit session-gate__orbit--outer"></span>
+          <span class="session-gate__orbit session-gate__orbit--inner"></span>
+          <span class="session-gate__corner session-gate__corner--tl"></span>
+          <span class="session-gate__corner session-gate__corner--tr"></span>
+          <span class="session-gate__corner session-gate__corner--bl"></span>
+          <span class="session-gate__corner session-gate__corner--br"></span>
+          <span class="session-gate__coordinate session-gate__coordinate--x">X.042 // LOCAL</span>
+          <span class="session-gate__coordinate session-gate__coordinate--y">Y.117</span>
+          <span class="session-gate__dock-label">WATCHER_07<br /><strong>CONTAINED</strong></span>
+        </div>
+
+        <div class="session-gate__readout">
+          <div><span>FORM</span><strong>WATCHER</strong></div>
+          <div><span>STATE</span><strong>SEALED</strong></div>
+          <div><span>AUTH</span><strong>MANUAL</strong></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="session-gate__footer">
+      <p class="session-gate__status" id="session-status" role="status" aria-live="polite" aria-atomic="true">
+        HANDSHAKE_READY // INPUT_REQUIRED
+      </p>
+
+      <button class="session-gate__enter" id="session-enter" data-session-enter type="button" autofocus>
+        <span class="session-gate__door" aria-hidden="true"><i></i><i></i></span>
+        <span class="session-gate__enter-label" data-session-enter-label>ENTER_TERMINAL</span>
+        <kbd>RETURN</kbd>
+      </button>
+    </div>
+  </div>
+</section>

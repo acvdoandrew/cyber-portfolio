@@ -1,6 +1,6 @@
 {
-  "name": "ANDREW_TERMINAL // V2",
-  "short_name": "ANDREW_V2",
+  "name": "ANDREW_TERMINAL // vOS",
+  "short_name": "ANDREW_vOS",
   "description": "Andrew builds systems, breaks them on purpose, and writes down what survived.",
   "start_url": "/",
   "display": "standalone",

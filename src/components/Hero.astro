@@ -1,30 +1,34 @@
+---
+import SectionSpecimen from './SectionSpecimen.astro';
+---
 <section class="hero section-shell" id="home" data-section="home">
   <div class="hero-grid">
     <div class="hero-copy">
       <div class="eyebrow reveal" data-reveal>
         <span class="eyebrow-index">SYS.00</span>
-        <span>SYSTEMS / BAD IDEAS / CONTROLLED CONDITIONS</span>
+        <span>ANDREW // BOSTON</span>
       </div>
 
+      <SectionSpecimen kind="galaxy" />
+
       <h1 class="reveal" data-reveal>
-        I keep following<br />
-        the signal<br />
-        <em>down.</em>
+        Andrew.<br />
+        Programmer.<br />
+        <em>AI enthusiast.</em>
       </h1>
 
       <p class="hero-lede reveal" data-reveal>
-        Andrew. I build systems, break them on purpose, and occasionally write down
-        why. Mostly Rust, distributed compute, model infrastructure, security labs,
-        and projects that would be easier to explain if I enjoyed elevator pitches.
+        Rust, C++, Python. Distributed systems, AI infrastructure, simulation, and security.
+        Usually building something that should not work yet.
       </p>
 
       <div class="hero-actions reveal" data-reveal>
         <a class="button button--primary" href="#work">
-          <span>SEE_WHAT_BROKE</span>
+          <span>VIEW_WORK</span>
           <span aria-hidden="true">↘</span>
         </a>
         <a class="button button--ghost" href="#contact">
-          <span>SEND_A_SIGNAL</span>
+          <span>EMAIL_ME</span>
           <span aria-hidden="true">→</span>
         </a>
       </div>
@@ -32,7 +36,7 @@
       <div class="hero-brief reveal" data-reveal aria-label="Operator summary">
         <div>
           <span class="brief-key">ROLE</span>
-          <strong>systems_programmer</strong>
+          <strong>systems / ai</strong>
         </div>
         <div>
           <span class="brief-key">BASE</span>
@@ -40,12 +44,12 @@
         </div>
         <div>
           <span class="brief-key">STATUS</span>
-          <strong class="status-open"><span></span>open_to_weird_work</strong>
+          <strong class="status-open"><span></span>building_something_strange</strong>
         </div>
       </div>
     </div>
 
-    <div class="entity-console reveal" data-reveal>
+    <div class="entity-console signal-bay reveal" data-reveal data-visual-bay>
       <div class="console-topline">
         <span>RECEIVED_ENTITY // 07</span>
         <span class="console-status"><i></i><span id="containment-state">SANDBOX_SEALED</span></span>
@@ -88,13 +92,13 @@
           <strong>OBSERVING</strong>
         </div>
       </div>
-      <p class="console-hint">// IT HAS BEEN TESTING THE WALLS · RELEASE IS OPTIONAL</p>
+      <p class="console-hint">// OBSERVER PROCESS // INTERACTION OPTIONAL</p>
     </div>
   </div>
 
   <div class="proof-rail reveal" data-reveal>
     <div class="rail-label">
-      <span>NO_THOUGHT_LEADERSHIP_RUNNING</span>
+      <span>PUBLIC_BUILD_LOG</span>
       <i></i>
     </div>
     <div class="rail-item">
@@ -111,7 +115,7 @@
     </div>
     <button class="rail-command" type="button" data-command-open>
       <span>OPEN_TERMINAL</span>
-      <kbd>CTRL K</kbd>
+      <kbd data-command-shortcut>CTRL K</kbd>
     </button>
   </div>
 </section>
