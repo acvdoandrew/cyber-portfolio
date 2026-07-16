@@ -6,11 +6,11 @@ A ground-up redesign of Andrew's cyberpunk portfolio. The build keeps the origin
 
 ## Run locally
 
-Requires Node.js 22.12 or newer.
+Requires Bun 1.2.23. Deployment tooling is pinned to Node.js 22.x.
 
 ```bash
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 Open `http://localhost:4321`.
@@ -18,8 +18,8 @@ Open `http://localhost:4321`.
 ## Production check
 
 ```bash
-npm run build
-npm run preview
+bun run build
+bun run preview
 ```
 
 ## Interface notes

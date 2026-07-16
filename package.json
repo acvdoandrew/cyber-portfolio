@@ -3,14 +3,14 @@
   "type": "module",
   "version": "3.0.0",
   "private": true,
+  "packageManager": "bun@1.2.23",
   "engines": {
-    "node": ">=22.12.0",
-    "npm": ">=9.6.5"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "astro dev",
     "build": "astro check && astro build",
-    "test": "esbuild tests/entity-runtime.test.ts --bundle --platform=node --format=esm --outfile=.test-dist/entity-runtime.test.mjs && node .test-dist/entity-runtime.test.mjs",
+    "test": "bun test",
     "preview": "astro preview",
     "astro": "astro"
   },
