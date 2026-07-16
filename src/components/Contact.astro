@@ -2,14 +2,14 @@
 import SectionSpecimen from './SectionSpecimen.astro';
 ---
 <section class="contact section-shell" id="contact" data-section="contact">
-  <div class="contact-panel reveal" data-reveal>
+  <div class="contact-panel reveal" data-reveal data-entity-obstacle="contact-panel">
     <div class="contact-copy">
       <div class="contact-heading-row">
         <div>
           <span class="section-index">04 / CONTACT</span>
           <h2>Email me.</h2>
         </div>
-        <SectionSpecimen kind="relay" />
+        <SectionSpecimen kind="relay" entityHost="section:contact" approach="left" />
       </div>
       <p>
         Working on infrastructure, security, or an odd technical problem?

@@ -45,12 +45,12 @@ const modules = [
 ];
 ---
 <section class="capabilities section-shell" id="stack" data-section="stack">
-  <header class="section-heading reveal" data-reveal>
+  <header class="section-heading reveal" data-reveal data-entity-obstacle="stack-heading">
     <div>
       <span class="section-index">02 / SYSTEM_MAP</span>
       <h2>What I use to build.</h2>
     </div>
-    <SectionSpecimen kind="graph" />
+    <SectionSpecimen kind="graph" entityHost="section:stack" approach="either" />
     <p>
       Tools I have shipped, debugged, or measured in real projects.
     </p>
@@ -60,7 +60,7 @@ const modules = [
     <div class="system-bus" aria-hidden="true">
       <span>INPUT</span><i></i><strong>ANDREW_KERNEL</strong><i></i><span>OUTPUT</span>
     </div>
-    <div class="module-list">
+    <div class="module-list" data-entity-obstacle="system-modules">
       {modules.map((module) => (
         <article class="module-row">
           <div class="module-number">MOD_{module.id}</div>

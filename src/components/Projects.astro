@@ -7,21 +7,21 @@ import SectionSpecimen from './SectionSpecimen.astro';
       <span class="section-index">01 / WORK</span>
       <h2>Built, broken, still running.</h2>
     </div>
-    <SectionSpecimen kind="black-hole" />
+    <SectionSpecimen kind="black-hole" entityHost="section:work" approach="either" />
     <p>
       The source is there. So are the rough edges.
     </p>
   </header>
 
-  <article class="quest-banner reveal" data-reveal>
+  <article class="quest-banner reveal" tabindex="0" aria-label="Project: ARES Civilization Agent Sandbox" data-reveal data-entity-project="ares" data-entity-interest>
     <div class="quest-signal" aria-hidden="true">
       <span></span><span></span><span></span>
     </div>
-    <div class="quest-meta">
+    <div class="quest-meta" data-entity-obstacle="ares-meta">
       <span class="case-index">CURRENT_QUEST // OBJ_00</span>
       <div class="status-chip status-chip--green"><i></i>FOUNDATION_GREEN</div>
     </div>
-    <div class="quest-copy">
+    <div class="quest-copy" data-entity-obstacle="ares-copy">
       <div>
         <h3>ARES</h3>
         <p class="quest-name">Civilization Agent Sandbox</p>
@@ -31,14 +31,14 @@ import SectionSpecimen from './SectionSpecimen.astro';
         Current checkpoint: private frontier initial state, deterministic CLI projection, and eight passing tests.
       </p>
     </div>
-    <div class="quest-stack" aria-label="ARES current checkpoint signals">
+    <div class="quest-stack" data-entity-obstacle="ares-stack" aria-label="ARES current checkpoint signals">
       <span>RUST</span><span>CARGO</span><span>8_TESTS</span><span>DETERMINISTIC</span><span>FRONTIER_V0.1</span>
     </div>
-    <div class="quest-state">LOCAL_REPO // VERIFIED_CHECKPOINT</div>
+    <div class="quest-state" data-entity-obstacle="ares-state">LOCAL_REPO // VERIFIED_CHECKPOINT</div>
   </article>
 
-  <article class="casefile casefile--flagship signal-bay reveal" data-reveal data-tilt data-visual-bay data-case="01">
-    <div class="casefile-visual network-visual" aria-hidden="true">
+  <article class="casefile casefile--flagship signal-bay reveal" tabindex="0" aria-label="Project: Rust Edge Compute Node" data-reveal data-tilt data-visual-bay data-case="01" data-entity-project="rust-edge-compute" data-entity-interest>
+    <div class="casefile-visual network-visual" data-entity-host="project:rust-edge-compute" aria-hidden="true">
       <div class="visual-toolbar">
         <span>EDGE_MESH // LIVE_MODEL</span>
         <span>HEARTBEAT: 01.0s</span>
@@ -95,7 +95,7 @@ import SectionSpecimen from './SectionSpecimen.astro';
       <div class="visual-statusline"><span>4 CHANNELS ACTIVE</span><span>FAULT_TOLERANCE // ARMED</span></div>
     </div>
 
-    <div class="casefile-copy">
+    <div class="casefile-copy" data-entity-obstacle="rust-edge-compute-copy">
       <div class="casefile-topline">
         <span class="case-index">DEPLOYMENT_01 // DISTRIBUTED_COMPUTE</span>
         <span class="status-chip status-chip--green"><i></i>SHIPPED_MVP</span>
@@ -124,8 +124,8 @@ import SectionSpecimen from './SectionSpecimen.astro';
   </article>
 
   <div class="casefile-grid">
-    <article class="casefile casefile--compact signal-bay reveal" data-reveal data-tilt data-visual-bay data-case="02">
-      <div class="casefile-visual particle-visual" aria-hidden="true">
+    <article class="casefile casefile--compact signal-bay reveal" tabindex="0" aria-label="Project: High-Performance Physics Engine" data-reveal data-tilt data-visual-bay data-case="02" data-entity-project="physics-engine" data-entity-interest>
+      <div class="casefile-visual particle-visual" data-entity-host="project:physics-engine" aria-hidden="true">
         <div class="visual-toolbar"><span>PHYSICS_LOOP // FRAME_N</span><span>HASH: 12×08</span></div>
         <div class="particle-stage">
           <div class="hash-grid"></div>
@@ -139,7 +139,7 @@ import SectionSpecimen from './SectionSpecimen.astro';
         </div>
         <div class="visual-statusline"><span>VERLET_INTEGRATION</span><span>BROAD_PHASE // ON</span></div>
       </div>
-      <div class="casefile-copy">
+      <div class="casefile-copy" data-entity-obstacle="physics-engine-copy">
         <div class="casefile-topline">
           <span class="case-index">DEPLOYMENT_02 // SIMULATION</span>
           <span class="status-chip status-chip--amber"><i></i>NEEDS_BENCHMARKS</span>
@@ -157,8 +157,8 @@ import SectionSpecimen from './SectionSpecimen.astro';
       </div>
     </article>
 
-    <article class="casefile casefile--compact casefile--wip signal-bay reveal" data-reveal data-tilt data-visual-bay data-case="03">
-      <div class="casefile-visual token-visual" aria-hidden="true">
+    <article class="casefile casefile--compact casefile--wip signal-bay reveal" tabindex="0" aria-label="Project: Speculative Inference Proxy" data-reveal data-tilt data-visual-bay data-case="03" data-entity-project="inference-proxy" data-entity-interest>
+      <div class="casefile-visual token-visual" data-entity-host="project:inference-proxy" aria-hidden="true">
         <div class="visual-toolbar"><span>INFERENCE_PROXY // TRACE</span><span>TTFT: TEST</span></div>
         <div class="token-stage">
           <div class="model-node"><span>DRAFT</span><strong>1B</strong></div>
@@ -169,7 +169,7 @@ import SectionSpecimen from './SectionSpecimen.astro';
         </div>
         <div class="visual-statusline"><span>SPECULATIVE_BATCH: 05</span><span>MOCK_BACKEND // FIRST</span></div>
       </div>
-      <div class="casefile-copy">
+      <div class="casefile-copy" data-entity-obstacle="inference-proxy-copy">
         <div class="casefile-topline">
           <span class="case-index">DEPLOYMENT_03 // AI_INFRA</span>
           <span class="status-chip status-chip--pink"><i></i>COMPILING</span>

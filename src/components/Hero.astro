@@ -4,12 +4,10 @@ import SectionSpecimen from './SectionSpecimen.astro';
 <section class="hero section-shell" id="home" data-section="home">
   <div class="hero-grid">
     <div class="hero-copy">
-      <div class="eyebrow reveal" data-reveal>
+      <div class="eyebrow reveal" data-reveal data-entity-obstacle="hero-eyebrow">
         <span class="eyebrow-index">SYS.00</span>
         <span>ANDREW // BOSTON</span>
       </div>
-
-      <SectionSpecimen kind="galaxy" />
 
       <h1 class="reveal" data-reveal>
         Andrew.<br />
@@ -33,7 +31,7 @@ import SectionSpecimen from './SectionSpecimen.astro';
         </a>
       </div>
 
-      <div class="hero-brief reveal" data-reveal aria-label="Operator summary">
+      <div class="hero-brief reveal" data-reveal data-entity-obstacle="hero-brief" aria-label="Operator summary">
         <div>
           <span class="brief-key">ROLE</span>
           <strong>systems / ai</strong>
@@ -49,39 +47,38 @@ import SectionSpecimen from './SectionSpecimen.astro';
       </div>
     </div>
 
+    <div class="hero-specimen-bay" data-entity-ignore>
+      <SectionSpecimen kind="galaxy" entityHost="section:home" approach="either" />
+    </div>
+
     <div class="entity-console signal-bay reveal" data-reveal data-visual-bay>
-      <div class="console-topline">
-        <span>RECEIVED_ENTITY // 07</span>
-        <span class="console-status"><i></i><span id="containment-state">SANDBOX_SEALED</span></span>
+      <div class="console-topline" data-entity-obstacle="console-status">
+        <span>EMERGENT_PROCESS // 07</span>
+        <span class="console-status"><i></i><span id="entity-autonomy-state" data-entity-spatial-status>SEALED</span></span>
       </div>
 
-      <div class="entity-viewport" id="entity-dock" aria-hidden="true">
-        <span class="corner corner--tl"></span>
-        <span class="corner corner--tr"></span>
-        <span class="corner corner--bl"></span>
-        <span class="corner corner--br"></span>
-        <div class="target-reticle"><span></span></div>
+      <div class="entity-viewport" id="entity-dock" data-entity-anchor="containment" data-entity-ignore aria-hidden="true">
+        <span class="hero-specimen-approach" data-entity-specimen-anchor="section:home"></span>
         <div class="entity-grid"></div>
-        <div class="coordinate coordinate--x">X.042 / FIELD_REACTIVE</div>
-        <div class="coordinate coordinate--y">Y.117</div>
+        <div class="coordinate coordinate--x">BOUNDARY_FIELD / LOCAL_PROCESS</div>
+        <div class="coordinate coordinate--y">SEALED</div>
         <div class="dock-message">
-          <span>OBSERVER_FIELD</span>
-          <strong>INTERFERENCE</strong>
+          <span>CONTAINMENT_STATE</span>
+          <strong id="containment-state" data-entity-spatial-status>SEALED</strong>
         </div>
       </div>
 
-      <div class="containment-controls">
-        <span class="containment-lock"><i></i><span data-containment-label>LOCAL_CONTAINMENT_ACTIVE</span></span>
-        <button id="entity-release" type="button" aria-pressed="false">
-          <span data-release-label>RELEASE_ENTITY</span>
-          <kbd>Y/N</kbd>
+      <div class="entity-autonomy-controls" data-entity-obstacle="entity-controls">
+        <span class="entity-presence-lock"><i></i><span data-containment-label>LOCAL_CONTAINMENT_ACTIVE</span></span>
+        <button class="entity-release" id="entity-release" type="button" aria-pressed="false">
+          <span data-release-label>RELEASE_ENTITY</span><kbd>Y / N</kbd>
         </button>
       </div>
 
-      <div class="console-readout">
+      <div class="console-readout" data-entity-obstacle="entity-readout">
         <div>
           <span>FORM</span>
-          <strong id="entity-form">WATCHER</strong>
+          <strong id="entity-form" data-entity-form-status>GLYPH_INTELLIGENCE</strong>
         </div>
         <div>
           <span>SIGNAL</span>
@@ -89,14 +86,14 @@ import SectionSpecimen from './SectionSpecimen.astro';
         </div>
         <div>
           <span>BEHAVIOR</span>
-          <strong>OBSERVING</strong>
+          <strong id="entity-behavior" data-entity-cognitive-status>DORMANT</strong>
         </div>
       </div>
-      <p class="console-hint">// OBSERVER PROCESS // INTERACTION OPTIONAL</p>
+      <p class="console-hint" data-release-prompt data-entity-obstacle="entity-hint">// Y RELEASE // N RETURN // MEMORY PERSISTS</p>
     </div>
   </div>
 
-  <div class="proof-rail reveal" data-reveal>
+  <div class="proof-rail reveal" data-reveal data-entity-obstacle="proof-rail">
     <div class="rail-label">
       <span>PUBLIC_BUILD_LOG</span>
       <i></i>

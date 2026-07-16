@@ -90,8 +90,11 @@ const schema = {
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <canvas id="signal-field" class="signal-field" aria-hidden="true"></canvas>
     <canvas id="signal-compositor" class="signal-compositor" aria-hidden="true"></canvas>
-    <canvas id="gpu-stage" class="gpu-stage" aria-hidden="true"></canvas>
-    <canvas id="braille-entity" class="braille-entity" aria-hidden="true"></canvas>
+    <div id="entity-runtime-root" class="entity-runtime-root" aria-hidden="true" data-entity-ignore>
+      <canvas id="gpu-stage" class="gpu-stage" aria-hidden="true"></canvas>
+      <canvas id="braille-entity" class="braille-entity" aria-hidden="true"></canvas>
+      <output id="entity-thought" class="entity-thought" aria-hidden="true"></output>
+    </div>
     <div class="ambient-light" aria-hidden="true"></div>
     <canvas id="signal-rain" class="signal-rain" aria-hidden="true"></canvas>
     <div class="crt-layer" aria-hidden="true"></div>
@@ -100,9 +103,9 @@ const schema = {
     <slot />
     <script is:inline src="/scripts/compositor.js"></script>
     <script is:inline src="/scripts/interface.js"></script>
-    <script is:inline src="/scripts/entity.js"></script>
     <script>
       import '../scripts/gpu-runtime';
+      import '../scripts/entity/canvas-renderer';
     </script>
   </body>
 </html>

@@ -52,7 +52,7 @@
       label.textContent = commandShortcut;
     });
 
-    // Manual gatehouse. The visitor opens the terminal; the Watcher never
+    // Manual gatehouse. The visitor opens the terminal; the entity never
     // grants admission on a timer.
     const sessionGate = document.getElementById('session-gate');
     const sessionEnter = document.getElementById('session-enter');
@@ -79,8 +79,8 @@
       sessionOpened = true;
       const name = setSessionName(requestedName);
       root.dataset.sessionPhase = 'granted';
-      if (sessionStatus) sessionStatus.textContent = 'ENTRY_GRANTED // WATCHER_SEALED';
-      if (sessionGuardState) sessionGuardState.textContent = 'CONTAINMENT_VERIFIED';
+      if (sessionStatus) sessionStatus.textContent = 'ENTRY_GRANTED // PROCESS_CONTINUES';
+      if (sessionGuardState) sessionGuardState.textContent = 'AUTONOMY_VERIFIED';
       root.dataset.session = 'opening';
       window.setTimeout(() => {
         if (sessionStatus) sessionStatus.textContent = `SESSION_OPEN // ${name}@vos`;
@@ -101,16 +101,24 @@
       root.dataset.session = 'admitting';
       root.dataset.sessionPhase = 'admitting';
       if (sessionStatus) sessionStatus.textContent = 'TERMINAL_APERTURE // OPENING';
-      if (sessionGuardState) sessionGuardState.textContent = 'ESCORTING_GUEST';
+      if (sessionGuardState) sessionGuardState.textContent = 'OBSERVING_ENTRY';
       window.setTimeout(() => openSession('guest'), reducedMotion.matches ? 0 : 980);
     };
 
     root.dataset.session = 'guarded';
     root.dataset.sessionPhase = 'awaiting';
     setSessionName('guest');
-    if (sessionStatus) sessionStatus.textContent = 'WATCHER_07 // AWAITING_GUEST_ACTION';
-    if (sessionGuardState) sessionGuardState.textContent = 'CONTAINED // OBSERVING';
+    if (sessionStatus) sessionStatus.textContent = 'ENTITY_07 // AWAITING_GUEST_ACTION';
+    if (sessionGuardState) sessionGuardState.textContent = 'DORMANT // LISTENING';
     sessionEnter?.addEventListener('click', requestAdmission);
+    const developmentQuery = new URLSearchParams(location.search);
+    const developmentTheme = developmentQuery.get('theme');
+    if (developmentQuery.get('entityDebug') === '1' && (developmentTheme === 'light' || developmentTheme === 'dark')) {
+      setTheme(developmentTheme, false);
+    }
+    if (developmentQuery.get('entityDebug') === '1' && developmentQuery.get('skipGate') === '1') {
+      openSession('debug');
+    }
 
     // Display texture control. The entity script intentionally owns its own toggle.
     const crtToggle = document.getElementById('crt-toggle');
@@ -165,7 +173,7 @@
     window.addEventListener('resize', requestScrollUpdate, { passive: true });
     updateScroll();
 
-    // Cursor illumination is subtle and independent from the Watcher repulsion.
+    // Cursor illumination is subtle and independent from the entity repulsion.
     let pointerFrame = 0;
     let pointerX = window.innerWidth / 2;
     let pointerY = window.innerHeight / 3;
@@ -246,12 +254,17 @@
     });
 
     const activateNav = (id) => {
+      const changed = root.dataset.activeSection !== id;
+      root.dataset.activeSection = id;
       navLinks.forEach((link) => {
         const active = link.dataset.navTarget === id;
         link.classList.toggle('is-active', active);
         if (active) link.setAttribute('aria-current', 'page');
         else link.removeAttribute('aria-current');
       });
+      if (changed) {
+        window.dispatchEvent(new CustomEvent('andrew:section-focus', { detail: { id } }));
+      }
     };
 
     if ('IntersectionObserver' in window) {
@@ -360,8 +373,8 @@
         crtToggle?.click();
       } else if (action === 'entity') {
         document.getElementById('entity-toggle')?.click();
-      } else if (action === 'release') {
-        document.getElementById('entity-release')?.click();
+      } else if (action === 'entity-release') {
+        window.dispatchEvent(new CustomEvent('andrew:entity-command', { detail: { command: 'toggle-release', source: 'keyboard' } }));
       }
     };
 
@@ -401,10 +414,6 @@
       } else if (event.key === '/' && !typing && !(deck instanceof HTMLDialogElement && deck.open)) {
         event.preventDefault();
         openDeck();
-      } else if (!typing && !root.classList.contains('session-pending') && event.key.toLowerCase() === 'y') {
-        if (root.dataset.entityReleased !== 'on') document.getElementById('entity-release')?.click();
-      } else if (!typing && !root.classList.contains('session-pending') && event.key.toLowerCase() === 'n') {
-        if (root.dataset.entityReleased === 'on') document.getElementById('entity-release')?.click();
       }
     });
 

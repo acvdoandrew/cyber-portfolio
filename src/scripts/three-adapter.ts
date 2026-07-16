@@ -1,17 +1,27 @@
 export {
+  AdditiveBlending,
+  BufferAttribute,
+  DataTexture,
+  FloatType,
+  InstancedBufferAttribute,
+  InstancedBufferGeometry,
   LinearFilter,
   Mesh,
+  NearestFilter,
   NoBlending,
+  NormalBlending,
   OrthographicCamera,
   PlaneGeometry,
   RGBAFormat,
   Scene,
   ShaderMaterial,
   SRGBColorSpace,
-  TextureLoader,
   UnsignedByteType,
   Vector2,
+  Vector3,
   Vector4,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
+
+export { GPUComputationRenderer } from 'three/addons/misc/GPUComputationRenderer.js';

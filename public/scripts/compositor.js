@@ -218,7 +218,7 @@
       const captureCenterX = capture.cx;
       const captureCenterY = capture.cy;
       const entityDistance = entity?.released
-        ? Math.hypot(entity.x - captureCenterX, entity.y - captureCenterY)
+        ? Math.hypot(entity.anchor.x - captureCenterX, entity.anchor.y - captureCenterY)
         : Infinity;
       const proximity = clamp(1 - entityDistance / Math.max(150, Math.max(capture.width, capture.height) * 0.9), 0, 1);
       const params = {
@@ -242,8 +242,8 @@
         bloomBY: 0.2 * Math.sin(time * 0.61),
         time,
         proximity,
-        entityX: entity ? (entity.x - captureCenterX) / Math.max(1, capture.width / 2) : 4,
-        entityY: entity ? (entity.y - captureCenterY) / Math.max(1, capture.height / 2) : 4,
+        entityX: entity ? (entity.anchor.x - captureCenterX) / Math.max(1, capture.width / 2) : 4,
+        entityY: entity ? (entity.anchor.y - captureCenterY) / Math.max(1, capture.height / 2) : 4,
       };
       for (let y = 0; y < sourceHeight; y += 1) {
         for (let x = 0; x < sourceWidth; x += 1) {
@@ -297,7 +297,7 @@
     };
 
     const shouldAnimate = () => !document.hidden && !reducedMotion.matches && !saveData &&
-      root.dataset.renderer !== "webgl" && window.__ANDREW_VISUAL_STATE__?.entity?.released === true;
+      root.dataset.renderer !== "webgl" && window.__ANDREW_VISUAL_STATE__?.entity?.visible === true;
 
     const animate = (time) => {
       if (!shouldAnimate()) {

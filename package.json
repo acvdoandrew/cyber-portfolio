@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro check && astro build",
+    "test": "esbuild tests/entity-runtime.test.ts --bundle --platform=node --format=esm --outfile=.test-dist/entity-runtime.test.mjs && node .test-dist/entity-runtime.test.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },

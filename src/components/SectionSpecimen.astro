@@ -1,9 +1,11 @@
 ---
 interface Props {
   kind: 'black-hole' | 'galaxy' | 'relay' | 'graph' | 'orbit';
+  entityHost?: string;
+  approach?: 'left' | 'right' | 'either';
 }
 
-const { kind } = Astro.props;
+const { kind, entityHost, approach = 'either' } = Astro.props;
 const meta = {
   'black-hole': { code: 'OBJ_01', label: 'MASS_ANOMALY', state: 'GRAVITY_ON', seed: 3, fragment: 'fragment--one' },
   galaxy: { code: 'OBJ_23', label: 'DEEP_FIELD_GALAXY', state: 'DRIFTING', seed: 23, fragment: 'fragment--six' },
@@ -17,6 +19,9 @@ const meta = {
   class={`section-specimen section-specimen--${kind}`}
   data-specimen={kind}
   data-specimen-seed={meta.seed}
+  data-entity-specimen={entityHost}
+  data-entity-host={entityHost}
+  data-entity-approach={approach}
   aria-hidden="true"
 >
   <div class="section-specimen__visual" data-specimen-visual>
@@ -24,6 +29,13 @@ const meta = {
       class={`section-specimen__fragment fragment ${meta.fragment}`}
       data-specimen-figure={kind}
     ></span>
+    {kind === 'relay' && (
+      <span class="section-specimen__relay-geometry">
+        <i class="section-specimen__relay-spine"></i>
+        <i class="section-specimen__relay-rings"></i>
+        <i class="section-specimen__relay-base"></i>
+      </span>
+    )}
   </div>
 
   <div class="section-specimen__readout">

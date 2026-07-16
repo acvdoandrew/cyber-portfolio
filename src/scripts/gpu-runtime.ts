@@ -3,40 +3,19 @@ import type {
   PlaneGeometry,
   Scene,
   ShaderMaterial,
-  Texture,
   Vector2,
   Vector4,
   WebGLRenderTarget,
   WebGLRenderer,
 } from 'three';
+import { EntityParticleField } from './entity-particle-field';
+import { entityRuntime } from './entity/runtime';
+import type { SpatialMode } from './entity/types';
 
 type QualityTier = 'high' | 'low' | 'static';
 
-interface EntityVisualState {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  gazeX: number;
-  gazeY: number;
-  elapsed: number;
-  scatter: number;
-  impact: number;
-  enabled: boolean;
-  released: boolean;
-  static: boolean;
-  status: string;
-}
-
-interface SharedVisualState {
-  revision: number;
-  pointer: { x: number; y: number; lastAt: number };
-  entity: EntityVisualState | null;
-}
-
 declare global {
   interface Window {
-    __ANDREW_VISUAL_STATE__?: SharedVisualState;
     __ANDREW_GPU_DISPOSE__?: () => void;
   }
 }
@@ -57,18 +36,13 @@ const SOURCE_SHADER = /* glsl */ `
   varying vec2 vUv;
   uniform float uTime;
   uniform vec2 uResolution;
-  uniform vec2 uPointer;
   uniform vec4 uEntity;
-  uniform vec2 uEntitySize;
   uniform vec4 uEntityMeta;
   uniform vec4 uCaptures[5];
   uniform float uCaptureSeeds[5];
   uniform vec4 uPortals[3];
   uniform float uPortalCount;
   uniform float uGlitch;
-  uniform float uReleasePulse;
-  uniform sampler2D uWatcherTexture;
-  uniform float uWatcherReady;
 
   float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -113,184 +87,6 @@ const SOURCE_SHADER = /* glsl */ `
     if (x < 2.0) return 7.0 / 16.0;
     if (x < 3.0) return 13.0 / 16.0;
     return 5.0 / 16.0;
-  }
-
-  vec4 watcher(vec2 uv) {
-    if (uEntityMeta.x < 0.5) return vec4(0.0);
-    vec2 size = max(uEntitySize, vec2(0.02));
-    vec2 p = (uv - uEntity.xy) / (size * 0.5);
-    p.x += sin(p.y * 13.0 + uTime * 1.65) * 0.012;
-    p.x += sin(p.y * 41.0 - uTime * 0.82) * 0.005;
-
-    vec2 pointerDelta = uv - uPointer;
-    float pointerDistance = length(pointerDelta * vec2(uResolution.x / uResolution.y, 1.0));
-    float pointerPush = smoothstep(0.15, 0.0, pointerDistance);
-    p += normalize(pointerDelta + vec2(0.0001)) * pointerPush * 0.16;
-
-    float disruption = clamp(uEntityMeta.z + uEntityMeta.w + uReleasePulse, 0.0, 1.0);
-    float rowNoise = hash21(vec2(floor((p.y + 1.0) * 30.0), floor(uTime * 17.0)));
-    p.x += (rowNoise - 0.5) * disruption * 0.32;
-
-    if (uWatcherReady > 0.5) {
-      float portraitRow = floor((p.y + 1.0) * 96.0);
-      float rowTear = hash21(vec2(portraitRow, floor(uTime * 13.0)));
-      vec2 faceUv = vec2(p.x * 0.5 + 0.5, p.y * 0.5 + 0.5);
-      faceUv.x += sin(p.y * 11.0 + uTime * 1.2) * 0.0028;
-      faceUv.x += (rowTear - 0.5) * disruption * 0.085;
-      vec3 portraitSample = texture2D(uWatcherTexture, clamp(faceUv, vec2(0.001), vec2(0.999))).rgb;
-      float portrait = dot(portraitSample, vec3(0.299, 0.587, 0.114));
-      portrait = pow(max(0.0, portrait), 0.82);
-
-      float portraitBounds = step(abs(p.x), 1.0) * step(abs(p.y), 1.0);
-      float portraitThreshold = 0.025 + bayer4(gl_FragCoord.xy) * 0.12;
-      float material = smoothstep(portraitThreshold, portraitThreshold + 0.075, portrait) * portraitBounds;
-      float scanline = mix(0.08, 1.0, step(0.28, fract(gl_FragCoord.y * 0.5 + uTime * 0.045)));
-      float fineSignal = 0.88 + sin(p.y * 170.0 - uTime * 2.0) * 0.12;
-      float damagedRow = step(0.955, hash21(vec2(portraitRow, floor(uTime * 6.0))));
-      material *= scanline * fineSignal * (1.0 - damagedRow * 0.82);
-
-      // The portrait has deliberately neutral eyes; this live signal is the gaze.
-      // Keep the core precise, then let a larger low-frequency aura make it feel
-      // luminous instead of pasted on top of the face.
-      vec2 gaze = vec2(uEntity.z * 0.018, uEntity.w * 0.01);
-      vec2 leftEye = (p - vec2(-0.185, 0.13) - gaze) * vec2(0.72, 1.65);
-      vec2 rightEye = (p - vec2(0.215, 0.13) - gaze) * vec2(0.72, 1.65);
-      float leftCore = 1.0 - smoothstep(0.009, 0.038, length(leftEye));
-      float rightCore = 1.0 - smoothstep(0.009, 0.038, length(rightEye));
-      float leftAura = 1.0 - smoothstep(0.026, 0.094, length(leftEye));
-      float rightAura = 1.0 - smoothstep(0.026, 0.094, length(rightEye));
-      float gazeCore = max(leftCore, rightCore) * portraitBounds;
-      float gazeAura = max(leftAura, rightAura) * portraitBounds;
-      float portraitSupport = smoothstep(0.035, 0.28, portrait);
-      gazeAura *= mix(0.55, 1.0, portraitSupport);
-      float signalPulse = 0.94 + sin(uTime * 1.7) * 0.06;
-
-      vec3 bone = vec3(0.9, 0.88, 0.84);
-      vec3 frost = vec3(0.73, 0.79, 0.78);
-      vec3 mauve = vec3(0.66, 0.43, 0.55);
-      vec3 color = mix(bone, frost, smoothstep(0.28, 0.88, portrait));
-      color = mix(color, mauve, disruption * 0.42);
-      vec3 gazeColor = mix(frost, bone, 0.68);
-      color = color * material + gazeColor * (gazeAura * 0.36 + gazeCore * 1.18) * signalPulse;
-      float alpha = max(material * (0.48 + portrait * 0.52), max(gazeAura * 0.58, gazeCore * 0.98));
-      return vec4(color, alpha);
-    }
-
-    float blinkClock = mod(uTime + 0.31, 4.9);
-    float blink = blinkClock > 4.52 && blinkClock < 4.72
-      ? clamp(abs(blinkClock - 4.62) / 0.1, 0.06, 1.0)
-      : 1.0;
-    float eyeCurve = (0.205 + sin(uTime * 1.8) * 0.012) *
-      sqrt(max(0.0, 1.0 - pow(abs(p.x) / 0.8, 1.72)));
-    float upper = lineMask(abs(p.y - (0.02 - eyeCurve * blink)), 0.026);
-    float lower = lineMask(abs(p.y - (0.02 + eyeCurve * blink)), 0.026);
-    float lidEcho = lineMask(abs(p.y - (0.02 - eyeCurve * blink - 0.045)), 0.012) +
-      lineMask(abs(p.y - (0.02 + eyeCurve * blink + 0.045)), 0.012);
-    lidEcho *= step(abs(p.x), 0.72) * step(0.38, blink);
-
-    vec2 irisCenter = vec2(uEntity.z * 0.105, 0.02 + uEntity.w * 0.075);
-    vec2 irisVector = (p - irisCenter) / vec2(0.19, 0.2);
-    float irisDistance = length(irisVector);
-    float iris = lineMask(abs(irisDistance - 1.0), 0.075) +
-      lineMask(abs(irisDistance - 0.69), 0.035);
-    float irisSpokes = step(0.44, irisDistance) * step(irisDistance, 0.94) *
-      step(0.86, abs(sin(atan(irisVector.y, irisVector.x) * 11.0 + uTime * 0.45)));
-    float irisMicro = step(0.52, irisDistance) * step(irisDistance, 0.96) *
-      step(0.9, abs(sin(atan(irisVector.y, irisVector.x) * 23.0 - uTime * 0.18)));
-    float pupil = 1.0 - smoothstep(0.82, 1.0, length((p - irisCenter) / vec2(0.074, 0.128)));
-    float glint = 1.0 - smoothstep(0.015, 0.032, length(p - irisCenter + vec2(0.032, 0.045)));
-    float insideEye = step(abs(p.x), 0.79) * step(abs(p.y - 0.02), max(0.0, eyeCurve * blink - 0.012));
-    float scleraGrain = insideEye * step(1.05, irisDistance) *
-      step(0.72, hash21(floor((p + 1.0) * vec2(64.0, 52.0)) + floor(uTime * 9.0)));
-    float scleraBands = insideEye * step(1.02, irisDistance) *
-      step(0.92, abs(sin(p.x * 38.0 + p.y * 17.0 + uTime * 0.34)));
-
-    float wingLift = sin(uTime * 1.05 + 0.7) * 0.065;
-    float body = 0.0;
-    body = max(body, lineMask(sdSegment(p, vec2(0.0, -0.31), vec2(sin(uTime * 0.63) * 0.026, -0.96)), 0.025));
-    body = max(body, lineMask(sdSegment(p, vec2(-0.04, -0.72), vec2(-0.48, -0.43)), 0.022));
-    body = max(body, lineMask(sdSegment(p, vec2(0.04, -0.72), vec2(0.48, -0.43)), 0.022));
-    body = max(body, lineMask(sdSegment(p, vec2(-0.08, -0.9), vec2(-0.2, -0.68)), 0.016));
-    body = max(body, lineMask(sdSegment(p, vec2(0.08, -0.9), vec2(0.2, -0.68)), 0.016));
-    body = max(body, lineMask(sdSegment(p, vec2(-0.74, -0.04), vec2(-0.98, -0.23 - wingLift)), 0.025));
-    body = max(body, lineMask(sdSegment(p, vec2(-0.72, 0.02), vec2(-0.99, 0.2 + wingLift)), 0.025));
-    body = max(body, lineMask(sdSegment(p, vec2(-0.6, -0.22), vec2(-0.88, -0.43 - wingLift)), 0.018));
-    body = max(body, lineMask(sdSegment(p, vec2(-0.6, 0.22), vec2(-0.87, 0.42 + wingLift)), 0.018));
-    body = max(body, lineMask(sdSegment(p, vec2(0.74, -0.04), vec2(0.98, -0.23 - wingLift)), 0.025));
-    body = max(body, lineMask(sdSegment(p, vec2(0.72, 0.02), vec2(0.99, 0.2 + wingLift)), 0.025));
-    body = max(body, lineMask(sdSegment(p, vec2(0.6, -0.22), vec2(0.88, -0.43 - wingLift)), 0.018));
-    body = max(body, lineMask(sdSegment(p, vec2(0.6, 0.22), vec2(0.87, 0.42 + wingLift)), 0.018));
-    body = max(body, lineMask(sdSegment(p, vec2(-0.52, 0.29), vec2(0.0, 0.96)), 0.025));
-    body = max(body, lineMask(sdSegment(p, vec2(0.52, 0.29), vec2(0.0, 0.96)), 0.025));
-    body = max(body, lineMask(sdSegment(p, vec2(0.0, 0.38), vec2(0.0, 0.91)), 0.018));
-    float halo = lineMask(abs(length(p / vec2(0.94, 0.6)) - 1.0), 0.018);
-    halo *= step(0.28, hash21(floor((p + 1.0) * 44.0) + floor(uTime * 4.0)));
-    body = max(body, halo);
-    float innerOrbit = lineMask(abs(length(p / vec2(0.68, 0.43)) - 1.0), 0.012);
-    float orbitAngle = atan(p.y / 0.6, p.x / 0.94);
-    float orbitTicks = step(0.955, abs(sin(orbitAngle * 16.0 + uTime * 0.09))) *
-      step(0.79, length(p / vec2(0.94, 0.6))) * step(length(p / vec2(0.94, 0.6)), 1.08);
-    body = max(body, innerOrbit * 0.68);
-    body = max(body, orbitTicks * 0.72);
-
-    float grain = step(0.82, hash21(floor((p + 1.0) * 38.0) + floor(uTime * 8.0)));
-    float outerRegion = step(0.55, abs(p.x)) * step(abs(p.x), 0.99) * step(abs(p.y), 0.45);
-    body = max(body, grain * outerRegion * 0.8);
-
-    float crawl = hash21(floor((p + 1.0) * vec2(72.0, 58.0)) + floor(uTime * 8.0));
-    float fineCrawl = hash21(floor((p + 1.0) * vec2(118.0, 86.0)) + floor(uTime * 11.0));
-    float crownSpan = 0.055 + clamp((p.y + 0.98) / 0.69, 0.0, 1.0) * 0.54;
-    float crownFill = step(-0.98, p.y) * step(p.y, -0.29) * step(abs(p.x), crownSpan);
-    crownFill *= 0.22 + step(0.36, abs(sin(p.x * 31.0 + p.y * 19.0 - uTime * 0.28))) * 0.43 + crawl * 0.28;
-    float wingFill = exp(-pow((abs(p.x) - 0.7) / 0.27, 2.0) * 2.3) *
-      exp(-pow((p.y + abs(p.x) * 0.09) / 0.37, 2.0) * 2.7);
-    wingFill *= 0.3 + step(0.48, abs(sin(abs(p.x) * 37.0 + p.y * 23.0 + uTime * 0.34))) * 0.4 + crawl * 0.24;
-    float lowerSpan = max(0.0, 0.49 * (1.0 - (p.y - 0.26) / 0.75));
-    float lowerFill = step(0.26, p.y) * step(p.y, 0.98) * step(abs(p.x), lowerSpan);
-    lowerFill *= 0.2 + step(0.53, abs(sin(p.x * 27.0 - p.y * 21.0 + uTime * 0.2))) * 0.42 + fineCrawl * 0.27;
-    float faceVeil = exp(-dot(p / vec2(0.77, 0.39), p / vec2(0.77, 0.39)) * 1.7) * 0.24;
-
-    float threshold = 0.14 + bayer4(gl_FragCoord.xy) * 0.76;
-    float bodyField = clamp(body * 0.94 + crownFill + wingFill + lowerFill + faceVeil + outerRegion * grain * 0.22, 0.0, 1.0);
-    float eyeField = clamp((upper + lower + lidEcho) * step(abs(p.x), 0.82) * 0.95 + insideEye * 0.18 + scleraBands * 0.32, 0.0, 1.0);
-    float irisField = clamp(iris * 0.92 + irisSpokes * 0.8 + irisMicro * 0.58 + glint + (1.0 - smoothstep(0.3, 1.0, irisDistance)) * 0.26, 0.0, 1.0);
-    float scleraField = clamp(scleraGrain * 0.68 + scleraBands * 0.46 + insideEye * smoothstep(0.92, 1.28, irisDistance) * 0.28, 0.0, 1.0);
-
-    float pupilVoid = step(0.92, pupil);
-    float eyeMask = step(threshold - 0.08, eyeField) * (1.0 - pupilVoid);
-    float irisMask = step(threshold - 0.16, irisField) * (1.0 - pupilVoid);
-    float scleraMask = step(threshold, scleraField) * (1.0 - pupilVoid);
-    float bodyMask = step(threshold, bodyField);
-    float materialStrength = max(bodyField, max(eyeField, max(irisField, scleraField)));
-    float materialGate = step(0.27, materialStrength);
-    eyeMask *= materialGate;
-    irisMask *= materialGate;
-    scleraMask *= materialGate;
-    bodyMask *= materialGate;
-
-    float scanGap = step(0.94, sin((p.y + uTime * 0.075) * 82.0)) *
-      step(0.42, hash21(vec2(floor(p.y * 52.0), floor(uTime * 7.0))));
-    float damagedRow = step(0.91, hash21(vec2(floor((p.y + 1.0) * 49.0), floor(uTime * 5.0)))) * 0.46;
-    float signalHold = 1.0 - max(scanGap * 0.88, damagedRow);
-    bodyMask *= signalHold;
-    eyeMask *= 1.0 - scanGap * 0.48;
-    irisMask *= 1.0 - scanGap * 0.3;
-    scleraMask *= signalHold;
-
-    float phosphorRow = mix(0.16, 1.0, step(0.42, fract(gl_FragCoord.y * 0.5 + uTime * 0.18)));
-    float fluidGain = 0.92 + sin(p.y * 126.0 - uTime * 2.1) * 0.08;
-    bodyMask *= phosphorRow * fluidGain;
-    eyeMask *= phosphorRow;
-    irisMask *= mix(0.58, 1.0, phosphorRow);
-    scleraMask *= phosphorRow;
-
-    vec3 bone = vec3(0.9, 0.88, 0.84);
-    vec3 frost = vec3(0.73, 0.79, 0.78);
-    vec3 signal = mix(bone, vec3(0.7, 0.48, 0.58), disruption * 0.62);
-    vec3 color = bone * bodyMask * 0.72 + signal * eyeMask * 0.92 + frost * irisMask + bone * scleraMask * 0.44;
-    float alpha = max(bodyMask * 0.74, max(eyeMask * 0.94, max(irisMask, scleraMask * 0.5)));
-    alpha *= 1.0 - pupilVoid * 0.92;
-    return vec4(color, alpha);
   }
 
   float captureField(vec2 local, float seed) {
@@ -434,17 +230,6 @@ const SOURCE_SHADER = /* glsl */ `
       alpha = max(alpha, motif * 0.38);
     }
 
-    vec4 entity = vec4(0.0);
-    vec2 entityDistance = abs(uv - uEntity.xy);
-    vec2 entityBounds = max(uEntitySize * 0.6, vec2(0.001));
-    if (entityDistance.x <= entityBounds.x && entityDistance.y <= entityBounds.y) {
-      entity = watcher(uv);
-      float entityPresence = step(0.2, entity.a);
-      entity *= entityPresence;
-    }
-    color = max(color, entity.rgb);
-    alpha = max(alpha, entity.a);
-
     if (uGlitch > 0.01) {
       float row = step(0.78, hash21(vec2(floor(uv.y * 48.0), floor(uTime * 19.0))));
       color += row * uGlitch * vec3(0.18, 0.08, 0.13);
@@ -463,7 +248,7 @@ const FEEDBACK_SHADER = /* glsl */ `
   uniform float uTime;
   uniform float uDecay;
   uniform float uGlitch;
-  uniform float uReleasePulse;
+  uniform float uEmergencePulse;
 
   float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -474,7 +259,7 @@ const FEEDBACK_SHADER = /* glsl */ `
   void main() {
     vec2 uv = vUv;
     float rowNoise = hash21(vec2(floor(uv.y * 80.0), floor(uTime * 13.0)));
-    float tear = step(0.82, rowNoise) * (uGlitch + uReleasePulse);
+    float tear = step(0.82, rowNoise) * (uGlitch + uEmergencePulse);
     vec2 drift = vec2((rowNoise - 0.5) * tear * 0.018, uTexel.y * 0.45);
     vec4 current = texture2D(uCurrent, uv);
     vec4 previous = texture2D(uPrevious, uv - drift);
@@ -521,8 +306,8 @@ const COMPOSITE_SHADER = /* glsl */ `
     combined.rgb = max(vec3(0.0), combined.rgb * scan + grain * combined.a);
     combined.rgb *= smoothstep(0.003, 0.025, combined.a);
     float warmSignal = smoothstep(0.015, 0.16, combined.r - combined.g);
-    vec3 graphiteInk = vec3(0.12, 0.105, 0.12);
-    vec3 frostInk = vec3(0.27, 0.39, 0.41);
+    vec3 graphiteInk = vec3(0.025, 0.022, 0.025);
+    vec3 frostInk = vec3(0.065, 0.06, 0.065);
     vec3 mauveInk = vec3(0.52, 0.31, 0.41);
     vec3 lightInk = mix(mix(graphiteInk, frostInk, 0.38), mauveInk, warmSignal);
     combined.rgb = mix(combined.rgb, lightInk, uLightTheme * step(0.002, combined.a));
@@ -576,10 +361,10 @@ class GpuRuntime {
   private sourceMaterial: ShaderMaterial;
   private feedbackMaterial: ShaderMaterial;
   private compositeMaterial: ShaderMaterial;
+  private particleField: EntityParticleField | null = null;
   private sourceTarget: WebGLRenderTarget;
   private feedbackRead: WebGLRenderTarget;
   private feedbackWrite: WebGLRenderTarget;
-  private watcherTexture: Texture | null = null;
   private quality: QualityTier;
   private viewport = { width: 1, height: 1, dpr: 1 };
   private elapsed = 0;
@@ -596,8 +381,8 @@ class GpuRuntime {
   private portalDirty = true;
   private specimenDirty = true;
   private staticRenderRequest = 0;
-  private releasePulse = 0;
-  private previousReleased = false;
+  private emergencePulse = 0;
+  private previousSpatialMode: SpatialMode = 'SEALED';
   private previousEnabled = true;
   private glitch = 0;
   private glitchEndsAt = 0;
@@ -681,18 +466,13 @@ class GpuRuntime {
       uniforms: {
         uTime: { value: 0 },
         uResolution: { value: new THREE.Vector2(1, 1) },
-        uPointer: { value: new THREE.Vector2(0.5, 0.5) },
         uEntity: { value: new THREE.Vector4(0.72, 0.5, 0, 0) },
-        uEntitySize: { value: new THREE.Vector2(0.28, 0.3) },
         uEntityMeta: { value: new THREE.Vector4(1, 0, 0, 0) },
         uCaptures: { value: captures },
         uCaptureSeeds: { value: specimenCaptures.map(({ seed }) => seed) },
         uPortals: { value: portals },
         uPortalCount: { value: 0 },
         uGlitch: { value: 0 },
-        uReleasePulse: { value: 0 },
-        uWatcherTexture: { value: null },
-        uWatcherReady: { value: 0 },
       },
     });
 
@@ -710,7 +490,7 @@ class GpuRuntime {
         uTime: { value: 0 },
         uDecay: { value: 0.92 },
         uGlitch: { value: 0 },
-        uReleasePulse: { value: 0 },
+        uEmergencePulse: { value: 0 },
       },
     });
 
@@ -742,6 +522,7 @@ class GpuRuntime {
     this.sourceTarget = this.makeTarget(1, 1);
     this.feedbackRead = this.makeTarget(1, 1);
     this.feedbackWrite = this.makeTarget(1, 1);
+    this.createParticleField();
     this.themeObserver = new MutationObserver(() => {
       this.clearFeedback();
       this.requestStaticRender();
@@ -759,15 +540,26 @@ class GpuRuntime {
     });
   }
 
+  private createParticleField() {
+    if (this.particleField) return;
+    this.particleField = new EntityParticleField(
+      this.THREE,
+      this.renderer,
+      entityRuntime.frame.quality,
+      entityRuntime.frame.sessionSeed,
+      entityRuntime.particlePoolId,
+    );
+    const initialTier = this.quality === 'static' ? 'static' : this.quality === 'low'
+      ? (coarsePointer.matches ? 'mobile' : 'low')
+      : entityRuntime.frame.quality;
+    entityRuntime.setQuality(initialTier);
+    const activeCount = this.particleField.setQuality(initialTier);
+    entityRuntime.setActiveParticleCount(activeCount);
+    root.dataset.entityParticles = String(activeCount);
+    root.dataset.entityPool = entityRuntime.particlePoolId;
+  }
+
   async initialise() {
-    try {
-      this.watcherTexture = await new this.THREE.TextureLoader().loadAsync('/assets/watcher-face-v3.webp');
-      this.watcherTexture.colorSpace = this.THREE.SRGBColorSpace;
-      this.sourceMaterial.uniforms.uWatcherTexture.value = this.watcherTexture;
-      this.sourceMaterial.uniforms.uWatcherReady.value = 1;
-    } catch (error) {
-      console.warn('[visual-runtime] Watcher portrait unavailable; using procedural fallback.', error);
-    }
     this.resize();
     const compile = this.renderer.compileAsync?.bind(this.renderer);
     if (compile) {
@@ -775,11 +567,13 @@ class GpuRuntime {
         compile(this.sourceScene, this.camera),
         compile(this.feedbackScene, this.camera),
         compile(this.compositeScene, this.camera),
+        ...(this.particleField ? [compile(this.particleField.scene, this.camera)] : []),
       ]);
     } else {
       this.renderer.compile(this.sourceScene, this.camera);
       this.renderer.compile(this.feedbackScene, this.camera);
       this.renderer.compile(this.compositeScene, this.camera);
+      if (this.particleField) this.renderer.compile(this.particleField.scene, this.camera);
     }
     this.clearFeedback();
     this.renderFrame(0);
@@ -829,6 +623,7 @@ class GpuRuntime {
     (this.feedbackMaterial.uniforms.uTexel.value as Vector2).set(1 / feedbackWidth, 1 / feedbackHeight);
     (this.sourceMaterial.uniforms.uResolution.value as Vector2).set(drawingSize.x, drawingSize.y);
     (this.compositeMaterial.uniforms.uResolution.value as Vector2).set(drawingSize.x, drawingSize.y);
+    this.particleField?.resize(drawingSize.x, drawingSize.y, this.viewport.width, this.viewport.height);
     this.feedbackMaterial.uniforms.uDecay.value = this.quality === 'high' ? 0.92 : this.quality === 'low' ? 0.84 : 0;
     this.compositeMaterial.uniforms.uQuality.value = this.quality === 'high' ? 1 : 0;
     root.dataset.fxQuality = this.quality;
@@ -843,6 +638,15 @@ class GpuRuntime {
     this.lastQualityChangeAt = performance.now();
     this.slowActiveWindows = 0;
     this.stableLowWindows = 0;
+    const particleTier = quality === 'static' ? 'static' : quality === 'low'
+      ? (coarsePointer.matches ? 'mobile' : 'low')
+      : entityRuntime.frame.quality === 'ultra' ? 'ultra' : 'high';
+    entityRuntime.setQuality(particleTier);
+    const activeCount = this.particleField?.setQuality(particleTier);
+    if (activeCount) {
+      entityRuntime.setActiveParticleCount(activeCount);
+      root.dataset.entityParticles = String(activeCount);
+    }
     this.resize();
     setRendererMode('webgl', this.quality, reason);
   }
@@ -919,57 +723,52 @@ class GpuRuntime {
     this.sourceMaterial.uniforms.uTime.value = this.elapsed;
     this.feedbackMaterial.uniforms.uTime.value = this.elapsed;
     this.compositeMaterial.uniforms.uTime.value = this.elapsed;
-    const shared = window.__ANDREW_VISUAL_STATE__;
-    const pointer = shared?.pointer;
-    const pointerX = pointer && Number.isFinite(pointer.x) ? pointer.x / this.viewport.width : 0.5;
-    const pointerY = pointer && Number.isFinite(pointer.y) ? 1 - pointer.y / this.viewport.height : 0.5;
-    (this.sourceMaterial.uniforms.uPointer.value as Vector2).set(pointerX, pointerY);
-
-    const entity = shared?.entity;
+    const entity = entityRuntime.update(performance.now(), delta);
     if (entity) {
       if (entity.enabled !== this.previousEnabled) {
         this.previousEnabled = entity.enabled;
-        this.releasePulse = 0;
+        this.emergencePulse = 0;
         this.glitch = 0;
         this.clearFeedback();
       }
-      const containedScale = 1;
       (this.sourceMaterial.uniforms.uEntity.value as Vector4).set(
-        entity.x / this.viewport.width,
-        1 - entity.y / this.viewport.height,
-        entity.gazeX,
-        -entity.gazeY,
-      );
-      (this.sourceMaterial.uniforms.uEntitySize.value as Vector2).set(
-        entity.width * containedScale / this.viewport.width,
-        entity.height * containedScale / this.viewport.height,
+        entity.anchor.x / this.viewport.width,
+        1 - entity.anchor.y / this.viewport.height,
+        entity.gazeOrientation.x,
+        -entity.gazeOrientation.y,
       );
       (this.sourceMaterial.uniforms.uEntityMeta.value as Vector4).set(
-        entity.enabled ? 1 : 0,
+        0,
         entity.released ? 1 : 0,
-        entity.scatter,
-        entity.impact,
+        entity.internal.entropy,
+        entity.interactionEnergy,
       );
-      if (entity.released !== this.previousReleased) {
-        this.releasePulse = 1;
-        this.previousReleased = entity.released;
+      if (entity.spatialMode !== this.previousSpatialMode) {
+        this.emergencePulse = 1;
+        this.previousSpatialMode = entity.spatialMode;
         this.glitch = 1;
         this.glitchEndsAt = this.elapsed + 0.22;
       }
+      this.particleField?.update(
+        entity,
+        entityRuntime.getOccupancy(),
+        delta,
+        this.elapsed,
+      );
     }
 
-    this.releasePulse = Math.max(0, this.releasePulse - delta * 1.45);
+    this.emergencePulse = Math.max(0, this.emergencePulse - delta * 1.45);
     if (this.elapsed >= this.nextGlitchAt && this.glitch <= 0) {
       this.glitch = 1;
-      const duration = 0.12 + Math.random() * 0.12;
+      const seededPhase = Math.abs(Math.sin(entity.sessionSeed * 0.000013 + this.elapsed * 0.71));
+      const duration = 0.12 + seededPhase * 0.12;
       this.glitchEndsAt = this.elapsed + duration;
-      this.nextGlitchAt = this.elapsed + 5 + Math.random() * 4;
+      this.nextGlitchAt = this.elapsed + 5 + Math.abs(Math.sin(entity.sessionSeed * 0.000031 + this.elapsed * 0.37)) * 4;
     }
     if (this.glitch > 0 && this.elapsed >= this.glitchEndsAt) this.glitch = 0;
     this.sourceMaterial.uniforms.uGlitch.value = this.glitch;
     this.feedbackMaterial.uniforms.uGlitch.value = this.glitch;
-    this.sourceMaterial.uniforms.uReleasePulse.value = this.releasePulse;
-    this.feedbackMaterial.uniforms.uReleasePulse.value = this.releasePulse;
+    this.feedbackMaterial.uniforms.uEmergencePulse.value = this.emergencePulse;
     const crt = root.dataset.crt === 'off' ? 0 : 1;
     this.compositeMaterial.uniforms.uCrt.value = crt;
     this.compositeMaterial.uniforms.uLightTheme.value = root.dataset.themeResolved === 'light' ? 1 : 0;
@@ -984,6 +783,7 @@ class GpuRuntime {
     this.renderer.setRenderTarget(this.sourceTarget);
     this.renderer.clear();
     this.renderer.render(this.sourceScene, this.camera);
+    this.particleField?.render(this.sourceTarget, this.camera);
 
     if (this.quality !== 'static') {
       this.feedbackMaterial.uniforms.uCurrent.value = this.sourceTarget.texture;
@@ -1005,8 +805,8 @@ class GpuRuntime {
     if (this.stopped || this.disposed || document.hidden) return;
     const pointerLastAt = window.__ANDREW_VISUAL_STATE__?.pointer?.lastAt || 0;
     const idle = time - Math.max(this.lastInteractionAt, pointerLastAt) > 12000;
-    const activeRate = this.quality === 'low' ? (coarsePointer.matches ? 20 : 24) : 60;
-    const requestedRate = idle ? (this.quality === 'low' ? 10 : 20) : activeRate;
+    const activeRate = this.quality === 'static' ? 8 : this.quality === 'low' ? (coarsePointer.matches ? 20 : 24) : 60;
+    const requestedRate = this.quality === 'static' ? 8 : idle ? (this.quality === 'low' ? 10 : 20) : activeRate;
     if (idle !== this.wasIdle) {
       this.wasIdle = idle;
       this.cadenceStartedAt = time;
@@ -1059,12 +859,7 @@ class GpuRuntime {
     this.cadenceStartedAt = 0;
     this.cadenceFrames = 0;
     this.wasIdle = false;
-    if (this.quality === 'static') {
-      this.renderer.setAnimationLoop(null);
-      this.renderFrame(0);
-    } else {
-      this.renderer.setAnimationLoop(this.tick);
-    }
+    this.renderer.setAnimationLoop(this.tick);
   }
 
   stop() {
@@ -1091,10 +886,11 @@ class GpuRuntime {
     this.sourceTarget.dispose();
     this.feedbackRead.dispose();
     this.feedbackWrite.dispose();
-    this.watcherTexture?.dispose();
     this.sourceMaterial.dispose();
     this.feedbackMaterial.dispose();
     this.compositeMaterial.dispose();
+    this.particleField?.dispose();
+    this.particleField = null;
     this.geometry.dispose();
     this.renderer.dispose();
   }

@@ -1,5 +1,5 @@
 <dialog class="command-deck" id="command-deck" aria-labelledby="command-title">
-  <div class="command-deck__shell">
+  <div class="command-deck__shell" data-entity-obstacle="command-deck">
     <div class="command-deck__header">
       <div>
         <span class="command-glyph" aria-hidden="true">&gt;_</span>
@@ -38,11 +38,11 @@
       <button type="button" data-command="crt effects texture toggle" data-action="crt">
         <span class="command-key">/toggle-crt</span><span>Toggle display texture</span><kbd>FX</kbd>
       </button>
-      <button type="button" data-command="entity face braille watcher toggle" data-action="entity">
+      <button type="button" data-command="entity bits particles observer toggle" data-action="entity">
         <span class="command-key">/toggle-entity</span><span>Toggle uploaded entity</span><kbd>07</kbd>
       </button>
-      <button type="button" data-command="release recall entity sandbox roam pet" data-action="release">
-        <span class="command-key">/release-entity</span><span>Open or reseal the sandbox</span><kbd>Y/N</kbd>
+      <button type="button" data-command="release entity unseal free" data-action="entity-release">
+        <span class="command-key">/release-entity</span><span>Release or recall the same ENTITY_07 process</span><kbd>Y/N</kbd>
       </button>
     </div>
     <p class="command-empty" id="command-empty" hidden>NO_MATCH // try “projects”, “contact”, or “entity”</p>
