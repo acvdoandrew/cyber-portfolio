@@ -1,6 +1,6 @@
 # Andrew Signal Console
 
-A ground-up redesign of Andrew's cyberpunk portfolio. The build keeps the original terminal voice while shifting the visual language toward monochrome bitmap transmission, restrained mauve signal accents, and accessible technical storytelling.
+A ground-up redesign of my cyberpunk portfolio. I kept the original terminal voice, but pushed the visuals toward monochrome bitmap transmissions, restrained mauve signal accents, and clearer technical storytelling.
 
 ![Signal Console preview](./preview.png)
 
