@@ -1,83 +1,33 @@
 ---
-import SectionSpecimen from './SectionSpecimen.astro';
-
-const modules = [
-  {
-    id: '01',
-    title: 'SYSTEMS_PROGRAMMING',
-    state: 'SHIPPING',
-    tone: 'green',
-    verb: 'Control planes, runtimes, and performance-critical loops.',
-    skills: ['Rust', 'C++', 'Linux', 'Bash', 'Tokio'],
-  },
-  {
-    id: '02',
-    title: 'AI_INFRA',
-    state: 'INSTALLING',
-    tone: 'pink',
-    verb: 'Model serving, evaluation harnesses, and latency measurement.',
-    skills: ['Python', 'PyTorch', 'vLLM', 'FastAPI', 'Eval Harnesses'],
-  },
-  {
-    id: '03',
-    title: 'DISTRIBUTED_INFRA',
-    state: 'FIELD_TESTED',
-    tone: 'cyan',
-    verb: 'Scheduling, telemetry, failure recovery, and network boundaries.',
-    skills: ['Docker', 'gRPC', 'Tonic', 'GitHub Actions'],
-  },
-  {
-    id: '04',
-    title: 'SECURITY_LABS',
-    state: 'ACTIVE_LAB',
-    tone: 'amber',
-    verb: 'Adversarial inputs, threat models, and controlled security labs.',
-    skills: ['Hack The Box', 'Web Security', 'Prompt Injection', 'Threat Modeling'],
-  },
-  {
-    id: '05',
-    title: 'PRODUCT_SURFACE',
-    state: 'BUILDING',
-    tone: 'violet',
-    verb: 'Interfaces that make complex systems observable and usable.',
-    skills: ['TypeScript', 'React', 'MapLibre', 'Dashboards'],
-  },
-];
+import { capabilities } from '../data/portfolio';
 ---
-<section class="capabilities section-shell" id="stack" data-section="stack">
-  <header class="section-heading reveal" data-reveal data-entity-obstacle="stack-heading">
+<section
+  class="capabilities-section section-frame"
+  id="capabilities"
+  aria-labelledby="capabilities-title"
+>
+  <header class="section-intro">
+    <p class="section-label">02 / STACK</p>
     <div>
-      <span class="section-index">02 / SYSTEM_MAP</span>
-      <h2>Tools and domains.</h2>
+      <h2 id="capabilities-title">What I use to build.</h2>
+      <p>Things I’ve used to build, debug, and measure real systems.</p>
     </div>
-    <SectionSpecimen kind="graph" entityHost="section:stack" approach="either" />
-    <p>
-      Technologies I have shipped, debugged, or measured in real projects.
-    </p>
   </header>
 
-  <div class="system-map reveal" data-reveal>
-    <div class="system-bus" aria-hidden="true">
-      <span>INPUT</span><i></i><strong>ANDREW_KERNEL</strong><i></i><span>OUTPUT</span>
-    </div>
-    <div class="module-list" data-entity-obstacle="system-modules">
-      {modules.map((module) => (
-        <article class="module-row">
-          <div class="module-number">MOD_{module.id}</div>
-          <div class="module-name">
-            <h3>{module.title}</h3>
-            <p>{module.verb}</p>
+  <div class="capability-index">
+    {
+      capabilities.map((capability, index) => (
+        <article class="capability-row">
+          <p class="capability-row__number">C_{String(index + 1).padStart(2, '0')}</p>
+          <div>
+            <h3>{capability.title}</h3>
+            <p>{capability.summary}</p>
           </div>
-          <div class="module-skills">
-            {module.skills.map((skill) => <span>{skill}</span>)}
-          </div>
-          <div class={`module-state module-state--${module.tone}`}><i></i>{module.state}</div>
+          <ul aria-label={`${capability.title} tools`}>
+            {capability.stack.map((item) => <li>{item}</li>)}
+          </ul>
         </article>
-      ))}
-    </div>
-    <div class="system-map-footer">
-      <span>PACKETS_ACCEPTED: CURIOUS_PROBLEMS</span>
-      <span>OUTPUT_MODE: BUILD / BENCHMARK / BREAK / EXPLAIN</span>
-    </div>
+      ))
+    }
   </div>
 </section>

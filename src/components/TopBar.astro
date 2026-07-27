@@ -1,78 +1,45 @@
 ---
 const navItems = [
-  { label: 'HOME', href: '#home', section: 'home' },
-  { label: 'WORK', href: '#work', section: 'work' },
-  { label: 'STACK', href: '#stack', section: 'stack' },
-  { label: 'NOTES', href: '#log', section: 'log' },
-  { label: 'CONTACT', href: '#contact', section: 'contact' },
+  { label: 'Work', href: '#work' },
+  { label: 'Stack', href: '#capabilities' },
+  { label: 'Contact', href: '#contact' },
 ];
 ---
-<header class="site-header" data-header data-entity-obstacle="navigation">
-  <div class="header-shell">
-    <a class="site-mark" href="#home" aria-label="Andrew, return home">
-      <strong>andrew</strong>
-      <span>/ systems + ai</span>
+<header class="masthead" data-masthead>
+  <div class="masthead__inner">
+    <a class="wordmark" href="#home" aria-label="Andrew, return to the introduction">
+      <span class="wordmark__monogram" aria-hidden="true">A</span>
+      <span class="wordmark__name">Andrew</span>
     </a>
 
-    <nav class="primary-nav" id="primary-nav" aria-label="Primary navigation">
-      {navItems.map((item) => (
-        <a href={item.href} data-nav-target={item.section}>
-          {item.label}
-        </a>
-      ))}
+    <nav class="masthead__nav" id="primary-navigation" aria-label="Primary navigation">
+      {navItems.map((item) => <a href={item.href}>{item.label}</a>)}
     </nav>
 
-    <div class="header-status" aria-label="System status">
-      <span class="status-pip"></span>
-      <span>07 / <strong id="entity-state">DOCKED</strong></span>
-      <time id="local-time">--:--:-- ET</time>
-    </div>
+    <div class="masthead__controls">
+      <button
+        class="palette-cycle"
+        type="button"
+        data-palette-cycle
+        aria-label="Current palette archive. Activate for carbon."
+      >
+        <span class="palette-cycle__glyph" aria-hidden="true">✳</span>
+        <span class="palette-cycle__label" data-palette-current>archive</span>
+        <span class="sr-only" data-palette-announcement>
+          Current palette archive. Activate for carbon.
+        </span>
+      </button>
 
-    <div class="header-controls">
-      <button class="hud-button command-button" type="button" data-command-open aria-label="Open command deck">
-        <span>command</span><kbd data-command-shortcut>CTRL K</kbd>
-      </button>
-      <button class="hud-button icon-toggle theme-toggle" id="theme-toggle" type="button" aria-label="Appearance: system theme">
-        <span class="toggle-glyph toggle-glyph--theme" aria-hidden="true">
-          <svg viewBox="0 0 32 32" focusable="false">
-            <g data-theme-icon="system">
-              <rect x="5" y="6.5" width="22" height="15" rx="1.5"></rect>
-              <path d="M12 26h8M16 21.5V26"></path>
-            </g>
-            <g data-theme-icon="light">
-              <circle cx="16" cy="16" r="5"></circle>
-              <path d="M16 3v5M16 24v5M3 16h5M24 16h5M6.8 6.8l3.6 3.6M21.6 21.6l3.6 3.6M25.2 6.8l-3.6 3.6M10.4 21.6l-3.6 3.6"></path>
-            </g>
-            <g data-theme-icon="dark" transform="translate(1.25 0)">
-              <path d="M23.8 21.6A10.5 10.5 0 0 1 10.4 8.2 10.7 10.7 0 1 0 23.8 21.6Z"></path>
-            </g>
-          </svg>
-        </span>
-        <span class="sr-only" data-theme-label>SYSTEM_THEME</span>
-      </button>
-      <button class="hud-button icon-toggle" id="crt-toggle" type="button" aria-pressed="true" aria-label="Toggle CRT texture">
-        <span class="toggle-glyph toggle-glyph--crt" aria-hidden="true">
-          <svg viewBox="0 0 32 32" focusable="false">
-            <path d="M3.5 16s4.7-7 12.5-7 12.5 7 12.5 7-4.7 7-12.5 7S3.5 16 3.5 16Z"></path>
-            <circle cx="16" cy="16" r="3.8"></circle>
-            <path class="toggle-glyph__strike" d="M6 5.5 26 26.5"></path>
-          </svg>
-        </span>
-        <span class="sr-only" data-crt-label>CRT_ON</span>
-      </button>
-      <button class="hud-button icon-toggle" id="entity-toggle" type="button" aria-pressed="true" aria-label="Toggle roaming entity">
-        <span class="toggle-glyph toggle-glyph--entity" aria-hidden="true">
-          <svg viewBox="0 0 32 32" focusable="false">
-            <path d="M7 25.5 4.5 13 10 5.5h12l5.5 7.5L25 25.5l-9 3Z"></path>
-            <path d="m9 14 4-2 3 2 3-2 4 2M10.5 18.5l3 1.2M21.5 18.5l-3 1.2M12 24h8"></path>
-            <path class="toggle-glyph__strike" d="M6 5.5 26 26.5"></path>
-          </svg>
-        </span>
-        <span class="sr-only" data-entity-label>ENT_ON</span>
-      </button>
-      <button class="mobile-menu-button" type="button" data-menu-toggle aria-expanded="false" aria-controls="primary-nav">
+      <button
+        class="menu-toggle"
+        type="button"
+        data-menu-toggle
+        aria-expanded="false"
+        aria-controls="primary-navigation"
+      >
         <span class="sr-only">Toggle navigation</span>
-        <span></span><span></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
       </button>
     </div>
   </div>

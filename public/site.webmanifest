@@ -1,11 +1,11 @@
 {
-  "name": "ANDREW_TERMINAL // vOS",
-  "short_name": "ANDREW_vOS",
-  "description": "Andrew builds systems, breaks them on purpose, and writes down what survived.",
+  "name": "Andrew — programmer building strange systems",
+  "short_name": "Andrew",
+  "description": "I build weird systems in Rust, C++, and Python. You can inspect the work yourself.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#050505",
-  "theme_color": "#050505",
+  "background_color": "#E7E4DC",
+  "theme_color": "#182521",
   "icons": [
     { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
   ]

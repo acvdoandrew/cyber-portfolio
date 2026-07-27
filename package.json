@@ -1,26 +1,24 @@
 {
   "name": "andrew-signal-console",
-  "type": "module",
   "version": "3.0.0",
-  "private": true,
-  "packageManager": "bun@1.2.23",
+  "dependencies": {
+    "@astrojs/check": "0.9.9",
+    "astro": "7.0.7",
+    "typescript": "^5.8.3"
+  },
   "engines": {
     "node": "22.x"
   },
+  "packageManager": "bun@1.2.23",
+  "private": true,
   "scripts": {
+    "art:generate": "node scripts/generate-dither-assets.mjs",
     "dev": "astro dev",
     "build": "astro check && astro build",
     "test": "bun test",
     "preview": "astro preview",
+    "visual:regression": "node scripts/capture-visual-regressions.mjs",
     "astro": "astro"
   },
-  "dependencies": {
-    "@astrojs/check": "0.9.9",
-    "astro": "7.0.7",
-    "three": "^0.185.1",
-    "typescript": "^5.8.3"
-  },
-  "devDependencies": {
-    "@types/three": "^0.185.1"
-  }
+  "type": "module"
 }

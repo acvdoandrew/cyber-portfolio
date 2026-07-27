@@ -1,8 +1,11 @@
-# Andrew Signal Console
+# Andrew / Minimal Signal
 
-A ground-up redesign of my cyberpunk portfolio. I kept the original terminal voice, but pushed the visuals toward monochrome bitmap transmissions, restrained mauve signal accents, and clearer technical storytelling.
+An alternate, editorial homepage for Andrew’s systems and AI portfolio. This
+branch keeps the existing project and contact facts while replacing the former
+terminal HUD with a sparse research-plate interface, ordered 1-bit artwork, and
+one contained raw-WebGL2 recursive field.
 
-![Signal Console preview](./preview.png)
+![Six palette studies](./artifacts/visual-regression/hero-palettes-contact-sheet.png)
 
 ## Run locally
 
@@ -13,25 +16,52 @@ bun install
 bun run dev
 ```
 
-Open `http://localhost:4321`.
+Open the URL Astro prints in the terminal.
 
-## Production check
+## Verify
 
 ```bash
+bun test
 bun run build
 bun run preview
 ```
 
-## Interface notes
+The regression capture script expects a local preview at
+`http://127.0.0.1:4325/` by default. Override it with
+`PORTFOLIO_PREVIEW_URL` when needed.
 
-- Press `Ctrl+K` (or `Cmd+K`) to open the command deck.
-- The CRT filter and emergent signal entity can be toggled in the header; both preferences persist.
-- The entity moves through Dormant, Observing, Curious, Inspecting, Thinking, Fragmenting, and Reforming states. Noise, interaction memory, section focus, project hover, scrolling, and inactivity bias transitions rather than timeline loops.
-- ENTITY_07 has one session-seeded runtime, bounded perception stream, decaying memory map, attention/behavior controller, and active particle pool across sealed, releasing, free, relocating, returning, and hidden modes. The contained view is a live mask over the global renderer rather than a second entity.
-- Three.js/WebGL2 runs the motion field in float-texture ping-pong passes and draws a generated SDF glyph atlas with one instanced call. The ultra pool contains 135,424 glyphs; high/medium/low/mobile/static tiers expose 65,536 / 36,864 / 16,384 / 9,216 / 5,184 active glyphs without rebuilding the runtime.
-- A lazily allocated Canvas 2D fallback uses the same runtime, seed, abstract symbolic topology, containment state, gaze, entropy, and interaction memory when WebGL is unavailable. Append `?renderer=canvas` to force this path during development.
-- The active path is exposed through `data-renderer="webgl|canvas"`; quality is reported through `data-fx-quality="high|low|static"`, and `data-fx-reason` explains why that mode was selected.
-- Append `?quality=ultra|high|medium|low|mobile|static` to lock the entity tier while profiling. Automatic quality changes alter the active prefix of the existing pool and never recreate behavior state.
-- Append `?entityDebug=1&skipGate=1` for the development overlay. Add `&entitySeed=707`, `&entityMode=free`, and `&theme=light|dark` for deterministic state, placement, and theme checks.
-- Reduced-motion and data-saver visitors receive a static GPU frame or the Canvas fallback without losing content or controls.
-- All content and contact links remain available without the command deck or animation effects.
+```bash
+bun run visual:regression
+```
+
+It captures all six 1280×720 hero palettes; complete `archive` and `carbon`
+pages at 1440, 768, 390, and 320px widths; and desktop/mobile comparisons with
+the live portfolio. The run also asserts one canvas, no horizontal overflow, and
+CLS below 0.05.
+
+## Implementation notes
+
+- Palette choice persists to `portfolio.palette.v1` and is exposed through
+  `html[data-palette]`.
+- The centered outer frame is the continuous field. Work and Contact dissolve
+  into it, while the hero, project preview, and Stack become deliberate paper
+  objects instead of four equally boxed sections.
+- `ENTITY_07` is a static, non-interactive engraving in Contact. There is no
+  roaming entity, cage, animation runtime, or second canvas.
+- `src/data/portfolio.ts` is the single typed source for project, stack,
+  palette, and contact data.
+- `src/scripts/recursive-field.ts` owns the only live canvas. It caps DPR and
+  buffer size, adapts resolution, pauses offscreen or when hidden, renders one
+  deterministic frame for reduced motion, and falls back to a pre-rendered
+  poster for WebGL failure, data saver, or context loss.
+- `scripts/generate-dither-assets.mjs` deterministically rebuilds four original
+  project engravings, their four technical underlays, the recursive poster, the
+  `ENTITY_07` mask, and the optimized social card. The transparent art masks
+  share one 4×4 Bayer pipeline.
+- Licensed Bodoni Moda and IBM Plex Mono files and their OFL notices are
+  self-hosted under `public/fonts/`.
+- Original generated sources and unverified legacy watcher artwork live outside
+  `public/` under `artwork-source/`.
+
+This branch is a comparison artifact only; it does not deploy or alter the live
+site by itself.

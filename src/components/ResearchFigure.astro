@@ -1,0 +1,654 @@
+---
+import type { ArtworkSpec } from '../data/portfolio';
+
+export type ResearchFigureVariant =
+  | 'recursive-field'
+  | 'ares'
+  | 'rust-edge-compute'
+  | 'physics-engine'
+  | 'inference-proxy'
+  | 'entity-07'
+  | 'generic';
+
+interface Props {
+  artwork: ArtworkSpec;
+  status?: string;
+  taxonomy?: string | string[];
+  variant?: ResearchFigureVariant;
+  id?: string;
+  class?: string;
+  active?: boolean;
+  loading?: 'eager' | 'lazy';
+}
+
+const {
+  artwork,
+  status,
+  taxonomy,
+  variant = artwork.kind === 'shader' ? 'recursive-field' : 'generic',
+  id,
+  class: className,
+  active = true,
+  loading = 'lazy',
+} = Astro.props;
+
+const statusText =
+  status ??
+  {
+    shader: 'LIVE / 60 FPS',
+    mask: 'STATIC / 1-BIT',
+    diagram: 'STATIC / CODE',
+  }[artwork.kind];
+
+const taxonomyItems = Array.isArray(taxonomy)
+  ? taxonomy
+  : taxonomy
+    ? [taxonomy]
+    : {
+        shader: ['FOLDED SPACE', 'ORBITAL FLOW', 'ORDERED 1-BIT DITHER'],
+        mask: ['BAYER 4×4', 'TRANSPARENT MASK'],
+        diagram: ['CODE-NATIVE', 'SYSTEM TRACE'],
+      }[artwork.kind];
+
+const maskStyle = artwork.src
+  ? `--figure-mask: url(${JSON.stringify(artwork.src)});`
+  : undefined;
+const underlayStyle = artwork.underlaySrc
+  ? `--figure-underlay: url(${JSON.stringify(artwork.underlaySrc)});`
+  : undefined;
+---
+
+<figure
+  id={id}
+  class:list={['research-figure', className]}
+  data-research-figure
+  data-figure-kind={artwork.kind}
+  data-figure-variant={variant}
+  data-active={active ? 'true' : 'false'}
+>
+  <div class="research-figure__topline">
+    <span class="research-figure__label">{artwork.label}</span>
+    <span class="research-figure__status" data-figure-status aria-live="polite">
+      <i aria-hidden="true"></i>
+      <span data-figure-status-text>{statusText}</span>
+    </span>
+  </div>
+
+  <div
+    class="research-figure__viewport"
+    data-figure-viewport
+    role="img"
+    aria-label={artwork.alt}
+  >
+    {
+      artwork.kind === 'shader' && (
+        <>
+          {artwork.src && (
+            <img
+              class="research-figure__poster"
+              src={artwork.src}
+              alt=""
+              width="960"
+              height="960"
+              loading={loading}
+              decoding="async"
+              aria-hidden="true"
+            />
+          )}
+          <canvas
+            class="research-figure__canvas"
+            data-recursive-field
+            data-field-state="pending"
+            aria-hidden="true"
+          >
+            {artwork.alt}
+          </canvas>
+          <p class="research-figure__fallback" data-field-fallback aria-hidden="true">
+            {artwork.alt}
+          </p>
+        </>
+      )
+    }
+
+    {
+      artwork.kind !== 'shader' && (
+        <div
+          class:list={[
+            'research-diagram',
+            `research-diagram--${variant}`,
+            artwork.kind === 'mask' && 'research-diagram--underlay',
+          ]}
+          aria-hidden="true"
+        >
+          <span class="research-diagram__grid"></span>
+          <span class="research-diagram__boundary"></span>
+          <span class="research-diagram__route research-diagram__route--01"></span>
+          <span class="research-diagram__route research-diagram__route--02"></span>
+          <span class="research-diagram__route research-diagram__route--03"></span>
+          <span class="research-diagram__route research-diagram__route--04"></span>
+          <span class="research-diagram__route research-diagram__route--05"></span>
+          <span class="research-diagram__node research-diagram__node--01"></span>
+          <span class="research-diagram__node research-diagram__node--02"></span>
+          <span class="research-diagram__node research-diagram__node--03"></span>
+          <span class="research-diagram__node research-diagram__node--04"></span>
+          <span class="research-diagram__node research-diagram__node--05"></span>
+          <span class="research-diagram__node research-diagram__node--06"></span>
+          <span class="research-diagram__pulse research-diagram__pulse--01"></span>
+          <span class="research-diagram__pulse research-diagram__pulse--02"></span>
+          <span class="research-diagram__pulse research-diagram__pulse--03"></span>
+          <span class="research-diagram__bar research-diagram__bar--01"></span>
+          <span class="research-diagram__bar research-diagram__bar--02"></span>
+          <span class="research-diagram__bar research-diagram__bar--03"></span>
+          <span class="research-diagram__bar research-diagram__bar--04"></span>
+        </div>
+      )
+    }
+
+    {
+      artwork.kind === 'mask' && artwork.src && (
+        <>
+          {artwork.underlaySrc && (
+            <span
+              class="research-figure__technical-mask"
+              style={underlayStyle}
+              aria-hidden="true"
+            ></span>
+          )}
+          <img
+            class="research-figure__mask-source"
+            src={artwork.src}
+            alt=""
+            width="960"
+            height="960"
+            loading={loading}
+            decoding="async"
+            aria-hidden="true"
+          />
+          <span
+            class="research-figure__mask"
+            style={maskStyle}
+            aria-hidden="true"
+          ></span>
+        </>
+      )
+    }
+  </div>
+
+  <figcaption class="research-figure__caption">
+    <span class="research-figure__description">{artwork.caption}</span>
+    <span class="research-figure__taxonomy">
+      {
+        taxonomyItems.map((item, index) => (
+          <>
+            {index > 0 && <i aria-hidden="true">·</i>}
+            <span>{item}</span>
+          </>
+        ))
+      }
+    </span>
+    <strong
+      class="research-figure__index"
+      aria-label={`Plate ${artwork.index}`}
+    >
+      {artwork.index}
+    </strong>
+  </figcaption>
+</figure>
+
+<style>
+  .research-figure {
+    --figure-paper: var(--paper, #e7e4dc);
+    --figure-ink: var(--ink, #182521);
+    --figure-accent: var(--accent-readable, var(--accent, #8e2148));
+    --figure-rule: var(
+      --rule,
+      color-mix(in srgb, var(--figure-ink) 24%, transparent)
+    );
+    display: grid;
+    min-width: 0;
+    margin: 0;
+    border: 1px solid var(--figure-rule);
+    background: var(--figure-paper);
+    color: var(--figure-ink);
+  }
+
+  .research-figure__topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 2.55rem;
+    padding: 0.55rem 0.75rem;
+    gap: 1rem;
+    border-bottom: 1px solid var(--figure-rule);
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: max(0.75rem, 12px);
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .research-figure__status {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    gap: 0.55rem;
+    white-space: nowrap;
+  }
+
+  .research-figure__status i {
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--figure-accent);
+  }
+
+  .research-figure__viewport {
+    position: relative;
+    min-height: 15rem;
+    aspect-ratio: var(--figure-aspect, 1 / 1);
+    overflow: hidden;
+    isolation: isolate;
+    background:
+      linear-gradient(var(--figure-rule) 1px, transparent 1px),
+      linear-gradient(90deg, var(--figure-rule) 1px, transparent 1px),
+      var(--figure-paper);
+    background-size: 2rem 2rem;
+    color: var(--figure-ink);
+  }
+
+  .research-figure__poster,
+  .research-figure__canvas,
+  .research-figure__mask-source,
+  .research-figure__technical-mask,
+  .research-figure__mask,
+  .research-diagram {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .research-figure__poster,
+  .research-figure__mask-source {
+    display: block;
+    object-fit: contain;
+  }
+
+  .research-figure__poster {
+    z-index: 0;
+    filter: grayscale(1) contrast(1.2);
+  }
+
+  .research-figure__canvas {
+    z-index: 1;
+    image-rendering: pixelated;
+  }
+
+  .research-figure__fallback {
+    position: absolute;
+    z-index: 2;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    display: none;
+    margin: 0;
+    padding: 0.65rem;
+    border: 1px solid var(--figure-rule);
+    background: var(--figure-paper);
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: max(0.75rem, 12px);
+  }
+
+  .research-figure__canvas[data-field-state='fallback']
+    + .research-figure__fallback {
+    display: block;
+  }
+
+  .research-figure__mask-source {
+    z-index: 1;
+    opacity: 0.16;
+    filter: grayscale(1) contrast(1.7);
+  }
+
+  .research-figure__technical-mask {
+    z-index: 1;
+    background: var(--figure-ink);
+    opacity: 0.18;
+    -webkit-mask: var(--figure-underlay) center / contain no-repeat;
+    mask: var(--figure-underlay) center / contain no-repeat;
+  }
+
+  .research-figure__mask {
+    z-index: 2;
+    background: var(--figure-ink);
+    -webkit-mask: var(--figure-mask) center / contain no-repeat;
+    mask: var(--figure-mask) center / contain no-repeat;
+  }
+
+  @supports (
+    (-webkit-mask-image: linear-gradient(#000, #000)) or
+      (mask-image: linear-gradient(#000, #000))
+  ) {
+    .research-figure__mask-source {
+      opacity: 0;
+    }
+  }
+
+  .research-figure__caption {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'description index'
+      'taxonomy index';
+    align-items: end;
+    min-height: 5.4rem;
+    padding: 0.7rem 0.75rem;
+    gap: 0.35rem 1rem;
+    border-top: 1px solid var(--figure-rule);
+  }
+
+  .research-figure__description {
+    grid-area: description;
+    max-width: 62ch;
+    font-family: var(--font-display, Georgia, serif);
+    font-size: clamp(1.1rem, 2.4vw, 1.55rem);
+    line-height: 1.08;
+  }
+
+  .research-figure__taxonomy {
+    display: flex;
+    grid-area: taxonomy;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.55rem;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: max(0.75rem, 12px);
+    letter-spacing: 0.1em;
+    line-height: 1.35;
+    text-transform: uppercase;
+  }
+
+  .research-figure__taxonomy i {
+    font-style: normal;
+  }
+
+  .research-figure__index {
+    grid-area: index;
+    font-family: var(--font-display, Georgia, serif);
+    font-size: clamp(2.4rem, 7vw, 4.8rem);
+    font-weight: 400;
+    line-height: 0.78;
+  }
+
+  .research-diagram {
+    z-index: 0;
+    overflow: hidden;
+    color: var(--figure-ink);
+  }
+
+  .research-diagram--underlay {
+    opacity: 0.1;
+  }
+
+  .research-diagram span {
+    position: absolute;
+    display: block;
+    box-sizing: border-box;
+  }
+
+  .research-diagram__grid {
+    inset: 8%;
+    border: 1px solid currentColor;
+    opacity: 0.32;
+    background:
+      linear-gradient(currentColor 1px, transparent 1px),
+      linear-gradient(90deg, currentColor 1px, transparent 1px);
+    background-size: 12.5% 12.5%;
+  }
+
+  .research-diagram__boundary {
+    top: 18%;
+    left: 18%;
+    width: 64%;
+    height: 64%;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+  }
+
+  .research-diagram__route {
+    left: 50%;
+    top: 50%;
+    width: 34%;
+    height: 1px;
+    background: currentColor;
+    transform-origin: left;
+  }
+
+  .research-diagram__route--01 {
+    transform: rotate(10deg);
+  }
+
+  .research-diagram__route--02 {
+    transform: rotate(74deg);
+  }
+
+  .research-diagram__route--03 {
+    transform: rotate(146deg);
+  }
+
+  .research-diagram__route--04 {
+    transform: rotate(218deg);
+  }
+
+  .research-diagram__route--05 {
+    transform: rotate(286deg);
+  }
+
+  .research-diagram__node {
+    width: 0.85rem;
+    height: 0.85rem;
+    border: 1px solid currentColor;
+    background: var(--figure-paper);
+    transform: translate(-50%, -50%);
+  }
+
+  .research-diagram__node--01 {
+    top: 50%;
+    left: 50%;
+    width: 1.35rem;
+    height: 1.35rem;
+    background: var(--figure-accent);
+  }
+
+  .research-diagram__node--02 {
+    top: 56%;
+    left: 82%;
+  }
+
+  .research-diagram__node--03 {
+    top: 82%;
+    left: 59%;
+  }
+
+  .research-diagram__node--04 {
+    top: 68%;
+    left: 24%;
+  }
+
+  .research-diagram__node--05 {
+    top: 29%;
+    left: 23%;
+  }
+
+  .research-diagram__node--06 {
+    top: 18%;
+    left: 61%;
+  }
+
+  .research-diagram__pulse {
+    width: 0.42rem;
+    height: 0.42rem;
+    background: var(--figure-accent);
+  }
+
+  .research-diagram__pulse--01 {
+    top: 38%;
+    left: 60%;
+  }
+
+  .research-diagram__pulse--02 {
+    top: 64%;
+    left: 48%;
+  }
+
+  .research-diagram__pulse--03 {
+    top: 44%;
+    left: 31%;
+  }
+
+  .research-diagram__bar {
+    right: 10%;
+    bottom: 12%;
+    width: 5%;
+    border: 1px solid currentColor;
+    border-bottom: 0;
+  }
+
+  .research-diagram__bar--01 {
+    right: 29%;
+    height: 15%;
+  }
+
+  .research-diagram__bar--02 {
+    right: 23%;
+    height: 24%;
+  }
+
+  .research-diagram__bar--03 {
+    right: 17%;
+    height: 36%;
+  }
+
+  .research-diagram__bar--04 {
+    height: 48%;
+    background: var(--figure-accent);
+  }
+
+  .research-diagram--rust-edge-compute .research-diagram__boundary {
+    top: 30%;
+    left: 37%;
+    width: 26%;
+    height: 40%;
+    border-radius: 0;
+  }
+
+  .research-diagram--rust-edge-compute .research-diagram__route--01 {
+    transform: rotate(0deg);
+  }
+
+  .research-diagram--rust-edge-compute .research-diagram__route--02 {
+    transform: rotate(180deg);
+  }
+
+  .research-diagram--rust-edge-compute .research-diagram__route--03 {
+    transform: rotate(32deg);
+  }
+
+  .research-diagram--rust-edge-compute .research-diagram__route--04 {
+    transform: rotate(148deg);
+  }
+
+  .research-diagram--physics-engine .research-diagram__boundary {
+    border-style: dashed;
+    border-radius: 0;
+    transform: rotate(9deg);
+  }
+
+  .research-diagram--physics-engine .research-diagram__route {
+    width: 17%;
+  }
+
+  .research-diagram--physics-engine .research-diagram__node {
+    border-radius: 50%;
+    background: var(--figure-accent);
+  }
+
+  .research-diagram--inference-proxy .research-diagram__boundary {
+    display: none;
+  }
+
+  .research-diagram--inference-proxy .research-diagram__route {
+    left: 16%;
+    width: 68%;
+  }
+
+  .research-diagram--inference-proxy .research-diagram__route--01,
+  .research-diagram--inference-proxy .research-diagram__route--02,
+  .research-diagram--inference-proxy .research-diagram__route--03 {
+    transform: rotate(0deg);
+  }
+
+  .research-diagram--inference-proxy .research-diagram__route--01 {
+    top: 35%;
+  }
+
+  .research-diagram--inference-proxy .research-diagram__route--02 {
+    top: 50%;
+  }
+
+  .research-diagram--inference-proxy .research-diagram__route--03 {
+    top: 65%;
+  }
+
+  .research-diagram--inference-proxy .research-diagram__node {
+    top: 50%;
+    border-radius: 50%;
+  }
+
+  .research-diagram--inference-proxy .research-diagram__node--01 {
+    left: 16%;
+  }
+
+  .research-diagram--inference-proxy .research-diagram__node--02 {
+    left: 50%;
+  }
+
+  .research-diagram--inference-proxy .research-diagram__node--03 {
+    left: 84%;
+  }
+
+  .research-diagram--entity-07 .research-diagram__boundary {
+    top: 8%;
+    left: 30%;
+    width: 40%;
+    height: 84%;
+    border-radius: 48% 48% 18% 18%;
+  }
+
+  .research-diagram--entity-07 .research-diagram__route {
+    top: 34%;
+    left: 50%;
+    width: 40%;
+  }
+
+  @media (max-width: 42rem) {
+    .research-figure__topline {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .research-figure__viewport {
+      min-height: 12rem;
+    }
+
+    .research-figure__caption {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .research-figure__status i {
+      animation: none;
+    }
+  }
+</style>

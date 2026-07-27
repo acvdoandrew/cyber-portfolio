@@ -1,6 +1,5 @@
 ---
-import '../styles/global.css';
-import '../styles/minimal.css';
+import '../styles/editorial.css';
 
 interface Props {
   title?: string;
@@ -8,11 +7,12 @@ interface Props {
 }
 
 const {
-  title = 'Andrew — systems, AI, and strange software',
-  description = 'I build weird systems in Rust and Python: distributed compute, simulations, security tooling, and AI infra. You can inspect the work yourself.',
+  title = 'Andrew — programmer building strange systems',
+  description = 'I build weird systems in Rust, C++, and Python: distributed compute, simulations, security tooling, and AI infrastructure. You can inspect the work yourself.',
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const socialImage = new URL('/og.png', Astro.site);
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'Person',
@@ -37,81 +37,82 @@ const schema = {
 };
 ---
 <!doctype html>
-<html lang="en" data-design="minimal-signal" data-theme="system" data-theme-resolved="dark" data-crt="on" data-entity="on" data-entity-form="signal" data-substrate="auto" data-renderer="canvas" data-fx-quality="high" data-fx-reason="boot">
+<html lang="en" data-palette="archive">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#050505" />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#E7E4DC" />
+    <meta name="color-scheme" content="light" />
     <meta name="description" content={description} />
     <meta name="author" content="Andrew" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="preload" href="/fonts/Doto-Black.ttf" as="font" type="font/ttf" crossorigin />
+    <link
+      rel="preload"
+      href="/fonts/BodoniModa-Variable-Latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/IBMPlexMono-Regular-Latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
 
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="ANDREW_TERMINAL // vOS" />
+    <meta property="og:site_name" content="Andrew / Strange Systems" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:creator" content="@etobyte" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
 
     <title>{title}</title>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
     <script is:inline>
       (() => {
+        const palettes = {
+          archive: { paper: '#E7E4DC', scheme: 'light' },
+          carbon: { paper: '#090A09', scheme: 'dark' },
+          signal: { paper: '#050806', scheme: 'dark' },
+          radiant: { paper: '#0B0905', scheme: 'dark' },
+          field: { paper: '#061008', scheme: 'dark' },
+          alloy: { paper: '#B4BCC1', scheme: 'light' },
+        };
         try {
-          const crt = localStorage.getItem('andrew-crt');
-          const entity = localStorage.getItem('andrew-entity');
-          const savedSubstrate = localStorage.getItem('andrew-substrate');
-          const savedTheme = localStorage.getItem('andrew-theme');
-          const theme = ['system', 'light', 'dark'].includes(savedTheme || '') ? savedTheme : 'system';
-          const substrate = ['auto', 'contours', 'gravity', 'neural', 'flow', 'membrane', 'off'].includes(savedSubstrate || '')
-            ? savedSubstrate
-            : 'auto';
-          const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          const resolvedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
-          document.documentElement.dataset.theme = theme;
-          document.documentElement.dataset.themeResolved = resolvedTheme;
-          document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolvedTheme === 'light' ? '#f1eee8' : '#050505');
-          document.documentElement.dataset.crt = crt === 'off' ? 'off' : 'on';
-          document.documentElement.dataset.entity = entity === 'off' ? 'off' : 'on';
-          document.documentElement.dataset.substrate = substrate;
+          const stored = localStorage.getItem('portfolio.palette.v1');
+          const id = stored && Object.hasOwn(palettes, stored) ? stored : 'archive';
+          const palette = palettes[id];
+          document.documentElement.dataset.palette = id;
+          document.documentElement.style.colorScheme = palette.scheme;
+          document
+            .querySelector('meta[name="theme-color"]')
+            ?.setAttribute('content', palette.paper);
+          document
+            .querySelector('meta[name="color-scheme"]')
+            ?.setAttribute('content', palette.scheme);
         } catch {
-          document.documentElement.dataset.theme = 'system';
-          document.documentElement.dataset.themeResolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          document.documentElement.dataset.crt = 'on';
-          document.documentElement.dataset.entity = 'on';
-          document.documentElement.dataset.substrate = 'auto';
+          document.documentElement.dataset.palette = 'archive';
         }
       })();
     </script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    <canvas id="signal-field" class="signal-field" aria-hidden="true"></canvas>
-    <canvas id="signal-compositor" class="signal-compositor" aria-hidden="true"></canvas>
-    <div id="entity-runtime-root" class="entity-runtime-root" aria-hidden="true" data-entity-ignore>
-      <canvas id="gpu-stage" class="gpu-stage" aria-hidden="true"></canvas>
-      <canvas id="braille-entity" class="braille-entity" aria-hidden="true"></canvas>
-      <output id="entity-thought" class="entity-thought" aria-hidden="true"></output>
-    </div>
-    <div class="ambient-light" aria-hidden="true"></div>
-    <canvas id="signal-rain" class="signal-rain" aria-hidden="true"></canvas>
-    <div class="crt-layer" aria-hidden="true"></div>
-    <div class="noise-layer" aria-hidden="true"></div>
-    <div class="scroll-progress" aria-hidden="true"><span id="scroll-progress-bar"></span></div>
     <slot />
-    <script is:inline src="/scripts/compositor.js"></script>
-    <script is:inline src="/scripts/interface.js"></script>
     <script>
-      import '../scripts/gpu-runtime';
-      import '../scripts/entity/canvas-renderer';
+      import '../scripts/editorial-interface';
     </script>
   </body>
 </html>

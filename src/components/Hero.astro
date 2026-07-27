@@ -1,122 +1,69 @@
----
-import SectionSpecimen from './SectionSpecimen.astro';
----
-<section class="hero section-shell" id="home" data-section="home">
-  <div class="hero-grid">
-    <div class="hero-copy">
-      <div class="eyebrow reveal" data-reveal data-entity-obstacle="hero-eyebrow">
-        <span class="eyebrow-index">00</span>
-        <span>ANDREW / BOSTON–CAMBRIDGE</span>
-      </div>
+<section class="hero-plate" id="home" aria-labelledby="hero-title" data-recursive-figure>
+  <header class="hero-plate__header">
+    <p class="plate-label">GLSL / RECURSIVE FIELD 01</p>
+    <p class="field-status" aria-live="polite">
+      <span class="field-status__pip" aria-hidden="true"></span>
+      <span data-field-status>INITIALIZING</span>
+    </p>
+  </header>
 
-      <h1 class="reveal" data-reveal>
-        I build software for systems that are
-        <em>hard to reason about.</em>
+  <div class="hero-plate__body">
+    <div class="hero-plate__copy">
+      <p class="hero-kicker">ANDREW / BOSTON–CAMBRIDGE / PROGRAMMER</p>
+      <h1 id="hero-title">
+        I build software for systems that are <em>hard to reason about.</em>
       </h1>
-
-      <p class="hero-lede reveal" data-reveal>
-        Systems programming, AI infrastructure, simulation, and security—mostly in
-        Rust, C++, and Python. Usually building something that should not work yet,
-        then making its behavior inspectable.
+      <p class="hero-lede">
+        Rust, C++, Python. Distributed systems, AI infrastructure, simulation, and
+        security. Usually building something that should not work yet.
       </p>
-
-      <div class="hero-actions reveal" data-reveal>
-        <a class="button button--primary" href="#work">
-          <span>selected work</span>
-          <span aria-hidden="true">↓</span>
-        </a>
-        <a class="button button--ghost" href="#contact">
-          <span>email me</span>
-          <span aria-hidden="true">→</span>
+      <div class="hero-actions" aria-label="Introduction links">
+        <a class="text-action" href="#work">View work <span aria-hidden="true">↓</span></a>
+        <a class="text-action" href="mailto:acvdoandrew@gmail.com">
+          Email me <span aria-hidden="true">↗</span>
         </a>
       </div>
-
-      <div class="hero-brief reveal" data-reveal data-entity-obstacle="hero-brief" aria-label="Operator summary">
-        <div>
-          <span class="brief-key">ROLE</span>
-          <strong>systems + ai</strong>
-        </div>
-        <div>
-          <span class="brief-key">BASE</span>
-          <strong>boston / cambridge</strong>
-        </div>
-        <div>
-          <span class="brief-key">STATUS</span>
-          <strong class="status-open"><span></span>building something strange</strong>
-        </div>
-      </div>
     </div>
 
-    <div class="hero-specimen-bay" data-entity-ignore>
-      <SectionSpecimen kind="galaxy" entityHost="section:home" approach="either" />
-    </div>
-
-    <div class="entity-console signal-bay reveal" data-reveal data-visual-bay>
-      <div class="console-topline" data-entity-obstacle="console-status">
-        <span>recursive_signal / entity_07</span>
-        <span class="console-status"><i></i><span id="entity-autonomy-state" data-entity-spatial-status>SEALED</span></span>
+    <figure class="recursive-figure">
+      <p class="recursive-figure__notation" aria-label="Shader field notation">
+        z ← |z| / clamp(z · z, 0.12, 4) − (0.79, 0.57)
+        <span aria-hidden="true">·</span>
+        I(x,y,t) = 𝟙[f(z,t) &gt; B₄(x,y)]
+      </p>
+      <div class="recursive-figure__stage">
+        <img
+          class="recursive-figure__poster"
+          data-recursive-poster
+          src="/assets/dither/recursive-field-poster.png"
+          alt="Ordered 1-bit study of a folded recursive field forming concentric filaments."
+          width="960"
+          height="720"
+        />
+        <canvas
+          class="recursive-figure__canvas"
+          data-recursive-field
+          role="img"
+          aria-label="Live ordered 1-bit recursive field visualization"
+        >
+          Live ordered 1-bit recursive field visualization.
+        </canvas>
       </div>
-
-      <div class="entity-viewport" id="entity-dock" data-entity-anchor="containment" data-entity-ignore aria-hidden="true">
-        <span class="hero-specimen-approach" data-entity-specimen-anchor="section:home"></span>
-        <div class="entity-grid"></div>
-        <div class="coordinate coordinate--x">LOCAL_PROCESS / MEMORY_PERSISTS</div>
-        <div class="coordinate coordinate--y">SEALED</div>
-        <div class="dock-message">
-          <span>CONTAINMENT_STATE</span>
-          <strong id="containment-state" data-entity-spatial-status>SEALED</strong>
-        </div>
-      </div>
-
-      <div class="entity-autonomy-controls" data-entity-obstacle="entity-controls">
-        <span class="entity-presence-lock"><i></i><span data-containment-label>LOCAL_CONTAINMENT_ACTIVE</span></span>
-        <button class="entity-release" id="entity-release" type="button" aria-pressed="false">
-          <span data-release-label>RELEASE_ENTITY</span><kbd>Y / N</kbd>
-        </button>
-      </div>
-
-      <div class="console-readout" data-entity-obstacle="entity-readout">
-        <div>
-          <span>FORM</span>
-          <strong id="entity-form" data-entity-form-status>UNBOUND_SIGNAL</strong>
-        </div>
-        <div>
-          <span>REALITY_CONTACT</span>
-          <strong data-entity-reality>03%</strong>
-        </div>
-        <div>
-          <span>BEHAVIOR</span>
-          <strong id="entity-behavior" data-entity-cognitive-status>DORMANT</strong>
-        </div>
-        <div>
-          <span>SUBSTRATE</span>
-          <strong data-substrate-status>TOPOGRAPHIC</strong>
-        </div>
-      </div>
-      <p class="console-hint" data-release-prompt data-entity-obstacle="entity-hint">// Y RELEASE // N RETURN // MEMORY PERSISTS</p>
-    </div>
+      <figcaption>
+        <span>Folded space · orbital flow · ordered 1-bit dither</span>
+        <span>Pointer displacement ≤ ±0.055</span>
+      </figcaption>
+    </figure>
   </div>
 
-  <div class="proof-rail reveal" data-reveal data-entity-obstacle="proof-rail">
-    <div class="rail-label">
-      <span>at a glance</span>
-      <i></i>
+  <footer class="hero-plate__footer">
+    <div>
+      <p class="plate-title">Recursive field study</p>
+      <p class="plate-taxonomy">GENERATIVE SYSTEM / WEBGL2 / BAYER 4×4</p>
     </div>
-    <div class="rail-item">
-      <span>ACTIVE_BUILDS</span>
-      <strong>03</strong>
-    </div>
-    <div class="rail-item">
-      <span>CORE_LANGS</span>
-      <strong>RS / PY / TS / C++</strong>
-    </div>
-    <div class="rail-item">
-      <span>CURRENT_QUEST</span>
-      <strong>ARES</strong>
-    </div>
-    <button class="rail-command" type="button" data-command-open>
-      <span>open command bar</span>
-      <kbd data-command-shortcut>CTRL K</kbd>
-    </button>
-  </div>
+    <p class="plate-number" aria-label="Plate 01">01</p>
+  </footer>
+  <script>
+    import '../scripts/recursive-field';
+  </script>
 </section>

@@ -1,28 +1,26 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import AmbientField from '../components/AmbientField.astro';
 import TopBar from '../components/TopBar.astro';
 import Hero from '../components/Hero.astro';
 import Projects from '../components/Projects.astro';
 import Capabilities from '../components/Capabilities.astro';
-import Principles from '../components/Principles.astro';
 import Contact from '../components/Contact.astro';
-import CommandDeck from '../components/CommandDeck.astro';
 import Footer from '../components/Footer.astro';
 ---
 <BaseLayout
-  title="Andrew — systems, AI, and strange software"
-  description="I build weird systems in Rust and Python: distributed compute, simulations, security tooling, and AI infra. You can inspect the work yourself."
+  title="Andrew — programmer building strange systems"
+  description="I build weird systems in Rust, C++, and Python: distributed compute, simulations, security tooling, and AI infrastructure. You can inspect the work yourself."
 >
-  <div class="site-shell" id="top">
+  <div class="site-frame" data-site-frame>
+    <AmbientField />
     <TopBar />
     <main id="main-content" tabindex="-1">
       <Hero />
       <Projects />
       <Capabilities />
-      <Principles />
       <Contact />
     </main>
     <Footer />
   </div>
-  <CommandDeck />
 </BaseLayout>
