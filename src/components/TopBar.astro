@@ -9,6 +9,11 @@ const navItems = [
 ---
 <header class="site-header" data-header data-entity-obstacle="navigation">
   <div class="header-shell">
+    <a class="site-mark" href="#home" aria-label="Andrew, return home">
+      <strong>andrew</strong>
+      <span>/ systems + ai</span>
+    </a>
+
     <nav class="primary-nav" id="primary-nav" aria-label="Primary navigation">
       {navItems.map((item) => (
         <a href={item.href} data-nav-target={item.section}>
@@ -19,13 +24,13 @@ const navItems = [
 
     <div class="header-status" aria-label="System status">
       <span class="status-pip"></span>
-      <span>ENTITY_07 / <strong id="entity-state">DOCKED</strong></span>
+      <span>07 / <strong id="entity-state">DOCKED</strong></span>
       <time id="local-time">--:--:-- ET</time>
     </div>
 
     <div class="header-controls">
       <button class="hud-button command-button" type="button" data-command-open aria-label="Open command deck">
-        <span>CMD</span><kbd data-command-shortcut>CTRL K</kbd>
+        <span>command</span><kbd data-command-shortcut>CTRL K</kbd>
       </button>
       <button class="hud-button icon-toggle theme-toggle" id="theme-toggle" type="button" aria-label="Appearance: system theme">
         <span class="toggle-glyph toggle-glyph--theme" aria-hidden="true">

@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import '../styles/minimal.css';
 
 interface Props {
   title?: string;
@@ -7,7 +8,7 @@ interface Props {
 }
 
 const {
-  title = 'ANDREW_TERMINAL // vOS',
+  title = 'Andrew — systems, AI, and strange software',
   description = 'I build weird systems in Rust and Python: distributed compute, simulations, security tooling, and AI infra. You can inspect the work yourself.',
 } = Astro.props;
 
@@ -36,7 +37,7 @@ const schema = {
 };
 ---
 <!doctype html>
-<html lang="en" data-theme="system" data-theme-resolved="dark" data-crt="on" data-entity="on" data-entity-form="signal" data-substrate="auto" data-renderer="canvas" data-fx-quality="high" data-fx-reason="boot">
+<html lang="en" data-design="minimal-signal" data-theme="system" data-theme-resolved="dark" data-crt="on" data-entity="on" data-entity-form="signal" data-substrate="auto" data-renderer="canvas" data-fx-quality="high" data-fx-reason="boot">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

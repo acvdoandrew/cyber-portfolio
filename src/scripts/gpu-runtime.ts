@@ -1099,7 +1099,7 @@ class GpuRuntime {
     const motion = reducedMotion.matches || this.quality === 'static' ? 0 : 1;
     const strength = mode === 'off'
       ? 0
-      : this.quality === 'high' ? 0.9 : this.quality === 'low' ? 0.76 : 0.62;
+      : this.quality === 'high' ? 0.64 : this.quality === 'low' ? 0.52 : 0.42;
 
     (this.sourceMaterial.uniforms.uSubstrate.value as Vector4).set(
       this.substratePhase,

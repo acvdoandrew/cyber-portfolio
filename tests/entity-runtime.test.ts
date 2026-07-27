@@ -275,6 +275,23 @@ test('the reality substrate morphs through five coherent dithered fields and rem
   assert.match(interfaceSource, /andrew-substrate/);
 });
 
+test('the minimal-signal study keeps editorial hierarchy and one primary recursive artifact', () => {
+  const layout = source('src/layouts/BaseLayout.astro');
+  const minimal = source('src/styles/minimal.css');
+  const topBar = source('src/components/TopBar.astro');
+  const hero = source('src/components/Hero.astro');
+
+  assert.match(layout, /data-design="minimal-signal"/);
+  assert.match(layout, /styles\/minimal\.css/);
+  assert.match(topBar, /class="site-mark"/);
+  assert.match(hero, /recursive_signal \/ entity_07/);
+  assert.match(hero, /SectionSpecimen kind="galaxy"/);
+  assert.match(minimal, /type first, artifacts/);
+  assert.match(minimal, /\.casefile--compact \.casefile-visual \{\s*display: none/);
+  assert.match(minimal, /\.hero-specimen-bay \.section-specimen--galaxy/);
+  assert.match(minimal, /\.command-deck/);
+});
+
 test('seeded cognitive behavior is reproducible and interaction history changes it', () => {
   const first = runBrain(707, true);
   const second = runBrain(707, true);
