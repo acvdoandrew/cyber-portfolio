@@ -193,6 +193,17 @@ test('there is one runtime owner and one GPU particle-pool construction site', (
   assert.match(runtime, /particlePoolId/);
 });
 
+test('the portfolio opens directly without a manual welcome gate', () => {
+  const page = source('src/pages/index.astro');
+  const layout = source('src/layouts/BaseLayout.astro');
+  const interfaceSource = source('public/scripts/interface.js');
+  assert.doesNotMatch(page, /SessionLogin|session-gate/);
+  assert.doesNotMatch(layout, /classList\.add\('session-pending'\)/);
+  assert.doesNotMatch(interfaceSource, /requestAdmission|session-enter|OPENING_GATE/);
+  assert.match(interfaceSource, /root\.dataset\.session = 'open'/);
+  assert.match(interfaceSource, /dispatchEvent\(new CustomEvent\('andrew:session-open'/);
+});
+
 test('release and toggle controls converge on the same runtime API', () => {
   const runtime = source('src/scripts/entity/runtime.ts');
   const interfaceSource = source('public/scripts/interface.js');
@@ -208,6 +219,60 @@ test('release and toggle controls converge on the same runtime API', () => {
   assert.match(runtime, /dataset\.entityReleaseIntent = 'on'/);
   assert.match(runtime, /this\.hiddenReason === 'occupancy' \|\| spatialModeIsReleased/);
   assert.match(styles, /data-entity-release-intent="on"/);
+});
+
+test('entity evolution is one continuous form system with an explicit reality-contact path', () => {
+  const runtime = source('src/scripts/entity/runtime.ts');
+  const gpu = source('src/scripts/gpu-runtime.ts');
+  const particleField = source('src/scripts/entity-particle-field.ts');
+  const canvas = source('src/scripts/entity/canvas-renderer.ts');
+  const compositor = source('public/scripts/compositor.js');
+  const hero = source('src/components/Hero.astro');
+  const deck = source('src/components/CommandDeck.astro');
+  const interfaceSource = source('public/scripts/interface.js');
+
+  assert.match(runtime, /type EntityForm|EntityForm/);
+  assert.match(runtime, /private updateEvolution/);
+  assert.match(runtime, /private beginAscension/);
+  assert.match(runtime, /command === 'ascend'\) this\.requestAscension/);
+  assert.match(runtime, /root\.dataset\.entityForm/);
+  assert.match(particleField, /uReconstructionTarget/);
+  assert.match(particleField, /topology\.reconstructionTargets/);
+  assert.match(gpu, /ascensionVolume/);
+  assert.match(gpu, /uEvolution/);
+  assert.match(canvas, /frame\.reconstructionStrength/);
+  assert.match(compositor, /ascensionSignalField/);
+  assert.match(hero, /data-entity-reality/);
+  assert.match(deck, /\/reality-contact/);
+  assert.match(interfaceSource, /command: 'ascend'/);
+});
+
+test('the reality substrate morphs through five coherent dithered fields and remains visitor-selectable', () => {
+  const gpu = source('src/scripts/gpu-runtime.ts');
+  const interfaceSource = source('public/scripts/interface.js');
+  const layout = source('src/layouts/BaseLayout.astro');
+  const hero = source('src/components/Hero.astro');
+  const deck = source('src/components/CommandDeck.astro');
+
+  for (const field of [
+    'topographicField',
+    'gravityField',
+    'neuralField',
+    'flowMemoryField',
+    'membraneField',
+  ]) {
+    assert.match(gpu, new RegExp(field));
+  }
+  assert.match(gpu, /uniform vec4 uSubstrate/);
+  assert.match(gpu, /uniform vec4 uPointer/);
+  assert.match(gpu, /bayer4\(gl_FragCoord\.xy\)/);
+  assert.match(gpu, /querySelectorAll<HTMLElement>\('\[data-section\]'\)/);
+  assert.match(gpu, /reducedMotion\.matches \|\| this\.quality === 'static' \? 0 : 1/);
+  assert.match(layout, /data-substrate="auto"/);
+  assert.match(hero, /data-substrate-status/);
+  assert.match(deck, /\/cycle-substrate/);
+  assert.match(interfaceSource, /andrew:substrate-change/);
+  assert.match(interfaceSource, /andrew-substrate/);
 });
 
 test('seeded cognitive behavior is reproducible and interaction history changes it', () => {
@@ -798,6 +863,7 @@ test('topology is a newly authored compact faceless humanoid field', () => {
   assert.equal(topology.source, 'compact-faceless-humanoid-field');
   assert.equal(topology.count, 12000);
   assert.equal(topology.listeningTargets.length, topology.targets.length);
+  assert.equal(topology.reconstructionTargets.length, topology.targets.length);
   assert.equal(topology.regionCounts.reduce((sum, count) => sum + count, 0), topology.count);
   assert.ok(topology.regionCounts.every((count) => count > 0));
   const regionNames = Object.keys(BODY_REGION).join(' ');

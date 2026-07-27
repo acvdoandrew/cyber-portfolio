@@ -1,5 +1,5 @@
 import { ENTITY_CONFIG } from './config';
-import { clamp, fractalNoise2, integerHash, mix, SeededRandom } from './random';
+import { clamp, fractalNoise2, integerHash, mix, SeededRandom, smoothstep } from './random';
 import { BODY_REGION } from './types';
 import type { BodyRegion, EntityTopology } from './types';
 
@@ -207,6 +207,43 @@ function listeningTarget(coherent: Point3, region: BodyRegion, random: SeededRan
   ];
 }
 
+function reconstructionTarget(
+  region: BodyRegion,
+  random: SeededRandom,
+  sessionSeed: number,
+): Point3 {
+  const bandCount = 38;
+  const band = Math.floor(random.next() * bandCount);
+  const vertical = band / (bandCount - 1);
+  const latitude = mix(-0.88, 0.86, vertical);
+  const phase = random.range(0, TAU);
+  const head = Math.exp(-Math.pow((latitude + 0.48) / 0.24, 2));
+  const shoulders = Math.exp(-Math.pow((latitude + 0.02) / 0.3, 2));
+  const torso = Math.exp(-Math.pow((latitude - 0.34) / 0.48, 2));
+  const taper = smoothstep(clamp((0.92 - latitude) / 0.72));
+  const width = 0.075 + head * 0.31 + shoulders * 0.48 + torso * 0.3;
+  const depth = 0.055 + head * 0.2 + shoulders * 0.24 + torso * 0.16;
+  const fold = fractalNoise2(latitude * 1.8, phase * 0.21, sessionSeed + 1709);
+  const spine = Math.sin(latitude * 2.8 + sessionSeed * 0.00017) * 0.105 + fold * 0.035;
+  const rib = 0.84 + 0.16 * Math.cos(phase * 2 + latitude * 6.4);
+  let x = spine + Math.cos(phase) * width * rib;
+  let y = latitude + Math.sin(phase * 2.0 + latitude * 4.8) * 0.026;
+  let z = Math.sin(phase) * depth;
+
+  if (region === BODY_REGION.PLUME || region === BODY_REGION.FREE_FIELD) {
+    const side = random.chance(0.5) ? -1 : 1;
+    const t = Math.pow(random.next(), 0.72);
+    const originX = spine + side * (0.22 + shoulders * 0.26);
+    const originY = mix(-0.26, 0.28, random.next());
+    x = originX + side * t * mix(0.18, 0.72, random.next()) * taper;
+    y = originY + t * (0.28 + random.next() * 0.46) +
+      Math.sin(t * 9 + phase) * (0.025 + t * 0.055);
+    z = Math.sin(phase) * mix(0.05, 0.21, t);
+  }
+
+  return [x, y, z];
+}
+
 function appearanceFor(region: BodyRegion, random: SeededRandom, target: Point3): [number, number, number, number] {
   let alpha: [number, number];
   let scale: [number, number];
@@ -255,10 +292,11 @@ function copyParticle(source: number, target: number, from: Float32Array, to: Fl
 function spatiallyReorder(
   targets: Float32Array,
   listeningTargets: Float32Array,
+  reconstructionTargets: Float32Array,
   properties: Float32Array,
   appearance: Float32Array,
   count: number,
-): [Float32Array, Float32Array, Float32Array, Float32Array] {
+): [Float32Array, Float32Array, Float32Array, Float32Array, Float32Array] {
   const order = Array.from({ length: count }, (_, index) => index);
   order.sort((left, right) => {
     const leftOffset = left * 4;
@@ -273,16 +311,18 @@ function spatiallyReorder(
   });
   const orderedTargets = new Float32Array(targets.length);
   const orderedListening = new Float32Array(listeningTargets.length);
+  const orderedReconstruction = new Float32Array(reconstructionTargets.length);
   const orderedProperties = new Float32Array(properties.length);
   const orderedAppearance = new Float32Array(appearance.length);
   for (let index = 0; index < count; index += 1) {
     const source = order[index];
     copyParticle(source, index, targets, orderedTargets);
     copyParticle(source, index, listeningTargets, orderedListening);
+    copyParticle(source, index, reconstructionTargets, orderedReconstruction);
     copyParticle(source, index, properties, orderedProperties);
     copyParticle(source, index, appearance, orderedAppearance);
   }
-  return [orderedTargets, orderedListening, orderedProperties, orderedAppearance];
+  return [orderedTargets, orderedListening, orderedReconstruction, orderedProperties, orderedAppearance];
 }
 
 export function createFacelessHumanoidTopology(count: number, sessionSeed: number): EntityTopology {
@@ -290,6 +330,7 @@ export function createFacelessHumanoidTopology(count: number, sessionSeed: numbe
   const random = new SeededRandom(sessionSeed ^ 0x07e1717);
   const targets = new Float32Array(particleCount * 4);
   const listeningTargets = new Float32Array(particleCount * 4);
+  const reconstructionTargets = new Float32Array(particleCount * 4);
   const properties = new Float32Array(particleCount * 4);
   const appearance = new Float32Array(particleCount * 4);
   const regionCounts = new Uint32Array(REGION_COUNT);
@@ -314,6 +355,11 @@ export function createFacelessHumanoidTopology(count: number, sessionSeed: numbe
       coherent[1] += fractalNoise2(coherent[1] * 3.1, region * 0.43, sessionSeed + 409) * 0.008;
     }
     const unresolved = listeningTarget(coherent, region, pointRandom);
+    const reconstruction = reconstructionTarget(
+      region,
+      pointRandom.fork(`reconstruction:${index}`),
+      sessionSeed,
+    );
     const offset = index * 4;
     targets[offset] = coherent[0];
     targets[offset + 1] = coherent[1];
@@ -323,6 +369,10 @@ export function createFacelessHumanoidTopology(count: number, sessionSeed: numbe
     listeningTargets[offset + 1] = unresolved[1];
     listeningTargets[offset + 2] = unresolved[2];
     listeningTargets[offset + 3] = region;
+    reconstructionTargets[offset] = reconstruction[0];
+    reconstructionTargets[offset + 1] = reconstruction[1];
+    reconstructionTargets[offset + 2] = reconstruction[2];
+    reconstructionTargets[offset + 3] = region;
     properties[offset] = pointRandom.range(definition.binding[0], definition.binding[1]);
     properties[offset + 1] = pointRandom.range(0.6, 0.96);
     properties[offset + 2] = pointRandom.range(0.04, 0.98);
@@ -335,13 +385,21 @@ export function createFacelessHumanoidTopology(count: number, sessionSeed: numbe
     regionCounts[region] += 1;
   }
 
-  const ordered = spatiallyReorder(targets, listeningTargets, properties, appearance, particleCount);
+  const ordered = spatiallyReorder(
+    targets,
+    listeningTargets,
+    reconstructionTargets,
+    properties,
+    appearance,
+    particleCount,
+  );
   return {
     count: particleCount,
     targets: ordered[0],
     listeningTargets: ordered[1],
-    properties: ordered[2],
-    appearance: ordered[3],
+    reconstructionTargets: ordered[2],
+    properties: ordered[3],
+    appearance: ordered[4],
     regionCounts,
     source: 'compact-faceless-humanoid-field',
   };

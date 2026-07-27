@@ -36,7 +36,7 @@ const schema = {
 };
 ---
 <!doctype html>
-<html lang="en" data-theme="system" data-theme-resolved="dark" data-crt="on" data-entity="on" data-renderer="canvas" data-fx-quality="high" data-fx-reason="boot">
+<html lang="en" data-theme="system" data-theme-resolved="dark" data-crt="on" data-entity="on" data-entity-form="signal" data-substrate="auto" data-renderer="canvas" data-fx-quality="high" data-fx-reason="boot">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -67,8 +67,12 @@ const schema = {
         try {
           const crt = localStorage.getItem('andrew-crt');
           const entity = localStorage.getItem('andrew-entity');
+          const savedSubstrate = localStorage.getItem('andrew-substrate');
           const savedTheme = localStorage.getItem('andrew-theme');
           const theme = ['system', 'light', 'dark'].includes(savedTheme || '') ? savedTheme : 'system';
+          const substrate = ['auto', 'contours', 'gravity', 'neural', 'flow', 'membrane', 'off'].includes(savedSubstrate || '')
+            ? savedSubstrate
+            : 'auto';
           const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           const resolvedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
           document.documentElement.dataset.theme = theme;
@@ -76,13 +80,14 @@ const schema = {
           document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolvedTheme === 'light' ? '#f1eee8' : '#050505');
           document.documentElement.dataset.crt = crt === 'off' ? 'off' : 'on';
           document.documentElement.dataset.entity = entity === 'off' ? 'off' : 'on';
+          document.documentElement.dataset.substrate = substrate;
         } catch {
           document.documentElement.dataset.theme = 'system';
           document.documentElement.dataset.themeResolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
           document.documentElement.dataset.crt = 'on';
           document.documentElement.dataset.entity = 'on';
+          document.documentElement.dataset.substrate = 'auto';
         }
-        document.documentElement.classList.add('session-pending');
       })();
     </script>
   </head>

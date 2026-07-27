@@ -39,6 +39,7 @@ const VELOCITY_SHADER = /* glsl */ `
   precision highp float;
   uniform sampler2D uTarget;
   uniform sampler2D uListeningTarget;
+  uniform sampler2D uReconstructionTarget;
   uniform sampler2D uProperties;
   uniform sampler2D uOccupancy;
   uniform vec2 uOccupancySize;
@@ -56,6 +57,7 @@ const VELOCITY_SHADER = /* glsl */ `
   uniform vec4 uPointerField;
   uniform vec4 uPointerMotion;
   uniform vec4 uSpecimen;
+  uniform vec4 uEvolution;
   uniform vec2 uSpecimenDirection;
   uniform float uTime;
   uniform float uDelta;
@@ -130,6 +132,7 @@ const VELOCITY_SHADER = /* glsl */ `
     vec4 velocitySample = texture2D(textureVelocity, uv);
     vec4 targetSample = texture2D(uTarget, uv);
     vec4 listeningSample = texture2D(uListeningTarget, uv);
+    vec4 reconstructionSample = texture2D(uReconstructionTarget, uv);
     vec4 properties = texture2D(uProperties, uv);
     vec3 positionValue = positionSample.xyz;
     vec3 velocityValue = velocitySample.xyz;
@@ -151,6 +154,24 @@ const VELOCITY_SHADER = /* glsl */ `
     float inspectionStrength = clamp(uEpisode.y, 0.0, 1.0);
     float directionalBias = clamp(uEpisode.z, -1.0, 1.0);
     float specimenStrength = clamp(uSpecimen.y, 0.0, 1.0);
+    float reconstructionStrength = smoothstep(0.0, 1.0, clamp(uEvolution.x, 0.0, 1.0));
+    float ascensionStrength = smoothstep(0.0, 1.0, clamp(uEvolution.y, 0.0, 1.0));
+    target = mix(target, reconstructionSample.xyz, reconstructionStrength);
+
+    if (ascensionStrength > 0.001) {
+      float fieldAngle = properties.w * 50.265482 + uv.x * 12.566371 + uTime * 0.11;
+      float fieldBand = fract(uv.y * 17.0 + properties.z * 3.7);
+      float fieldRadius = mix(0.18, 1.06, fieldBand);
+      float fieldFold = sin(fieldAngle * 3.0 + fieldRadius * 9.0 + uTime * 0.34);
+      vec3 fieldTarget = vec3(
+        cos(fieldAngle) * fieldRadius * (0.72 + fieldFold * 0.12),
+        sin(fieldAngle * 0.5 + properties.z * 4.0) * fieldRadius * 0.62 - 0.06,
+        sin(fieldAngle) * fieldRadius * 0.28
+      );
+      fieldTarget.xy += normalize(fieldTarget.xy + vec2(0.0001)) *
+        sin(fieldRadius * 28.0 - uTime * 1.2 + properties.w * 9.0) * 0.035;
+      target = mix(target, fieldTarget, ascensionStrength * (0.54 + properties.w * 0.28));
+    }
 
     float cranialCore = regionEquals(region, 0.0);
     float cranialEdge = regionEquals(region, 1.0);
@@ -272,6 +293,7 @@ const VELOCITY_SHADER = /* glsl */ `
     float reformOrder = mix(1.0, mix(0.7, 1.18, broadSilhouette) - landmarkDelay, reforming);
     float effectiveBinding = max(preserved, baseBinding * bindingGate * formCoherence * reformOrder);
     effectiveBinding = max(effectiveBinding, specimenBinding);
+    effectiveBinding = max(effectiveBinding, ascensionStrength * 0.72);
     effectiveBinding *= mix(1.0, 0.5, relocation);
 
     float detach = (1.0 - effectiveBinding) * (0.36 + fragmentPressure * 0.88);
@@ -435,6 +457,7 @@ const PARTICLE_VERTEX_SHADER = /* glsl */ `
   uniform float uStructureAlpha;
   uniform float uDensityAlpha;
   uniform float uFormBlend;
+  uniform vec4 uEvolution;
   uniform vec4 uVisualWeights;
   uniform vec4 uEpisodeVisual;
   uniform float uSpecimenStrength;
@@ -445,6 +468,8 @@ const PARTICLE_VERTEX_SHADER = /* glsl */ `
   varying float vSeed;
   varying float vRegion;
   varying float vHighlight;
+  varying float vFormStyle;
+  varying float vAscension;
 
   float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -512,6 +537,8 @@ const PARTICLE_VERTEX_SHADER = /* glsl */ `
     float pointSize = (0.94 + appearance.w * 1.58) * uPixelRatio;
     pointSize *= 1.0 + directionalSurface * uEpisodeVisual.x * 0.08 + cranialEdge * uEpisodeVisual.y * 0.05;
     pointSize *= 0.88 + (1.0 - abs(positionSample.z)) * 0.28 + uEntropy * properties.w * 0.16;
+    pointSize *= mix(1.0, 0.72, smoothstep(0.0, 1.0, uEvolution.x));
+    pointSize *= mix(1.0, 0.82, smoothstep(0.0, 1.0, uEvolution.y));
     clip += aCorner * pointSize * 2.0 / max(uViewport, vec2(1.0));
     gl_Position = vec4(clip, positionSample.z * 0.04, 1.0);
     vCorner = aCorner;
@@ -520,6 +547,8 @@ const PARTICLE_VERTEX_SHADER = /* glsl */ `
     vSeed = seed;
     vRegion = region;
     vHighlight = highlight;
+    vFormStyle = max(smoothstep(0.08, 0.7, uEvolution.x), smoothstep(0.04, 0.5, uEvolution.y));
+    vAscension = smoothstep(0.0, 1.0, uEvolution.y);
     float structureGain = mix(1.0, uStructureAlpha / max(0.001, uThemeAlpha), structure * 0.28);
     float fieldFade = mix(1.0, 0.34, peripheral);
     fieldFade *= 1.0 + peripheral * uSpecimenStrength * 0.82;
@@ -533,7 +562,8 @@ const PARTICLE_VERTEX_SHADER = /* glsl */ `
     hierarchy *= mix(1.0, listeningBody, step(region, 9.5));
     float relocationFade = mix(1.0, mix(0.48, 0.68, peripheral), relocating * sin(progress * 3.14159265));
     float disabledFade = spatialMode > 4.5 ? 1.0 - smoothstep(0.08, 1.0, progress) : 1.0;
-    vAlpha = uThemeAlpha * uDensityAlpha * appearance.y * structureGain * fieldFade * hierarchy * presenceGain * torsoFade * relocationFade * disabledFade;
+    float evolutionGain = 1.0 + vFormStyle * 0.36 + vAscension * 0.38;
+    vAlpha = uThemeAlpha * uDensityAlpha * appearance.y * structureGain * fieldFade * hierarchy * presenceGain * torsoFade * relocationFade * disabledFade * evolutionGain;
   }
 `;
 
@@ -555,6 +585,8 @@ const PARTICLE_FRAGMENT_SHADER = /* glsl */ `
   varying float vSeed;
   varying float vRegion;
   varying float vHighlight;
+  varying float vFormStyle;
+  varying float vAscension;
 
   float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -574,6 +606,10 @@ const PARTICLE_FRAGMENT_SHADER = /* glsl */ `
     float distanceValue = texture2D(uGlyphAtlas, atlasUv).r;
     float glyph = smoothstep(0.43, 0.57, distanceValue);
     float softTrace = smoothstep(0.31, 0.5, distanceValue) * 0.16;
+    float pointMark = 1.0 - smoothstep(0.18, 0.72, length(vCorner));
+    float filamentMark = (1.0 - smoothstep(0.08, 0.23, abs(vCorner.y))) *
+      (1.0 - smoothstep(0.28, 0.92, abs(vCorner.x)));
+    float evolvedMark = max(pointMark, filamentMark * (0.22 + vAscension * 0.42));
 
     vec2 edgeDistance = min(vScreenUv - uContainmentRect.xy, uContainmentRect.zw - vScreenUv);
     float inside = smoothstep(-uContainmentSoftness, uContainmentSoftness, min(edgeDistance.x, edgeDistance.y));
@@ -582,7 +618,7 @@ const PARTICLE_FRAGMENT_SHADER = /* glsl */ `
     float mask = mix(1.0, max(inside, weakBoundary), smoothstep(0.0, 0.08, uContainmentStrength));
 
     float grain = 0.94 + hash21(gl_FragCoord.xy + floor(uTime * 4.0 + vSeed * 9.0)) * 0.06;
-    float alpha = (glyph + softTrace) * vAlpha * grain * mask;
+    float alpha = mix(glyph + softTrace, evolvedMark, vFormStyle) * vAlpha * grain * mask;
     if (alpha < 0.004) discard;
     vec3 darkBase = vec3(0.72, 0.73, 0.72);
     vec3 darkStructure = vec3(0.87, 0.88, 0.87);
@@ -636,6 +672,7 @@ export class EntityParticleField {
   private velocityVariable: Variable;
   private targetTexture: DataTexture;
   private listeningTargetTexture: DataTexture;
+  private reconstructionTargetTexture: DataTexture;
   private propertiesTexture: DataTexture;
   private appearanceTexture: DataTexture;
   private occupancyTexture: DataTexture;
@@ -667,6 +704,7 @@ export class EntityParticleField {
     const velocityTexture = this.gpuCompute.createTexture();
     this.targetTexture = this.gpuCompute.createTexture();
     this.listeningTargetTexture = this.gpuCompute.createTexture();
+    this.reconstructionTargetTexture = this.gpuCompute.createTexture();
     this.propertiesTexture = this.gpuCompute.createTexture();
     this.appearanceTexture = this.gpuCompute.createTexture();
     this.populateTextures(sessionSeed, positionTexture, velocityTexture);
@@ -692,6 +730,7 @@ export class EntityParticleField {
     Object.assign(this.velocityVariable.material.uniforms, {
       uTarget: { value: this.targetTexture },
       uListeningTarget: { value: this.listeningTargetTexture },
+      uReconstructionTarget: { value: this.reconstructionTargetTexture },
       uProperties: { value: this.propertiesTexture },
       uOccupancy: { value: this.occupancyTexture },
       uOccupancySize: { value: new THREE.Vector2(ENTITY_CONFIG.occupancy.columns, ENTITY_CONFIG.occupancy.rows) },
@@ -709,6 +748,7 @@ export class EntityParticleField {
       uPointerField: { value: new THREE.Vector4(4, 4, 0, 0) },
       uPointerMotion: { value: new THREE.Vector4() },
       uSpecimen: { value: new THREE.Vector4() },
+      uEvolution: { value: new THREE.Vector4() },
       uSpecimenDirection: { value: new THREE.Vector2(1, 0) },
       uTime: { value: 0 },
       uDelta: { value: 1 / 60 },
@@ -756,6 +796,7 @@ export class EntityParticleField {
         uStructureAlpha: { value: ENTITY_CONFIG.theme.dark.structureAlpha },
         uDensityAlpha: { value: ENTITY_CONFIG.particles.densityAlpha[maximumTier] },
         uFormBlend: { value: ENTITY_CONFIG.body.stateFormBlend.DORMANT },
+        uEvolution: { value: new THREE.Vector4() },
         uVisualWeights: { value: new THREE.Vector4(
           ENTITY_CONFIG.body.edgeHighlightGain,
           ENTITY_CONFIG.body.supportHighlightGain,
@@ -783,10 +824,12 @@ export class EntityParticleField {
     const velocityData = velocity.image.data as Float32Array;
     const targetData = this.targetTexture.image.data as Float32Array;
     const listeningTargetData = this.listeningTargetTexture.image.data as Float32Array;
+    const reconstructionTargetData = this.reconstructionTargetTexture.image.data as Float32Array;
     const propertyData = this.propertiesTexture.image.data as Float32Array;
     const appearanceData = this.appearanceTexture.image.data as Float32Array;
     targetData.set(topology.targets);
     listeningTargetData.set(topology.listeningTargets);
+    reconstructionTargetData.set(topology.reconstructionTargets);
     propertyData.set(topology.properties);
     appearanceData.set(topology.appearance);
     for (let index = 0; index < this.count; index += 1) {
@@ -807,6 +850,7 @@ export class EntityParticleField {
     velocity.needsUpdate = true;
     this.targetTexture.needsUpdate = true;
     this.listeningTargetTexture.needsUpdate = true;
+    this.reconstructionTargetTexture.needsUpdate = true;
     this.propertiesTexture.needsUpdate = true;
     this.appearanceTexture.needsUpdate = true;
   }
@@ -955,6 +999,12 @@ export class EntityParticleField {
       frame.specimen.direction.x,
       frame.specimen.direction.y,
     );
+    (this.velocityVariable.material.uniforms.uEvolution.value as Vector4).set(
+      frame.reconstructionStrength,
+      frame.ascensionStrength,
+      frame.realityContact,
+      frame.ascensionPhase,
+    );
     if (dt > 0 || !this.hasComputed) {
       this.gpuCompute.compute();
       this.hasComputed = true;
@@ -996,6 +1046,12 @@ export class EntityParticleField {
       : frame.cognitiveState === 'CURIOUS' ? 0.35 : 0.08;
     this.material.uniforms.uLightTheme.value = frame.theme === 'light' ? 1 : 0;
     this.material.uniforms.uExposure.value = theme.exposure;
+    (this.material.uniforms.uEvolution.value as Vector4).set(
+      frame.reconstructionStrength,
+      frame.ascensionStrength,
+      frame.realityContact,
+      frame.ascensionPhase,
+    );
   }
 
   render(target: WebGLRenderTarget, camera: OrthographicCamera): void {
@@ -1013,6 +1069,7 @@ export class EntityParticleField {
     this.material.dispose();
     this.targetTexture.dispose();
     this.listeningTargetTexture.dispose();
+    this.reconstructionTargetTexture.dispose();
     this.propertiesTexture.dispose();
     this.appearanceTexture.dispose();
     this.occupancyTexture.dispose();

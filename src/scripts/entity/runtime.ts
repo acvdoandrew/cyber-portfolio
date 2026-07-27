@@ -17,6 +17,7 @@ import type {
   BehaviorEpisodeKind,
   BehaviorPhase,
   CognitiveState,
+  EntityForm,
   EntityPostureState,
   EntityRuntimeApi,
   EntityRuntimeDebugSnapshot,
@@ -65,7 +66,15 @@ const GLYPH_CORRUPTION = ['·', ':', '░', '_', ' '];
 const COGNITIVE_STATES: CognitiveState[] = [
   'DORMANT', 'OBSERVING', 'CURIOUS', 'INSPECTING', 'THINKING', 'FRAGMENTING', 'REFORMING',
 ];
+const ENTITY_FORMS: EntityForm[] = ['SIGNAL', 'EMBODIMENT', 'RECONSTRUCTION', 'ASCENSION', 'MANIFEST'];
 const SPECIMEN_KINDS: SpecimenKind[] = ['black-hole', 'galaxy', 'relay', 'graph', 'orbit'];
+const FORM_LABELS: Record<EntityForm, string> = {
+  SIGNAL: 'UNBOUND_SIGNAL',
+  EMBODIMENT: 'GLYPH_EMBODIMENT',
+  RECONSTRUCTION: 'PARAMETRIC_SHELL',
+  ASCENSION: 'FIELD_INTELLIGENCE',
+  MANIFEST: 'MANIFEST_AVATAR',
+};
 
 function isSpecimenKind(value: string | undefined | null): value is SpecimenKind {
   return Boolean(value && SPECIMEN_KINDS.includes(value as SpecimenKind));
@@ -187,6 +196,7 @@ class EntityRuntimeController implements EntityRuntimeApi {
   private previousSpatialMode: SpatialMode = 'SEALED';
   private spatialMode: SpatialMode = 'SEALED';
   private cognitiveState: CognitiveState = 'DORMANT';
+  private entityForm: EntityForm = 'SIGNAL';
   private motorIntent: MotorIntent = 'IDLE';
   private transitionStart = 0;
   private transitionDuration = 1;
@@ -265,6 +275,19 @@ class EntityRuntimeController implements EntityRuntimeApi {
   private specimenNextEligible = new Map<string, number>();
   private activeSpecimenElement: HTMLElement | null = null;
   private activeSpecimenKind: SpecimenKind | null = null;
+  private reconstructionStrength = 0;
+  private ascensionStrength = 0;
+  private ascensionPhase = 0;
+  private realityContact = 0.035;
+  private ascensionStartedAt = -Infinity;
+  private ascensionEndsAt = -Infinity;
+  private ascensionCooldownUntil = 0;
+  private ascensionCount = 0;
+  private pendingAscension = false;
+  private forcedEntityForm = (() => {
+    const requested = new URLSearchParams(location.search).get('entityForm')?.toUpperCase() as EntityForm | undefined;
+    return requested && ENTITY_FORMS.includes(requested) ? requested : null;
+  })();
 
   constructor() {
     const seed = readSessionSeed();
@@ -333,6 +356,11 @@ class EntityRuntimeController implements EntityRuntimeApi {
       scrollOrigin: 0.5,
       interactionEnergy: 0,
       formCoherence: ENTITY_CONFIG.brain.stateCoherence.DORMANT,
+      entityForm: 'SIGNAL',
+      reconstructionStrength: 0,
+      ascensionStrength: 0,
+      ascensionPhase: 0,
+      realityContact: this.realityContact,
       boundRatio: ENTITY_CONFIG.particles.activeBindingRange[0],
       posture: emptyPosture(),
       quality: initialQuality,
@@ -497,6 +525,18 @@ class EntityRuntimeController implements EntityRuntimeApi {
     this.frame.activeAnchorId = 'containment';
   }
 
+  requestAscension(source: PerceptionSource = 'system'): void {
+    if (!this.requestedEnabled) this.setEnabled(true, source);
+    const now = performance.now();
+    if (this.spatialMode === 'SEALED' || this.spatialMode === 'RETURNING' || this.spatialMode === 'RELEASING') {
+      this.pendingAscension = true;
+      this.evidenceMessagePending = 'reality contact requested // releasing boundary';
+      if (this.spatialMode === 'SEALED' || this.spatialMode === 'RETURNING') this.requestRelease(source);
+      return;
+    }
+    this.beginAscension(now);
+  }
+
   toggleRelease(source: PerceptionSource = 'system'): void {
     if (this.pendingReleaseForSafeSpace) this.requestReturn(source);
     else if (this.spatialMode === 'SEALED' || this.spatialMode === 'RETURNING') this.requestRelease(source);
@@ -658,6 +698,7 @@ class EntityRuntimeController implements EntityRuntimeApi {
       const source = (event as CustomEvent<{ source?: PerceptionSource }>).detail?.source || 'system';
       if (command === 'release') this.requestRelease(source);
       else if (command === 'return') this.requestReturn(source);
+      else if (command === 'ascend') this.requestAscension(source);
       else if (command === 'toggle-release') this.toggleRelease(source);
       else if (command === 'toggle') this.setEnabled(!this.requestedEnabled, source);
       else if (command === 'enable') this.setEnabled(true, source);
@@ -2303,6 +2344,7 @@ class EntityRuntimeController implements EntityRuntimeApi {
       ? { x: specimenDelta.x / specimenDistancePx, y: specimenDelta.y / specimenDistancePx }
       : { x: 0, y: 0 };
     this.frame.specimen.distance = clamp(specimenDistancePx / Math.max(1, size.width), 0, 4);
+    this.updateEvolution(time, seconds, interactionEnergy);
     this.frame.lastVisibleActionAt = this.lastVisibleActionAt;
     this.frame.activeAnchorId = this.spatialMode === 'SEALED' ? 'containment' : this.frame.activeAnchorId;
     this.frame.activeHostId = episode?.hostId?.startsWith('host:')
@@ -2324,6 +2366,11 @@ class EntityRuntimeController implements EntityRuntimeApi {
     this.frame.scrollOrigin = this.scroll.origin;
     this.frame.interactionEnergy = interactionEnergy;
     this.frame.formCoherence = mix(this.frame.formCoherence, coherenceTarget, 1 - Math.exp(-seconds * 0.7));
+    this.frame.entityForm = this.entityForm;
+    this.frame.reconstructionStrength = this.reconstructionStrength;
+    this.frame.ascensionStrength = this.ascensionStrength;
+    this.frame.ascensionPhase = this.ascensionPhase;
+    this.frame.realityContact = this.realityContact;
     this.frame.boundRatio = mix(this.frame.boundRatio, boundTarget, 1 - Math.exp(-seconds * 0.5));
     this.frame.enabled = this.requestedEnabled;
     this.frame.visible = this.spatialMode !== 'HIDDEN' || this.transitionProgress < 1;
@@ -2331,13 +2378,123 @@ class EntityRuntimeController implements EntityRuntimeApi {
     this.frame.reducedMotion = this.reducedMotion.matches;
     this.frame.simulationPaused = expensiveSimulationShouldPause(document.hidden, this.frame.visible);
     this.frame.theme = document.documentElement.dataset.themeResolved === 'light' ? 'light' : 'dark';
-    this.frame.status = `${this.spatialMode} / ${this.cognitiveState}${episode ? ` / ${episode.kind}:${episode.phase}` : ''}`;
+    this.frame.status = `${this.spatialMode} / ${this.entityForm} / ${this.cognitiveState}${episode ? ` / ${episode.kind}:${episode.phase}` : ''}`;
     this.frame.frameTimeAverage = this.frameTimeAverage;
     this.frame.activeParticleCount = this.activeParticleCount;
     const coupledSpecimenSection = episode?.kind === 'SPECIMEN' && ['SETTLE', 'ENGAGE'].includes(episode.phase)
       ? specimenSection
       : null;
     this.syncSpecimenContact(coupledSpecimenSection);
+  }
+
+  private beginAscension(time: number): void {
+    if (time < this.ascensionCooldownUntil || this.ascensionStrength > 0.04) return;
+    this.pendingAscension = false;
+    if (this.reducedMotion.matches) {
+      this.ascensionCount += 1;
+      this.realityContact = Math.max(this.realityContact, 0.72);
+      this.entityForm = 'MANIFEST';
+      this.evidenceMessagePending = 'field form modeled // motion suppressed';
+      this.publish(true);
+      return;
+    }
+    this.ascensionStartedAt = time;
+    this.ascensionEndsAt = time + 7800;
+    this.ascensionCooldownUntil = time + 30000;
+    this.entityForm = 'ASCENSION';
+    this.evidenceMessagePending = 'boundary confidence exceeded // field form online';
+    this.lastVisibleActionAt = time;
+    this.publish(true);
+  }
+
+  private updateEvolution(time: number, seconds: number, interactionEnergy: number): void {
+    const memory = this.brain.getMemory();
+    const meaningfulMemory = memory.filter((entry) =>
+      entry.hoverCount + entry.focusCount + entry.activationCount > 0 || entry.accumulatedDwellMs > 900
+    );
+    const memorySignal = clamp(meaningfulMemory.reduce((sum, entry) =>
+      sum + entry.affinity * 0.62 + Math.min(0.38, entry.accumulatedDwellMs / 18000) +
+      Math.min(0.22, entry.activationCount * 0.11), 0) / 3.4
+    );
+    const contactTarget = clamp(
+      0.035 +
+      (this.frame.released ? 0.11 : 0) +
+      Math.min(0.19, meaningfulMemory.length * 0.028) +
+      memorySignal * 0.38 +
+      interactionEnergy * 0.12 +
+      this.frame.specimen.strength * 0.1 +
+      this.ascensionCount * 0.22 +
+      this.ascensionStrength * 0.24
+    );
+    this.realityContact = mix(
+      this.realityContact,
+      Math.max(this.realityContact * 0.998, contactTarget),
+      1 - Math.exp(-seconds * 0.42),
+    );
+
+    if (this.pendingAscension && this.spatialMode === 'FREE') this.beginAscension(time);
+    const automaticAscension = this.ascensionCount === 0 &&
+      this.spatialMode === 'FREE' &&
+      this.frame.specimen.kind === 'galaxy' &&
+      this.frame.specimen.strength > 0.78 &&
+      this.realityContact > 0.18;
+    if (automaticAscension) this.beginAscension(time);
+
+    if (time < this.ascensionEndsAt) {
+      const elapsed = time - this.ascensionStartedAt;
+      const duration = Math.max(1, this.ascensionEndsAt - this.ascensionStartedAt);
+      this.ascensionPhase = clamp(elapsed / duration);
+      const entrance = smoothstep(clamp(elapsed / 1450));
+      const exit = 1 - smoothstep(clamp((elapsed - (duration - 2250)) / 2250));
+      this.ascensionStrength = clamp(entrance * exit);
+      this.entityForm = 'ASCENSION';
+    } else if (this.ascensionStartedAt > 0) {
+      this.ascensionCount += 1;
+      this.ascensionStartedAt = -Infinity;
+      this.ascensionEndsAt = -Infinity;
+      this.ascensionStrength = 0;
+      this.ascensionPhase = 1;
+      this.realityContact = Math.max(this.realityContact, 0.68);
+      this.entityForm = 'MANIFEST';
+      this.evidenceMessagePending = 'reality contact retained // avatar selected';
+    }
+
+    let nextForm: EntityForm = this.entityForm;
+    if (this.forcedEntityForm) {
+      nextForm = this.forcedEntityForm;
+      if (nextForm === 'ASCENSION') {
+        this.ascensionStrength = this.reducedMotion.matches ? 0.24 : 0.92;
+        this.ascensionPhase = 0.54;
+      }
+    } else if (this.ascensionStrength > 0.01) {
+      nextForm = 'ASCENSION';
+    } else if (this.spatialMode === 'SEALED' || this.spatialMode === 'RETURNING') {
+      nextForm = 'SIGNAL';
+    } else if (
+      ['RELEASING', 'RELOCATING'].includes(this.spatialMode) ||
+      ['FRAGMENTING', 'REFORMING'].includes(this.cognitiveState) ||
+      this.frame.specimen.strength > 0.42
+    ) {
+      nextForm = 'RECONSTRUCTION';
+    } else if (this.ascensionCount > 0 || this.realityContact > 0.76) {
+      nextForm = 'MANIFEST';
+    } else {
+      nextForm = 'EMBODIMENT';
+    }
+
+    const reconstructionTarget = nextForm === 'RECONSTRUCTION'
+      ? 1
+      : nextForm === 'ASCENSION'
+        ? 0.74
+        : nextForm === 'MANIFEST'
+          ? 0.08
+          : 0;
+    this.reconstructionStrength = mix(
+      this.reconstructionStrength,
+      reconstructionTarget,
+      1 - Math.exp(-seconds * (reconstructionTarget > this.reconstructionStrength ? 2.5 : 1.35)),
+    );
+    this.entityForm = nextForm;
   }
 
   private syncSpecimenContact(sectionId: string | null): void {
@@ -2424,12 +2581,14 @@ class EntityRuntimeController implements EntityRuntimeApi {
     };
     shared.entity = this.frame;
     shared.revision = this.frame.revision;
-    const key = `${this.spatialMode}:${this.cognitiveState}:${this.motorIntent}:${this.episode?.kind || '-'}:${this.episode?.phase || '-'}:${this.requestedEnabled}:${this.frame.quality}`;
+    const realityBucket = Math.round(this.frame.realityContact * 20);
+    const key = `${this.spatialMode}:${this.entityForm}:${realityBucket}:${this.cognitiveState}:${this.motorIntent}:${this.episode?.kind || '-'}:${this.episode?.phase || '-'}:${this.requestedEnabled}:${this.frame.quality}`;
     if (!force && key === this.lastPublishedKey) return;
     this.lastPublishedKey = key;
     const root = document.documentElement;
     root.dataset.entitySpatial = this.spatialMode.toLowerCase();
     root.dataset.entityBehavior = this.cognitiveState.toLowerCase();
+    root.dataset.entityForm = this.entityForm.toLowerCase();
     root.dataset.entityMotor = this.motorIntent.toLowerCase();
     root.dataset.entityEpisode = this.episode?.kind.toLowerCase() || 'none';
     root.dataset.entityEpisodePhase = this.episode?.phase.toLowerCase() || 'none';
@@ -2440,17 +2599,30 @@ class EntityRuntimeController implements EntityRuntimeApi {
     const releaseButton = document.getElementById('entity-release') as HTMLButtonElement | null;
     const releaseLabel = releaseButton?.querySelector<HTMLElement>('[data-release-label]');
     const containmentLabel = document.querySelector<HTMLElement>('[data-containment-label],[data-entity-presence-label]');
+    const releasePrompt = document.querySelector<HTMLElement>('[data-release-prompt]');
     const toggle = document.getElementById('entity-toggle');
     const toggleLabel = toggle?.querySelector<HTMLElement>('[data-entity-label]');
     if (topStatus) topStatus.textContent = this.requestedEnabled ? this.cognitiveState : 'OFFLINE';
     document.querySelectorAll<HTMLElement>('[data-entity-spatial-status]').forEach((status) => { status.textContent = this.spatialMode; });
     document.querySelectorAll<HTMLElement>('[data-entity-cognitive-status]').forEach((status) => { status.textContent = this.cognitiveState; });
-    document.querySelectorAll<HTMLElement>('[data-entity-form-status]').forEach((status) => { status.textContent = 'GLYPH_INTELLIGENCE'; });
+    document.querySelectorAll<HTMLElement>('[data-entity-form-status]').forEach((status) => {
+      status.textContent = FORM_LABELS[this.entityForm];
+    });
+    document.querySelectorAll<HTMLElement>('[data-entity-reality]').forEach((status) => {
+      status.textContent = `${Math.round(this.frame.realityContact * 100).toString().padStart(2, '0')}%`;
+    });
     if (containmentLabel) containmentLabel.textContent = this.spatialMode === 'SEALED'
       ? 'LOCAL_CONTAINMENT_ACTIVE'
       : this.spatialMode === 'RETURNING'
         ? 'FIELD_RECALL_IN_PROGRESS'
+        : this.entityForm === 'ASCENSION'
+          ? 'REALITY_BOUNDARY_UNSTABLE'
         : 'ENTITY_07 // PORTFOLIO_WIDE';
+    if (releasePrompt) releasePrompt.textContent = this.entityForm === 'ASCENSION'
+      ? '// REALITY BREACH // LOCAL GEOMETRY REWRITING'
+      : this.frame.released
+        ? '// CTRL K → /REALITY-CONTACT // MEMORY ACCUMULATES'
+        : '// Y RELEASE // N RETURN // MEMORY PERSISTS';
     if (releaseButton) {
       const sealed = this.spatialMode === 'SEALED' || this.spatialMode === 'RETURNING';
       releaseButton.disabled = !this.requestedEnabled || this.pendingReleaseForSafeSpace || ['RELEASING', 'RETURNING'].includes(this.spatialMode);
@@ -2503,6 +2675,7 @@ class EntityRuntimeController implements EntityRuntimeApi {
         .join(' ');
       pre.textContent = [
         `spatial  ${snapshot.frame.spatialMode}`,
+        `form     ${snapshot.frame.entityForm} reconstruct:${snapshot.frame.reconstructionStrength.toFixed(2)} ascend:${snapshot.frame.ascensionStrength.toFixed(2)} reality:${snapshot.frame.realityContact.toFixed(2)}`,
         `cognitive ${snapshot.frame.cognitiveState}`,
         `motor    ${snapshot.frame.motorIntent}`,
         `episode  ${snapshot.frame.episodeKind || '-'}:${snapshot.frame.episodePhase || '-'} -> ${snapshot.frame.episodeTargetId || '-'}`,

@@ -10,7 +10,7 @@ import type {
 } from 'three';
 import { EntityParticleField } from './entity-particle-field';
 import { entityRuntime } from './entity/runtime';
-import type { SpatialMode } from './entity/types';
+import type { EntityForm, SpatialMode } from './entity/types';
 
 type QualityTier = 'high' | 'low' | 'static';
 
@@ -38,11 +38,14 @@ const SOURCE_SHADER = /* glsl */ `
   uniform vec2 uResolution;
   uniform vec4 uEntity;
   uniform vec4 uEntityMeta;
+  uniform vec4 uEvolution;
   uniform vec4 uCaptures[5];
   uniform float uCaptureSeeds[5];
   uniform vec4 uPortals[3];
   uniform float uPortalCount;
   uniform float uGlitch;
+  uniform vec4 uSubstrate;
+  uniform vec4 uPointer;
 
   float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -59,6 +62,72 @@ const SOURCE_SHADER = /* glsl */ `
 
   float lineMask(float distanceValue, float widthValue) {
     return 1.0 - smoothstep(widthValue, widthValue + 0.018, distanceValue);
+  }
+
+  mat2 rotate2d(float angle) {
+    float cosine = cos(angle);
+    float sine = sin(angle);
+    return mat2(cosine, -sine, sine, cosine);
+  }
+
+  float recursiveSignalField(vec2 position, float time) {
+    float energy = 0.0;
+    float weight = 1.0;
+    position *= rotate2d(0.18 * sin(time * 0.19));
+
+    for (int iteration = 0; iteration < 6; iteration++) {
+      float index = float(iteration);
+      position = abs(position);
+      position = position / clamp(dot(position, position), 0.12, 4.0) - vec2(0.79, 0.57);
+      position *= rotate2d(0.48 + 0.08 * sin(time * 0.21 + index * 1.7));
+
+      float radius = length(position);
+      float shell = exp(-20.0 * abs(radius - (0.63 + 0.035 * sin(time * 0.34 + index))));
+      float filaments = pow(
+        0.5 + 0.5 * cos(10.0 * atan(position.y, position.x) + radius * 7.0 - time),
+        7.0
+      );
+      energy += shell * (0.64 + 0.68 * filaments) / weight;
+      weight *= 1.32;
+    }
+
+    return energy;
+  }
+
+  float ascensionVolume(vec2 position, float time) {
+    float distanceFromCore = length(position);
+    float angle = atan(position.y, abs(position.x) + 0.0001);
+    vec2 folded = vec2(abs(position.x), position.y);
+    float energy = 0.0;
+    float weight = 1.0;
+
+    for (int iteration = 0; iteration < 7; iteration++) {
+      float index = float(iteration);
+      folded = abs(folded);
+      folded = folded / clamp(dot(folded, folded), 0.085, 4.2) - vec2(0.73, 0.54);
+      folded *= rotate2d(0.42 + sin(time * 0.12 + index * 1.37) * 0.075);
+      float radius = length(folded);
+      float shell = exp(-19.0 * abs(radius - (0.58 + sin(time * 0.2 + index) * 0.028)));
+      float filament = pow(0.5 + 0.5 * cos(
+        atan(folded.y, folded.x) * 12.0 + radius * 8.5 - time * 0.46
+      ), 9.0);
+      energy += shell * (0.46 + filament * 0.82) / weight;
+      weight *= 1.34;
+    }
+
+    float arches = pow(0.5 + 0.5 * cos(
+      distanceFromCore * 34.0 - abs(angle) * 10.0 +
+      sin(angle * 5.0 + time * 0.18) * 2.4
+    ), 10.0);
+    float ribs = pow(abs(cos(
+      angle * 15.0 + distanceFromCore * 8.0 -
+      sin(distanceFromCore * 7.0 - time * 0.23) * 2.0
+    )), 18.0);
+    float iris = exp(-8.0 * abs(distanceFromCore - (0.22 + sin(time * 0.26) * 0.014)));
+    float coreVoid = smoothstep(0.075, 0.18, distanceFromCore);
+    float envelope = 1.0 - smoothstep(0.52, 1.48, distanceFromCore);
+    float volume = energy * 0.74 + arches * 0.42 + ribs * 0.24 + iris * 0.58;
+    return tanh(volume * 1.2) * envelope * coreVoid;
   }
 
   float bayer4(vec2 pixel) {
@@ -87,6 +156,182 @@ const SOURCE_SHADER = /* glsl */ `
     if (x < 2.0) return 7.0 / 16.0;
     if (x < 3.0) return 13.0 / 16.0;
     return 5.0 / 16.0;
+  }
+
+  vec2 hash22(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.xx + p3.yz) * p3.zy);
+  }
+
+  float valueNoise(vec2 p) {
+    vec2 cell = floor(p);
+    vec2 local = fract(p);
+    local = local * local * (3.0 - 2.0 * local);
+    float a = hash21(cell);
+    float b = hash21(cell + vec2(1.0, 0.0));
+    float c = hash21(cell + vec2(0.0, 1.0));
+    float d = hash21(cell + vec2(1.0, 1.0));
+    return mix(mix(a, b, local.x), mix(c, d, local.x), local.y);
+  }
+
+  float fbm3(vec2 p) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    mat2 turn = mat2(0.8, 0.6, -0.6, 0.8);
+    for (int octave = 0; octave < 3; octave++) {
+      value += valueNoise(p) * amplitude;
+      p = turn * p * 2.03 + vec2(17.17, 9.31);
+      amplitude *= 0.5;
+    }
+    return value;
+  }
+
+  float topographicField(vec2 position, float time) {
+    vec2 drift = vec2(time * 0.012, -time * 0.008);
+    float warpA = fbm3(position * 0.58 + drift);
+    float warpB = fbm3(position * 0.58 + vec2(8.7, 3.1) - drift);
+    vec2 folded = position + (vec2(warpA, warpB) - 0.5) * 0.82;
+    float terrain = fbm3(folded * 1.24 + vec2(0.0, time * 0.01));
+    float majorDistance = abs(fract(terrain * 8.0 + position.y * 0.18) - 0.5);
+    float fineDistance = abs(fract(terrain * 17.0 - position.x * 0.08) - 0.5);
+    float major = 1.0 - smoothstep(0.025, 0.085, majorDistance);
+    float fine = 1.0 - smoothstep(0.014, 0.052, fineDistance);
+    vec2 markerCell = fract(position * 3.2) - 0.5;
+    float marker = (1.0 - smoothstep(0.025, 0.1, length(markerCell)))
+      * step(0.86, hash21(floor(position * 3.2)));
+    return clamp(major * 0.82 + fine * 0.28 + marker * 0.48, 0.0, 1.0);
+  }
+
+  float gravityField(vec2 position, float time, vec2 attractor) {
+    vec2 p = position - attractor * 0.18;
+    p *= rotate2d(0.06 * sin(time * 0.14));
+    float radius = length(p);
+    float angle = atan(p.y, p.x);
+    float primary = pow(
+      0.5 + 0.5 * cos(17.0 * log(radius + 0.14) - angle * 5.0 - time * 0.32),
+      12.0
+    );
+    float counter = pow(
+      0.5 + 0.5 * cos(27.0 * radius + angle * 7.0 + time * 0.23),
+      18.0
+    );
+    float lens = 1.0 - smoothstep(
+      0.018,
+      0.065,
+      abs(abs(p.y + sin(p.x * 3.2 + time * 0.12) * 0.035) - 0.17 / (radius + 0.24))
+    );
+    float photonRing = exp(-24.0 * abs(radius - (0.22 + sin(time * 0.18) * 0.012)));
+    float envelope = (1.0 - smoothstep(0.3, 2.45, radius)) * smoothstep(0.07, 0.19, radius);
+    return clamp(
+      (primary * 0.68 + counter * 0.28 + lens * 0.42 + photonRing * 0.7) * envelope,
+      0.0,
+      1.0
+    );
+  }
+
+  float neuralField(vec2 position, float time) {
+    vec2 p = position * 2.32;
+    vec2 cell = floor(p);
+    vec2 local = fract(p) - 0.5;
+    float nearest = 12.0;
+    float secondNearest = 12.0;
+    float identity = 0.0;
+
+    for (int y = -1; y <= 1; y++) {
+      for (int x = -1; x <= 1; x++) {
+        vec2 offset = vec2(float(x), float(y));
+        vec2 random = hash22(cell + offset);
+        vec2 node = offset + 0.34 * sin(time * 0.17 + random * 6.2831853) - local;
+        float distanceSquared = dot(node, node);
+        if (distanceSquared < nearest) {
+          secondNearest = nearest;
+          nearest = distanceSquared;
+          identity = random.x;
+        } else if (distanceSquared < secondNearest) {
+          secondNearest = distanceSquared;
+        }
+      }
+    }
+
+    float edgeDistance = sqrt(secondNearest) - sqrt(nearest);
+    float edge = 1.0 - smoothstep(0.025, 0.1, edgeDistance);
+    float node = 1.0 - smoothstep(0.025, 0.11, sqrt(nearest));
+    float pulse = pow(0.5 + 0.5 * sin(time * 0.7 - identity * 13.0), 7.0);
+    float axonPulse = pow(0.5 + 0.5 * sin(time * 0.33 + cell.x * 1.7 - cell.y * 1.1), 11.0);
+    return clamp(edge * (0.5 + axonPulse * 0.32) + node * (0.46 + pulse * 0.72), 0.0, 1.0);
+  }
+
+  float flowMemoryField(vec2 position, float time, float scrollVelocity) {
+    float directionNoise = fbm3(position * 0.54 + vec2(time * 0.018, -time * 0.011));
+    float angle = directionNoise * 6.2831853 + position.y * 0.36;
+    vec2 direction = vec2(cos(angle), sin(angle));
+    vec2 p = position + direction * (0.28 + abs(scrollVelocity) * 0.08);
+    p += vec2(time * 0.012, -time * 0.018 - scrollVelocity * 0.08);
+    float warp = fbm3(p * 0.82 + vec2(5.2, -3.7));
+    float ribbon = pow(abs(sin(p.x * 7.4 + warp * 8.2 + p.y * 1.3)), 22.0);
+    float counter = pow(abs(sin(p.y * 10.2 - warp * 5.4 - p.x * 0.8)), 30.0);
+    vec2 moteCell = floor(p * 13.0);
+    vec2 motePosition = fract(p * 13.0) - 0.5;
+    float mote = (1.0 - smoothstep(0.025, 0.12, length(motePosition)))
+      * step(0.92, hash21(moteCell + floor(time * 0.22)));
+    return clamp(ribbon * 0.72 + counter * 0.24 + mote * 0.52, 0.0, 1.0);
+  }
+
+  float membraneField(vec2 position, float time) {
+    vec2 p = position * 0.88;
+    float warpA = fbm3(p * 0.78 + vec2(time * 0.012, -time * 0.01));
+    float warpB = fbm3(p * 0.78 + vec2(4.4, -7.2) - vec2(time * 0.008, time * 0.014));
+    p += (vec2(warpA, warpB) - 0.5) * 0.92;
+    float activator = fbm3(p * 1.72 + vec2(time * 0.01, 0.0));
+    float inhibitor = fbm3(p * 3.86 - vec2(0.0, time * 0.014));
+    float reaction = activator - inhibitor * 0.72;
+    float cellWall = 1.0 - smoothstep(0.022, 0.078, abs(reaction - 0.16));
+    float secondaryWall = 1.0 - smoothstep(
+      0.018,
+      0.06,
+      abs(fract((activator + inhibitor * 0.38) * 6.4) - 0.5)
+    );
+    float pores = pow(0.5 + 0.5 * cos(
+      length(p) * 19.0 + atan(p.y, p.x) * 4.0 - time * 0.24
+    ), 18.0);
+    return clamp(cellWall * 0.76 + secondaryWall * 0.32 + pores * 0.2, 0.0, 1.0);
+  }
+
+  float substrateField(vec2 position, float phase, float time, float scrollVelocity, vec2 attractor) {
+    if (phase < 1.0) {
+      float blend = smoothstep(0.08, 0.92, phase);
+      return mix(
+        topographicField(position, time),
+        gravityField(position, time, attractor),
+        blend
+      );
+    }
+    if (phase < 2.0) {
+      float blend = smoothstep(0.08, 0.92, phase - 1.0);
+      return mix(
+        gravityField(position, time, attractor),
+        neuralField(position, time),
+        blend
+      );
+    }
+    if (phase < 3.0) {
+      float blend = smoothstep(0.08, 0.92, phase - 2.0);
+      return mix(
+        neuralField(position, time),
+        flowMemoryField(position, time, scrollVelocity),
+        blend
+      );
+    }
+    if (phase < 4.0) {
+      float blend = smoothstep(0.08, 0.92, phase - 3.0);
+      return mix(
+        flowMemoryField(position, time, scrollVelocity),
+        membraneField(position, time),
+        blend
+      );
+    }
+    return membraneField(position, time);
   }
 
   float captureField(vec2 local, float seed) {
@@ -129,25 +374,61 @@ const SOURCE_SHADER = /* glsl */ `
       float ticks = step(0.94, abs(sin(atan(local.y, local.x) * 18.0 - t))) * step(0.66, radius) * step(radius, 0.9);
       return clamp(rings * step(0.26, noise) + cross * 0.46 + satellite + ticks * 0.62, 0.0, 1.0);
     }
-    float galaxyRadius = length(local / vec2(0.94, 0.58));
-    float galaxyAngle = atan(local.y, local.x);
-    float spiral = lineMask(abs(sin(galaxyAngle * 2.0 - galaxyRadius * 10.0 + t * 0.3)), 0.085);
-    spiral *= step(0.14, galaxyRadius) * step(galaxyRadius, 0.94);
-    float core = exp(-dot(local / vec2(0.2, 0.12), local / vec2(0.2, 0.12)) * 2.2);
-    float starField = step(0.93, noise) * step(galaxyRadius, 1.0);
-    vec2 planetCenter = vec2(cos(t * 0.8) * 0.68, sin(t * 0.8) * 0.4);
-    float planet = 1.0 - smoothstep(0.025, 0.065, length(local - planetCenter));
-    return clamp(spiral * 0.82 + core + starField * 0.56 + planet, 0.0, 1.0);
+    vec2 fieldPosition = vec2(local.x * 1.55, local.y);
+    float fieldTime = uTime * 0.42 + seed * 0.31;
+    float radius = length(fieldPosition);
+    float angle = atan(fieldPosition.y, fieldPosition.x);
+    float recursive = recursiveSignalField(
+      vec2(abs(fieldPosition.x), fieldPosition.y) * 1.06,
+      fieldTime
+    );
+
+    float rings = 0.5 + 0.5 * cos(
+      31.0 * log(radius + 0.17)
+      - 10.0 * angle
+      - 1.35 * fieldTime
+      + 2.6 * sin(3.0 * angle + fieldTime * 0.24)
+    );
+    rings = pow(rings, 8.0) * exp(-0.38 * radius);
+
+    float counterRings = 0.5 + 0.5 * cos(
+      26.0 * radius
+      + 8.0 * angle
+      + 0.82 * fieldTime
+      + 2.0 * sin(5.0 * angle - fieldTime * 0.31)
+    );
+    counterRings = pow(counterRings, 11.0);
+
+    float spokes = pow(
+      abs(cos(angle * 12.0 + 2.4 * sin(radius * 5.0 - fieldTime * 0.46))),
+      24.0
+    );
+    float iris = exp(-6.0 * abs(radius - (0.24 + 0.025 * sin(fieldTime * 0.6))));
+    float core = exp(-7.5 * radius) * (0.55 + 0.45 * cos(angle * 8.0 + fieldTime));
+    float outerFade = 1.0 - smoothstep(0.22, 1.65, radius);
+    float value = (
+      recursive * 0.54
+      + rings * 0.46
+      + counterRings * 0.22
+      + spokes * (0.1 + 0.3 * (1.0 - smoothstep(0.2, 1.5, radius)))
+      + iris * 0.38
+      + core * 0.24
+    ) * outerFade;
+
+    return smoothstep(0.16, 0.93, value);
   }
 
   vec2 capturePlate(vec2 uv, vec2 center, vec2 size, float seed) {
     vec2 p = (uv - center) / max(size, vec2(0.0001));
     if (abs(p.x) > 1.04 || abs(p.y) > 1.04) return vec2(0.0);
+    float entityDistance = length((center - uEntity.xy) * vec2(uResolution.x / uResolution.y, 1.0));
     float entityNear = uEntityMeta.y * (1.0 - smoothstep(
       0.035,
       0.2,
-      length((center - uEntity.xy) * vec2(uResolution.x / uResolution.y, 1.0))
+      entityDistance
     ));
+    float ascensionNear = uEvolution.y * (1.0 - smoothstep(0.1, 0.72, entityDistance));
+    entityNear = max(entityNear, ascensionNear);
     vec2 entityLocal = (uEntity.xy - center) / size;
     float wakeRadius = fract(uTime * 0.52 + seed * 0.037) * 1.42;
     float wake = lineMask(abs(length(p - entityLocal) - wakeRadius), 0.024) * entityNear;
@@ -156,7 +437,11 @@ const SOURCE_SHADER = /* glsl */ `
     float tearRow = step(abs(p.y - sin(seed * 2.3) * 0.38), 0.07) * uGlitch;
     p.x += tearRow * (0.18 + hash21(vec2(seed, floor(uTime * 17.0))) * 0.22);
     float field = captureField(p, seed);
-    float threshold = 0.18 + bayer4(gl_FragCoord.xy) * 0.64 - entityNear * 0.12;
+    if (ascensionNear > 0.001) {
+      float infection = ascensionVolume(p * 0.86, uTime * 0.46 + seed * 0.17);
+      field = max(field, infection * ascensionNear * 1.24);
+    }
+    float threshold = 0.18 + bayer4(gl_FragCoord.xy) * 0.64 - entityNear * 0.12 - ascensionNear * 0.16;
     float sideCorners = lineMask(abs(abs(p.x) - 0.94), 0.012) * step(0.69, abs(p.y));
     float topCorners = lineMask(abs(abs(p.y) - 0.94), 0.012) * step(0.69, abs(p.x));
     float frame = clamp(sideCorners + topCorners, 0.0, 1.0);
@@ -199,6 +484,53 @@ const SOURCE_SHADER = /* glsl */ `
     vec3 color = vec3(0.0);
     float alpha = 0.0;
 
+    if (uSubstrate.w > 0.001) {
+      float aspect = uResolution.x / max(1.0, uResolution.y);
+      vec2 position = (uv - 0.5) * 2.0;
+      position.x *= aspect;
+      position.y += uSubstrate.z * 0.42;
+
+      vec2 entityPosition = (uEntity.xy - 0.5) * 2.0;
+      entityPosition.x *= aspect;
+      entityPosition.y += uSubstrate.z * 0.42;
+      vec2 pointerPosition = (uPointer.xy - 0.5) * 2.0;
+      pointerPosition.x *= aspect;
+      pointerPosition.y += uSubstrate.z * 0.42;
+
+      vec2 entityDelta = position - entityPosition;
+      vec2 pointerDelta = position - pointerPosition;
+      float entityReach = exp(-dot(entityDelta, entityDelta) * 1.55);
+      float pointerReach = exp(-dot(pointerDelta, pointerDelta) * 1.9) * uPointer.z;
+      vec2 entityCurl = vec2(-entityDelta.y, entityDelta.x)
+        * entityReach
+        * (0.045 + uEvolution.z * 0.1);
+      vec2 pointerCurl = vec2(-pointerDelta.y, pointerDelta.x) * pointerReach * 0.055;
+      vec2 warpedPosition = position + entityCurl + pointerCurl;
+
+      float substrateTime = uTime * uPointer.w;
+      float field = substrateField(
+        warpedPosition,
+        clamp(uSubstrate.x, 0.0, 4.0),
+        substrateTime,
+        uSubstrate.y,
+        mix(entityPosition, pointerPosition, uPointer.z * 0.24)
+      );
+      float wake = (entityReach * (0.2 + uEntityMeta.y * 0.22) + pointerReach * 0.12)
+        * (0.4 + field);
+      float density = clamp(field * (0.82 + uEvolution.y * 0.24) + wake, 0.0, 1.0);
+      float threshold = 0.31 + bayer4(gl_FragCoord.xy) * 0.62;
+      float substrateInk = step(threshold, density) * uSubstrate.w;
+      float accentInk = step(
+        0.64 + bayer4(gl_FragCoord.yx + vec2(1.0, 3.0)) * 0.3,
+        density * (0.72 + entityReach * 0.45 + uEvolution.y * 0.38)
+      ) * uSubstrate.w;
+
+      color += vec3(0.72, 0.73, 0.72) * substrateInk * 0.4;
+      color += vec3(0.56, 0.31, 0.43) * accentInk * (0.22 + uEvolution.y * 0.12);
+      alpha = max(alpha, substrateInk * (0.13 + uEvolution.y * 0.045));
+      alpha = max(alpha, accentInk * (0.12 + uEvolution.y * 0.05));
+    }
+
     vec2 captureSignal = vec2(0.0);
     for (int i = 0; i < 5; i++) {
       vec4 captureRect = uCaptures[i];
@@ -212,6 +544,22 @@ const SOURCE_SHADER = /* glsl */ `
     color += vec3(0.66, 0.43, 0.55) * captureSignal.y * 0.62;
     alpha = max(alpha, captureSignal.x * 0.36);
     alpha = max(alpha, captureSignal.y * 0.68);
+
+    if (uEvolution.y > 0.001) {
+      float aspect = uResolution.x / max(1.0, uResolution.y);
+      vec2 delta = uv - uEntity.xy;
+      delta.x *= aspect;
+      float fieldScale = max(0.14, max(uEntity.z * aspect, uEntity.w) * 0.7);
+      vec2 fieldPosition = delta / fieldScale;
+      float volume = ascensionVolume(fieldPosition, uTime);
+      float threshold = 0.12 + bayer4(gl_FragCoord.xy) * 0.58;
+      float signal = step(threshold, volume * uEvolution.y);
+      float core = exp(-26.0 * dot(fieldPosition, fieldPosition)) * uEvolution.y;
+      color += vec3(0.88, 0.88, 0.85) * signal * (0.34 + uEvolution.y * 0.34);
+      color += vec3(0.62, 0.36, 0.48) * max(core, signal * uEvolution.y * 0.12);
+      alpha = max(alpha, signal * (0.2 + uEvolution.y * 0.46));
+      alpha = max(alpha, core * 0.48);
+    }
 
     for (int i = 0; i < 3; i++) {
       if (float(i) >= uPortalCount) continue;
@@ -330,6 +678,14 @@ const specimenCaptures = [
   { kind: 'orbit', seed: 19 },
   { kind: 'galaxy', seed: 23 },
 ] as const;
+const substratePhaseByMode: Record<string, number> = {
+  contours: 0,
+  gravity: 1,
+  neural: 2,
+  flow: 3,
+  membrane: 4,
+};
+const substrateLabels = ['TOPOGRAPHIC', 'GRAVITY_WELL', 'NEURAL_LATTICE', 'FLOW_MEMORY', 'LIVING_MEMBRANE'] as const;
 
 let restoreAttempts = 0;
 let lastRestoreAt = 0;
@@ -383,6 +739,7 @@ class GpuRuntime {
   private staticRenderRequest = 0;
   private emergencePulse = 0;
   private previousSpatialMode: SpatialMode = 'SEALED';
+  private previousEntityForm: EntityForm = 'SIGNAL';
   private previousEnabled = true;
   private glitch = 0;
   private glitchEndsAt = 0;
@@ -391,6 +748,12 @@ class GpuRuntime {
   private disposed = false;
   private portalElements: HTMLElement[];
   private specimenElements: Array<HTMLElement | null>;
+  private sectionElements: HTMLElement[];
+  private substrateAnchors: Array<{ center: number; phase: number }> = [];
+  private substratePhase = 0;
+  private substrateScrollVelocity = 0;
+  private substrateLastScrollY = scrollY;
+  private substrateStatus = '';
   private onScroll = () => {
     this.portalDirty = true;
     this.specimenDirty = true;
@@ -420,6 +783,10 @@ class GpuRuntime {
     this.specimenDirty = true;
     this.requestStaticRender();
   };
+  private onSubstrateState = () => {
+    this.clearFeedback();
+    this.requestStaticRender();
+  };
   private onMotionChange = () => {
     this.setQuality(chooseQuality());
     this.start();
@@ -438,6 +805,7 @@ class GpuRuntime {
       const specimen = document.querySelector<HTMLElement>(`[data-specimen="${kind}"]`);
       return specimen?.querySelector<HTMLElement>('[data-specimen-visual], .section-specimen__visual') || specimen;
     });
+    this.sectionElements = [...document.querySelectorAll<HTMLElement>('[data-section]')].slice(0, 5);
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: stage,
@@ -468,11 +836,14 @@ class GpuRuntime {
         uResolution: { value: new THREE.Vector2(1, 1) },
         uEntity: { value: new THREE.Vector4(0.72, 0.5, 0, 0) },
         uEntityMeta: { value: new THREE.Vector4(1, 0, 0, 0) },
+        uEvolution: { value: new THREE.Vector4() },
         uCaptures: { value: captures },
         uCaptureSeeds: { value: specimenCaptures.map(({ seed }) => seed) },
         uPortals: { value: portals },
         uPortalCount: { value: 0 },
         uGlitch: { value: 0 },
+        uSubstrate: { value: new THREE.Vector4(0, 0, 0, 0.8) },
+        uPointer: { value: new THREE.Vector4(0.5, 0.5, 0, this.quality === 'static' ? 0 : 1) },
       },
     });
 
@@ -585,6 +956,7 @@ class GpuRuntime {
     addEventListener('pageshow', this.onPageShow);
     addEventListener('andrew:entity-state', this.onEntityState);
     addEventListener('andrew:specimen-change', this.onSpecimenState);
+    addEventListener('andrew:substrate-change', this.onSubstrateState);
     addEventListener('andrew:session-open', this.onSessionOpen);
     reducedMotion.addEventListener?.('change', this.onMotionChange);
     this.themeObserver.observe(root, { attributes: true, attributeFilter: ['data-crt', 'data-theme-resolved'] });
@@ -629,6 +1001,7 @@ class GpuRuntime {
     root.dataset.fxQuality = this.quality;
     this.portalDirty = true;
     this.specimenDirty = true;
+    this.refreshSubstrateAnchors();
     this.clearFeedback();
   }
 
@@ -668,6 +1041,89 @@ class GpuRuntime {
       this.staticRenderRequest = 0;
       if (this.quality === 'static' && !this.disposed && !document.hidden) this.renderFrame(0);
     });
+  }
+
+  private refreshSubstrateAnchors() {
+    this.substrateAnchors = this.sectionElements
+      .filter((section) => section.isConnected)
+      .map((section, index) => {
+        const rect = section.getBoundingClientRect();
+        return {
+          center: scrollY + rect.top + rect.height * 0.5,
+          phase: Math.min(index, substrateLabels.length - 1),
+        };
+      });
+  }
+
+  private substratePhaseForScroll() {
+    if (!this.substrateAnchors.length) return 0;
+    const focus = scrollY + this.viewport.height * 0.46;
+    const first = this.substrateAnchors[0];
+    if (focus <= first.center) return first.phase;
+
+    for (let index = 1; index < this.substrateAnchors.length; index += 1) {
+      const previous = this.substrateAnchors[index - 1];
+      const next = this.substrateAnchors[index];
+      if (focus > next.center) continue;
+      const distance = Math.max(1, next.center - previous.center);
+      const progress = Math.min(1, Math.max(0, (focus - previous.center) / distance));
+      return previous.phase + (next.phase - previous.phase) * progress;
+    }
+
+    return this.substrateAnchors[this.substrateAnchors.length - 1].phase;
+  }
+
+  private updateSubstrate(delta: number) {
+    const mode = root.dataset.substrate || 'auto';
+    const targetPhase = mode === 'auto'
+      ? this.substratePhaseForScroll()
+      : substratePhaseByMode[mode] ?? this.substratePhaseForScroll();
+    const smoothing = this.quality === 'static'
+      ? 1
+      : 1 - Math.exp(-Math.max(delta, 1 / 120) * 4.2);
+    this.substratePhase += (targetPhase - this.substratePhase) * smoothing;
+
+    const nextScrollY = scrollY;
+    const scrollDelta = (nextScrollY - this.substrateLastScrollY) / Math.max(1, this.viewport.height);
+    const rawVelocity = Math.max(-2, Math.min(2, scrollDelta / Math.max(delta, 1 / 60)));
+    const velocitySmoothing = 1 - Math.exp(-Math.max(delta, 1 / 120) * 7);
+    this.substrateScrollVelocity += (rawVelocity - this.substrateScrollVelocity) * velocitySmoothing;
+    this.substrateLastScrollY = nextScrollY;
+
+    const pointer = window.__ANDREW_VISUAL_STATE__?.pointer;
+    const pointerX = Math.min(1, Math.max(0, (pointer?.x ?? this.viewport.width * 0.5) / this.viewport.width));
+    const pointerY = 1 - Math.min(1, Math.max(0, (pointer?.y ?? this.viewport.height * 0.5) / this.viewport.height));
+    const pointerActivity = pointer?.lastAt
+      ? Math.exp(-(performance.now() - pointer.lastAt) / 2600)
+      : 0;
+    const motion = reducedMotion.matches || this.quality === 'static' ? 0 : 1;
+    const strength = mode === 'off'
+      ? 0
+      : this.quality === 'high' ? 0.9 : this.quality === 'low' ? 0.76 : 0.62;
+
+    (this.sourceMaterial.uniforms.uSubstrate.value as Vector4).set(
+      this.substratePhase,
+      this.substrateScrollVelocity,
+      nextScrollY / Math.max(1, this.viewport.height),
+      strength,
+    );
+    (this.sourceMaterial.uniforms.uPointer.value as Vector4).set(
+      pointerX,
+      pointerY,
+      pointerActivity,
+      motion,
+    );
+
+    const resolvedIndex = Math.max(0, Math.min(substrateLabels.length - 1, Math.round(this.substratePhase)));
+    const nextStatus = mode === 'off' ? 'DORMANT' : substrateLabels[resolvedIndex];
+    root.dataset.substratePhase = String(resolvedIndex);
+    root.dataset.substrateResolved = mode === 'off' ? 'off' : Object.keys(substratePhaseByMode)[resolvedIndex];
+    if (nextStatus !== this.substrateStatus) {
+      this.substrateStatus = nextStatus;
+      document.querySelectorAll<HTMLElement>('[data-substrate-status]').forEach((element) => {
+        element.textContent = nextStatus;
+      });
+    }
   }
 
   private updateSpecimens() {
@@ -734,8 +1190,8 @@ class GpuRuntime {
       (this.sourceMaterial.uniforms.uEntity.value as Vector4).set(
         entity.anchor.x / this.viewport.width,
         1 - entity.anchor.y / this.viewport.height,
-        entity.gazeOrientation.x,
-        -entity.gazeOrientation.y,
+        entity.entityWidth / this.viewport.width,
+        entity.entityHeight / this.viewport.height,
       );
       (this.sourceMaterial.uniforms.uEntityMeta.value as Vector4).set(
         0,
@@ -743,9 +1199,16 @@ class GpuRuntime {
         entity.internal.entropy,
         entity.interactionEnergy,
       );
-      if (entity.spatialMode !== this.previousSpatialMode) {
+      (this.sourceMaterial.uniforms.uEvolution.value as Vector4).set(
+        entity.reconstructionStrength,
+        entity.ascensionStrength,
+        entity.realityContact,
+        entity.ascensionPhase,
+      );
+      if (entity.spatialMode !== this.previousSpatialMode || entity.entityForm !== this.previousEntityForm) {
         this.emergencePulse = 1;
         this.previousSpatialMode = entity.spatialMode;
+        this.previousEntityForm = entity.entityForm;
         this.glitch = 1;
         this.glitchEndsAt = this.elapsed + 0.22;
       }
@@ -772,6 +1235,7 @@ class GpuRuntime {
     const crt = root.dataset.crt === 'off' ? 0 : 1;
     this.compositeMaterial.uniforms.uCrt.value = crt;
     this.compositeMaterial.uniforms.uLightTheme.value = root.dataset.themeResolved === 'light' ? 1 : 0;
+    this.updateSubstrate(delta);
     this.updateSpecimens();
     this.updatePortals();
   }
@@ -878,6 +1342,7 @@ class GpuRuntime {
     removeEventListener('pageshow', this.onPageShow);
     removeEventListener('andrew:entity-state', this.onEntityState);
     removeEventListener('andrew:specimen-change', this.onSpecimenState);
+    removeEventListener('andrew:substrate-change', this.onSubstrateState);
     removeEventListener('andrew:session-open', this.onSessionOpen);
     reducedMotion.removeEventListener?.('change', this.onMotionChange);
     window.clearTimeout(this.resizeTimer);

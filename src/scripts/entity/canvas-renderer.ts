@@ -149,11 +149,24 @@ class CanvasEntityRenderer {
       let targetX = mix(topology.listeningTargets[source], topology.targets[source], formBlend);
       let targetY = mix(topology.listeningTargets[source + 1], topology.targets[source + 1], formBlend);
       const targetZ = mix(topology.listeningTargets[source + 2], topology.targets[source + 2], formBlend);
+      targetX = mix(targetX, topology.reconstructionTargets[source], frame.reconstructionStrength);
+      targetY = mix(targetY, topology.reconstructionTargets[source + 1], frame.reconstructionStrength);
       const region = Math.round(topology.targets[source + 3]);
       const binding = topology.properties[source] * coherence;
       const inertia = topology.properties[source + 1];
       const delay = topology.properties[source + 2];
       const curiosity = topology.properties[source + 3];
+      if (frame.ascensionStrength > 0.001) {
+        const fieldAngle = curiosity * Math.PI * 16 + (index / count) * Math.PI * 4 + time * 0.11;
+        const fieldBand = (index / count * 17 + delay * 3.7) % 1;
+        const fieldRadius = mix(0.18, 1.06, fieldBand);
+        const fold = Math.sin(fieldAngle * 3 + fieldRadius * 9 + time * 0.34);
+        const fieldX = Math.cos(fieldAngle) * fieldRadius * (0.72 + fold * 0.12);
+        const fieldY = Math.sin(fieldAngle * 0.5 + delay * 4) * fieldRadius * 0.62 - 0.06;
+        const amount = frame.ascensionStrength * (0.54 + curiosity * 0.28);
+        targetX = mix(targetX, fieldX, amount);
+        targetY = mix(targetY, fieldY, amount);
+      }
       const head = region <= 2;
       const neck = region === 3;
       const trap = region === 4 || region === 5;
@@ -320,6 +333,26 @@ class CanvasEntityRenderer {
     const occupancy = entityRuntime.getOccupancy();
     const cognitiveBlend = ENTITY_CONFIG.body.stateFormBlend[frame.cognitiveState] * (1 - frame.internal.entropy * 0.14);
     const formBlend = frame.reducedMotion ? Math.max(0.55, cognitiveBlend) : clamp(cognitiveBlend);
+    if (frame.ascensionStrength > 0.01) {
+      const strength = frame.ascensionStrength;
+      const scale = Math.min(frame.entityWidth, frame.entityHeight) * (0.62 + strength * 0.5);
+      context.save();
+      context.translate(frame.anchor.x, frame.anchor.y);
+      context.globalCompositeOperation = light ? 'multiply' : 'screen';
+      context.strokeStyle = light ? 'rgba(35, 31, 36, 0.18)' : 'rgba(224, 224, 220, 0.18)';
+      context.lineWidth = 0.65;
+      for (let band = 0; band < 13; band += 1) {
+        const radius = scale * (0.12 + band * 0.045);
+        const pulse = Math.sin(frame.timestamp * 0.0012 + band * 0.73) * scale * 0.016;
+        context.beginPath();
+        context.ellipse(0, pulse - scale * 0.08, radius * 1.38, radius * 0.62, 0, Math.PI * 0.08, Math.PI * 0.92);
+        context.stroke();
+        context.beginPath();
+        context.ellipse(0, -pulse + scale * 0.04, radius * 1.06, radius * 0.72, 0, Math.PI * 1.08, Math.PI * 1.92);
+        context.stroke();
+      }
+      context.restore();
+    }
     for (let index = 0; index < maximumCount; index += 1) {
       const source = index * 4;
       const offset = index * 2;
@@ -388,7 +421,13 @@ class CanvasEntityRenderer {
       context.fillStyle = light
         ? (distributedHighlight > 0.3 ? '#222124' : '#302e31')
         : (distributedHighlight > 0.3 ? '#c4c7c4' : '#a0a4a1');
-      context.fillText(ENTITY_GLYPHS[glyphIndex], x, y);
+      context.fillText(
+        frame.reconstructionStrength > 0.42 || frame.ascensionStrength > 0.12
+          ? (seed > 0.66 ? '·' : seed > 0.33 ? ':' : '.')
+          : ENTITY_GLYPHS[glyphIndex],
+        x,
+        y,
+      );
     }
     context.globalAlpha = 1;
   }

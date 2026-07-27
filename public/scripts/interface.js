@@ -52,13 +52,8 @@
       label.textContent = commandShortcut;
     });
 
-    // Manual gatehouse. The visitor opens the terminal; the entity never
-    // grants admission on a timer.
-    const sessionGate = document.getElementById('session-gate');
-    const sessionEnter = document.getElementById('session-enter');
-    const sessionEnterLabel = sessionEnter?.querySelector('[data-session-enter-label]');
-    const sessionStatus = document.getElementById('session-status');
-    const sessionGuardState = document.getElementById('session-guard-state');
+    // The portfolio opens directly. Keep a lightweight session identity so
+    // terminal prompts and runtime observers still share one startup signal.
     const cleanSessionName = (value) => (value || 'guest')
       .trim()
       .toLowerCase()
@@ -71,54 +66,65 @@
       });
       return name;
     };
+    const sessionName = setSessionName('guest');
+    root.dataset.session = 'open';
+    delete root.dataset.sessionPhase;
+    queueMicrotask(() => {
+      window.dispatchEvent(new CustomEvent('andrew:session-open', { detail: { name: sessionName } }));
+    });
 
-    let sessionOpened = false;
-    let admissionStarted = false;
-    const openSession = (requestedName) => {
-      if (sessionOpened) return;
-      sessionOpened = true;
-      const name = setSessionName(requestedName);
-      root.dataset.sessionPhase = 'granted';
-      if (sessionStatus) sessionStatus.textContent = 'ENTRY_GRANTED // PROCESS_CONTINUES';
-      if (sessionGuardState) sessionGuardState.textContent = 'AUTONOMY_VERIFIED';
-      root.dataset.session = 'opening';
-      window.setTimeout(() => {
-        if (sessionStatus) sessionStatus.textContent = `SESSION_OPEN // ${name}@vos`;
-        root.dataset.session = 'open';
-        delete root.dataset.sessionPhase;
-        root.classList.remove('session-pending');
-        sessionGate?.setAttribute('aria-hidden', 'true');
-        window.dispatchEvent(new CustomEvent('andrew:session-open', { detail: { name } }));
-        document.getElementById('main-content')?.focus({ preventScroll: true });
-      }, reducedMotion.matches ? 0 : 460);
-    };
-
-    const requestAdmission = () => {
-      if (admissionStarted || sessionOpened) return;
-      admissionStarted = true;
-      sessionEnter?.setAttribute('disabled', '');
-      if (sessionEnterLabel) sessionEnterLabel.textContent = 'OPENING_GATE';
-      root.dataset.session = 'admitting';
-      root.dataset.sessionPhase = 'admitting';
-      if (sessionStatus) sessionStatus.textContent = 'TERMINAL_APERTURE // OPENING';
-      if (sessionGuardState) sessionGuardState.textContent = 'OBSERVING_ENTRY';
-      window.setTimeout(() => openSession('guest'), reducedMotion.matches ? 0 : 980);
-    };
-
-    root.dataset.session = 'guarded';
-    root.dataset.sessionPhase = 'awaiting';
-    setSessionName('guest');
-    if (sessionStatus) sessionStatus.textContent = 'ENTITY_07 // AWAITING_GUEST_ACTION';
-    if (sessionGuardState) sessionGuardState.textContent = 'DORMANT // LISTENING';
-    sessionEnter?.addEventListener('click', requestAdmission);
     const developmentQuery = new URLSearchParams(location.search);
     const developmentTheme = developmentQuery.get('theme');
     if (developmentQuery.get('entityDebug') === '1' && (developmentTheme === 'light' || developmentTheme === 'dark')) {
       setTheme(developmentTheme, false);
     }
-    if (developmentQuery.get('entityDebug') === '1' && developmentQuery.get('skipGate') === '1') {
-      openSession('debug');
-    }
+
+    // One evolving background system can also be pinned to a single form while
+    // comparing art direction. The query string is intentionally non-persistent.
+    const substrateModes = ['auto', 'contours', 'gravity', 'neural', 'flow', 'membrane', 'off'];
+    const substrateLabels = {
+      auto: 'AUTO_EVOLUTION',
+      contours: 'TOPOGRAPHIC_ONLY',
+      gravity: 'GRAVITY_WELL',
+      neural: 'NEURAL_LATTICE',
+      flow: 'FLOW_MEMORY',
+      membrane: 'LIVING_MEMBRANE',
+      off: 'SUBSTRATE_OFF',
+    };
+    const substrateStatus = {
+      contours: 'TOPOGRAPHIC',
+      gravity: 'GRAVITY_WELL',
+      neural: 'NEURAL_LATTICE',
+      flow: 'FLOW_MEMORY',
+      membrane: 'LIVING_MEMBRANE',
+      off: 'DORMANT',
+    };
+    const normaliseSubstrate = (mode) => substrateModes.includes(mode) ? mode : 'auto';
+    const setSubstrate = (requestedMode, persist = true) => {
+      const mode = normaliseSubstrate(requestedMode);
+      root.dataset.substrate = mode;
+      document.querySelectorAll('[data-substrate-label]').forEach((label) => {
+        label.textContent = substrateLabels[mode];
+      });
+      if (mode !== 'auto') {
+        document.querySelectorAll('[data-substrate-status]').forEach((status) => {
+          status.textContent = substrateStatus[mode];
+        });
+      }
+      if (persist) {
+        try { localStorage.setItem('andrew-substrate', mode); } catch { /* privacy mode */ }
+      }
+      window.dispatchEvent(new CustomEvent('andrew:substrate-change', { detail: { mode } }));
+    };
+    const requestedSubstrate = developmentQuery.get('substrate');
+    setSubstrate(
+      substrateModes.includes(requestedSubstrate) ? requestedSubstrate : root.dataset.substrate,
+      false,
+    );
+    const cycleSubstrate = () => {
+      const current = normaliseSubstrate(root.dataset.substrate);
+      setSubstrate(substrateModes[(substrateModes.indexOf(current) + 1) % substrateModes.length]);
+    };
 
     // Display texture control. The entity script intentionally owns its own toggle.
     const crtToggle = document.getElementById('crt-toggle');
@@ -371,10 +377,14 @@
         window.open(href, '_blank', 'noopener,noreferrer');
       } else if (action === 'crt') {
         crtToggle?.click();
+      } else if (action === 'substrate') {
+        cycleSubstrate();
       } else if (action === 'entity') {
         document.getElementById('entity-toggle')?.click();
       } else if (action === 'entity-release') {
         window.dispatchEvent(new CustomEvent('andrew:entity-command', { detail: { command: 'toggle-release', source: 'keyboard' } }));
+      } else if (action === 'entity-ascend') {
+        window.dispatchEvent(new CustomEvent('andrew:entity-command', { detail: { command: 'ascend', source: 'keyboard' } }));
       }
     };
 
@@ -643,7 +653,7 @@
     };
 
     const draw = (time, force = false) => {
-      if (document.documentElement.dataset.renderer === 'webgl') {
+      if (document.documentElement.dataset.renderer === 'webgl' || document.documentElement.dataset.substrate === 'off') {
         context.clearRect(0, 0, state.width, state.height);
         return;
       }
@@ -702,7 +712,7 @@
       cancelAnimationFrame(state.frame);
       state.last = 0;
       if (document.documentElement.classList.contains('session-pending')) return;
-      if (document.documentElement.dataset.renderer === 'webgl') {
+      if (document.documentElement.dataset.renderer === 'webgl' || document.documentElement.dataset.substrate === 'off') {
         context.clearRect(0, 0, state.width, state.height);
         return;
       }
@@ -728,8 +738,9 @@
       if (!document.hidden) start();
     });
 
-    window.addEventListener('andrew:renderer-change', start);
-    window.addEventListener('andrew:theme-change', () => draw(performance.now(), true));
+      window.addEventListener('andrew:renderer-change', start);
+      window.addEventListener('andrew:substrate-change', start);
+      window.addEventListener('andrew:theme-change', () => draw(performance.now(), true));
     window.addEventListener('andrew:session-open', start, { once: true });
 
     if (typeof reducedMotion.addEventListener === 'function') {

@@ -48,6 +48,86 @@
       const amount = clamp((pax * bax + pay * bay) / Math.max(0.0001, bax * bax + bay * bay), 0, 1);
       return Math.hypot(pax - bax * amount, pay - bay * amount);
     };
+    const recursiveSignalField = (inputX, inputY, time) => {
+      const baseRotation = 0.18 * Math.sin(time * 0.19);
+      const baseCosine = Math.cos(baseRotation);
+      const baseSine = Math.sin(baseRotation);
+      let x = inputX * baseCosine - inputY * baseSine;
+      let y = inputX * baseSine + inputY * baseCosine;
+      let energy = 0;
+      let weight = 1;
+
+      for (let iteration = 0; iteration < 5; iteration += 1) {
+        x = Math.abs(x);
+        y = Math.abs(y);
+        const denominator = clamp(x * x + y * y, 0.12, 4);
+        x = x / denominator - 0.79;
+        y = y / denominator - 0.57;
+
+        const rotation = 0.48 + 0.08 * Math.sin(time * 0.21 + iteration * 1.7);
+        const cosine = Math.cos(rotation);
+        const sine = Math.sin(rotation);
+        const rotatedX = x * cosine - y * sine;
+        const rotatedY = x * sine + y * cosine;
+        x = rotatedX;
+        y = rotatedY;
+
+        const radius = Math.hypot(x, y);
+        const shell = Math.exp(-20 * Math.abs(radius - (0.63 + 0.035 * Math.sin(time * 0.34 + iteration))));
+        const filaments = Math.pow(
+          0.5 + 0.5 * Math.cos(10 * Math.atan2(y, x) + radius * 7 - time),
+          7,
+        );
+        energy += shell * (0.64 + 0.68 * filaments) / weight;
+        weight *= 1.32;
+      }
+
+      return energy;
+    };
+    const ascensionSignalField = (inputX, inputY, time) => {
+      const coreDistance = Math.hypot(inputX, inputY);
+      const angle = Math.atan2(inputY, Math.abs(inputX) + 0.0001);
+      let x = Math.abs(inputX);
+      let y = inputY;
+      let energy = 0;
+      let weight = 1;
+
+      for (let iteration = 0; iteration < 6; iteration += 1) {
+        x = Math.abs(x);
+        y = Math.abs(y);
+        const denominator = clamp(x * x + y * y, 0.085, 4.2);
+        x = x / denominator - 0.73;
+        y = y / denominator - 0.54;
+        const rotation = 0.42 + Math.sin(time * 0.12 + iteration * 1.37) * 0.075;
+        const cosine = Math.cos(rotation);
+        const sine = Math.sin(rotation);
+        const rotatedX = x * cosine - y * sine;
+        y = x * sine + y * cosine;
+        x = rotatedX;
+        const radius = Math.hypot(x, y);
+        const shell = Math.exp(-19 * Math.abs(radius - (0.58 + Math.sin(time * 0.2 + iteration) * 0.028)));
+        const filament = Math.pow(
+          0.5 + 0.5 * Math.cos(Math.atan2(y, x) * 12 + radius * 8.5 - time * 0.46),
+          9,
+        );
+        energy += shell * (0.46 + filament * 0.82) / weight;
+        weight *= 1.34;
+      }
+
+      const arches = Math.pow(
+        0.5 + 0.5 * Math.cos(coreDistance * 34 - Math.abs(angle) * 10 + Math.sin(angle * 5 + time * 0.18) * 2.4),
+        10,
+      );
+      const ribs = Math.pow(
+        Math.abs(Math.cos(angle * 15 + coreDistance * 8 - Math.sin(coreDistance * 7 - time * 0.23) * 2)),
+        18,
+      );
+      const iris = Math.exp(-8 * Math.abs(coreDistance - (0.22 + Math.sin(time * 0.26) * 0.014)));
+      const coreVoid = smoothstep(0.075, 0.18, coreDistance);
+      const envelope = 1 - smoothstep(0.52, 1.48, coreDistance);
+      return Math.tanh((energy * 0.74 + arches * 0.42 + ribs * 0.24 + iris * 0.58) * 1.2) *
+        envelope * coreVoid;
+    };
     const parseColor = (value, fallback) => {
       const hex = value.trim().match(/^#([\da-f]{6})$/i)?.[1];
       if (hex) return [Number.parseInt(hex.slice(0, 2), 16), Number.parseInt(hex.slice(2, 4), 16), Number.parseInt(hex.slice(4, 6), 16)];
@@ -184,20 +264,51 @@
         const ticks = Math.abs(Math.sin(Math.atan2(localY, x) * 18 - t)) >= 0.94 && radius >= 0.66 && radius <= 0.9 ? 1 : 0;
         field = rings * (noise >= 0.26 ? 1 : 0) + cross * 0.46 + satellite + ticks * 0.62;
       } else {
-        const galaxyRadius = Math.hypot(x / 0.94, localY / 0.58);
-        const galaxyAngle = Math.atan2(localY, x);
-        let spiral = lineMask(Math.abs(Math.sin(galaxyAngle * 2 - galaxyRadius * 10 + t * 0.3)), 0.085);
-        spiral *= galaxyRadius >= 0.14 && galaxyRadius <= 0.94 ? 1 : 0;
-        const coreX = x / 0.2;
-        const coreY = localY / 0.12;
-        const core = Math.exp(-(coreX * coreX + coreY * coreY) * 2.2);
-        const starField = noise >= 0.93 && galaxyRadius <= 1 ? 1 : 0;
-        const planetX = Math.cos(t * 0.8) * 0.68;
-        const planetY = Math.sin(t * 0.8) * 0.4;
-        const planet = 1 - smoothstep(0.025, 0.065, Math.hypot(x - planetX, localY - planetY));
-        field = spiral * 0.82 + core + starField * 0.56 + planet;
+        const fieldX = x * 1.55;
+        const fieldY = localY;
+        const fieldTime = params.time * 0.42 + params.seed * 0.31;
+        const radius = Math.hypot(fieldX, fieldY);
+        const angle = Math.atan2(fieldY, fieldX);
+        const recursive = recursiveSignalField(Math.abs(fieldX) * 1.06, fieldY * 1.06, fieldTime);
+
+        let rings = 0.5 + 0.5 * Math.cos(
+          31 * Math.log(radius + 0.17)
+          - 10 * angle
+          - 1.35 * fieldTime
+          + 2.6 * Math.sin(3 * angle + fieldTime * 0.24),
+        );
+        rings = Math.pow(rings, 8) * Math.exp(-0.38 * radius);
+
+        let counterRings = 0.5 + 0.5 * Math.cos(
+          26 * radius
+          + 8 * angle
+          + 0.82 * fieldTime
+          + 2 * Math.sin(5 * angle - fieldTime * 0.31),
+        );
+        counterRings = Math.pow(counterRings, 11);
+
+        const spokes = Math.pow(
+          Math.abs(Math.cos(angle * 12 + 2.4 * Math.sin(radius * 5 - fieldTime * 0.46))),
+          24,
+        );
+        const iris = Math.exp(-6 * Math.abs(radius - (0.24 + 0.025 * Math.sin(fieldTime * 0.6))));
+        const core = Math.exp(-7.5 * radius) * (0.55 + 0.45 * Math.cos(angle * 8 + fieldTime));
+        const outerFade = 1 - smoothstep(0.22, 1.65, radius);
+        const value = (
+          recursive * 0.54
+          + rings * 0.46
+          + counterRings * 0.22
+          + spokes * (0.1 + 0.3 * (1 - smoothstep(0.2, 1.5, radius)))
+          + iris * 0.38
+          + core * 0.24
+        ) * outerFade;
+        field = smoothstep(0.16, 0.93, value);
       }
 
+      if (params.ascension > 0.001) {
+        field = Math.max(field, ascensionSignalField(x * 0.86, localY * 0.86, params.time * 0.46 + params.seed * 0.17) *
+          params.ascension * 1.24);
+      }
       const wakeRadius = fract(params.time * 0.52 + params.seed * 0.037) * 1.42;
       const wake = lineMask(Math.abs(Math.hypot(x - params.entityX, y - params.entityY) - wakeRadius), 0.024) * params.proximity;
 
@@ -220,7 +331,10 @@
       const entityDistance = entity?.released
         ? Math.hypot(entity.anchor.x - captureCenterX, entity.anchor.y - captureCenterY)
         : Infinity;
-      const proximity = clamp(1 - entityDistance / Math.max(150, Math.max(capture.width, capture.height) * 0.9), 0, 1);
+      const localProximity = clamp(1 - entityDistance / Math.max(150, Math.max(capture.width, capture.height) * 0.9), 0, 1);
+      const ascension = reducedMotion.matches || saveData ? 0 : entity?.ascensionStrength || 0;
+      const ascensionProximity = clamp(1 - entityDistance / Math.max(320, Math.max(capture.width, capture.height) * 2.4), 0, 1);
+      const proximity = Math.max(localProximity, ascension * ascensionProximity);
       const params = {
         seed: capture.seed,
         morph: Math.sin(time * 0.72 + capture.seed) * 0.5 + 0.5,
@@ -242,6 +356,7 @@
         bloomBY: 0.2 * Math.sin(time * 0.61),
         time,
         proximity,
+        ascension: ascension * ascensionProximity,
         entityX: entity ? (entity.anchor.x - captureCenterX) / Math.max(1, capture.width / 2) : 4,
         entityY: entity ? (entity.anchor.y - captureCenterY) / Math.max(1, capture.height / 2) : 4,
       };
@@ -251,7 +366,7 @@
           const v = (y / Math.max(1, sourceHeight - 1) - 0.5) * 2;
           const field = signalField(u, v, params);
           const threshold = (BAYER[(x % 4) + (y % 4) * 4] + 0.5) / 16;
-          const lit = field > 0.18 + threshold * 0.64 - proximity * 0.11;
+          const lit = field > 0.18 + threshold * 0.64 - proximity * 0.11 - params.ascension * 0.15;
           const offset = (y * sourceWidth + x) * 4;
           if (lit) {
             const accent = field > 0.74 && hash(x, y, frameSeed + 91) > 0.72;

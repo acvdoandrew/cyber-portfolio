@@ -964,10 +964,9 @@ html[data-theme-resolved="light"] .ambient-light {
   border-radius: 50%;
   transform: rotate(-11deg);
   background:
-    radial-gradient(ellipse at center, rgba(238, 236, 232, 0.92) 0 2%, transparent 3% 12%, rgba(238, 236, 232, 0.58) 13% 14%, transparent 15% 27%, rgba(169, 190, 192, 0.42) 28% 29%, transparent 30% 47%, rgba(238, 236, 232, 0.35) 48% 49%, transparent 50%),
-    repeating-conic-gradient(from 28deg at 50% 50%, transparent 0 8deg, rgba(238, 236, 232, 0.54) 8deg 10deg, transparent 10deg 31deg),
-    radial-gradient(circle at 22% 27%, rgba(238, 236, 232, 0.8) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 81% 67%, rgba(169, 109, 134, 0.85) 0 1px, transparent 1.5px);
+    repeating-radial-gradient(ellipse at center, transparent 0 5px, rgba(238, 236, 232, 0.52) 6px 7px, transparent 8px 13px),
+    repeating-conic-gradient(from 28deg at 50% 50%, transparent 0 7deg, rgba(238, 236, 232, 0.58) 7deg 9deg, transparent 9deg 19deg),
+    radial-gradient(ellipse at center, rgba(169, 109, 134, 0.72) 0 2%, transparent 3% 19%, rgba(169, 190, 192, 0.38) 20% 21%, transparent 22%);
   animation-delay: -5.4s;
 }
 .fragment--six::after {
@@ -1907,7 +1906,7 @@ html[data-entity-released="on"] .entity-viewport::after {
 
 .console-readout {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
@@ -1921,8 +1920,46 @@ html[data-entity-released="on"] .entity-viewport::after {
 
 .console-readout > div:last-child { border-right: 0; }
 .console-readout span { color: var(--dim); font-family: var(--mono); font-size: 0.5rem; letter-spacing: 0.09em; }
-.console-readout strong { color: var(--violet); font-family: var(--mono); font-size: 0.65rem; font-weight: 500; }
+.console-readout strong { min-width: 0; color: var(--violet); font-family: var(--mono); font-size: 0.61rem; font-weight: 500; overflow-wrap: anywhere; }
 .console-hint { margin: 0; color: var(--dim); font-family: var(--mono); font-size: 0.53rem; letter-spacing: 0.08em; padding: 9px 15px 10px; text-align: center; }
+
+html[data-entity-form="reconstruction"] .entity-console::before {
+  width: 46%;
+  background: linear-gradient(90deg, var(--pink), var(--cyan), transparent);
+}
+
+html[data-entity-form="ascension"] .entity-console {
+  border-color: color-mix(in srgb, var(--violet) 58%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--pink) 10%, transparent),
+    0 0 42px color-mix(in srgb, var(--pink) 10%, transparent);
+}
+
+html[data-entity-form="ascension"] .entity-console::before {
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--violet), var(--pink), var(--violet), transparent);
+  animation: entity-form-scan 1.6s steps(7, end) infinite;
+}
+
+html[data-entity-form="ascension"] .console-status,
+html[data-entity-form="ascension"] .console-readout strong {
+  color: var(--text);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--violet) 52%, transparent);
+}
+
+html[data-entity-form="ascension"] .section-specimen {
+  filter: drop-shadow(0 0 14px rgba(238, 236, 232, 0.2));
+}
+
+html[data-entity-form="manifest"] .entity-console::before {
+  width: 82%;
+  background: linear-gradient(90deg, var(--cyan), var(--violet), transparent);
+}
+
+@keyframes entity-form-scan {
+  0%, 100% { opacity: 0.45; transform: scaleX(0.72); transform-origin: left; }
+  52% { opacity: 1; transform: scaleX(1); }
+}
 
 .proof-rail {
   display: grid;
@@ -2183,15 +2220,15 @@ html[data-entity-released="on"] .entity-viewport::after {
 .hero-specimen-bay {
   position: absolute;
   z-index: 0;
-  top: clamp(-94px, -6vw, -72px);
-  right: clamp(170px, 18vw, 210px);
-  width: clamp(286px, 25vw, 340px);
+  top: clamp(-108px, -7vw, -82px);
+  right: clamp(128px, 14vw, 178px);
+  width: clamp(340px, 29vw, 430px);
   pointer-events: none;
 }
 
 .hero-specimen-bay .section-specimen--galaxy {
   width: 100%;
-  opacity: 0.46;
+  opacity: 0.56;
 }
 
 .hero-specimen-approach {
@@ -4346,6 +4383,9 @@ html[data-fx-quality="static"] .casefile-visual::after {
   .hero-brief > div:last-child { border-bottom: 0; }
   .entity-viewport { min-height: 300px; }
   .console-topline span:last-child { display: none; }
+  .console-readout { grid-template-columns: repeat(2, 1fr); }
+  .console-readout > div:nth-child(2) { border-right: 0; }
+  .console-readout > div:nth-child(-n + 2) { border-bottom: 1px solid var(--line); }
   .console-readout > div { padding-inline: 9px; }
   .console-readout strong { font-size: 0.56rem; }
   .console-hint { font-size: 0.47rem; }

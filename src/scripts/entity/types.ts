@@ -6,6 +6,13 @@ export type SpatialMode =
   | 'RETURNING'
   | 'HIDDEN';
 
+export type EntityForm =
+  | 'SIGNAL'
+  | 'EMBODIMENT'
+  | 'RECONSTRUCTION'
+  | 'ASCENSION'
+  | 'MANIFEST';
+
 export type CognitiveState =
   | 'DORMANT'
   | 'OBSERVING'
@@ -184,6 +191,7 @@ export interface EntityTopology {
   count: number;
   targets: Float32Array;
   listeningTargets: Float32Array;
+  reconstructionTargets: Float32Array;
   properties: Float32Array;
   appearance: Float32Array;
   regionCounts: Uint32Array;
@@ -247,6 +255,11 @@ export interface EntityRuntimeFrame {
   scrollOrigin: number;
   interactionEnergy: number;
   formCoherence: number;
+  entityForm: EntityForm;
+  reconstructionStrength: number;
+  ascensionStrength: number;
+  ascensionPhase: number;
+  realityContact: number;
   boundRatio: number;
   posture: EntityPostureState;
   quality: QualityTier;
@@ -284,6 +297,7 @@ export interface EntityRuntimeApi {
   enqueue(event: PerceptionEvent): void;
   requestRelease(source?: PerceptionSource): void;
   requestReturn(source?: PerceptionSource): void;
+  requestAscension(source?: PerceptionSource): void;
   toggleRelease(source?: PerceptionSource): void;
   setEnabled(enabled: boolean, source?: PerceptionSource): void;
   setQuality(quality: QualityTier): void;
