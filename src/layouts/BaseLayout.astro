@@ -37,7 +37,7 @@ const schema = {
 };
 ---
 <!doctype html>
-<html lang="en" data-palette="archive">
+<html lang="en" data-palette="archive" data-display-filter="on">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -93,8 +93,13 @@ const schema = {
         try {
           const stored = localStorage.getItem('portfolio.palette.v1');
           const id = stored && Object.hasOwn(palettes, stored) ? stored : 'archive';
+          const displayFilter =
+            localStorage.getItem('portfolio.display-filter.v1') === 'off'
+              ? 'off'
+              : 'on';
           const palette = palettes[id];
           document.documentElement.dataset.palette = id;
+          document.documentElement.dataset.displayFilter = displayFilter;
           document.documentElement.style.colorScheme = palette.scheme;
           document
             .querySelector('meta[name="theme-color"]')
@@ -104,6 +109,7 @@ const schema = {
             ?.setAttribute('content', palette.scheme);
         } catch {
           document.documentElement.dataset.palette = 'archive';
+          document.documentElement.dataset.displayFilter = 'on';
         }
       })();
     </script>
@@ -111,6 +117,7 @@ const schema = {
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <slot />
+    <div class="display-filter" aria-hidden="true"></div>
     <script>
       import '../scripts/editorial-interface';
     </script>

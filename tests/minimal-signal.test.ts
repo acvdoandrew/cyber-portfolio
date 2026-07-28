@@ -55,6 +55,9 @@ describe('minimal signal document', () => {
     expect(page).not.toMatch(/Principles|CommandDeck|welcome|entry gate/i);
 
     expect(layout).toContain("import '../styles/editorial.css'");
+    expect(layout).toContain(
+      '<div class="display-filter" aria-hidden="true"></div>',
+    );
     expect(layout).not.toMatch(/global\.css|minimal\.css/);
     expect(layout).not.toMatch(
       /signal-compositor|gpu-stage|braille-entity|signal-rain|crt-layer|noise-layer/,
@@ -63,6 +66,37 @@ describe('minimal signal document', () => {
       /compositor\.js|interface\.js|gpu-runtime|entity\/canvas-renderer|three-adapter/,
     );
     expect(source('package.json')).not.toMatch(/"three"|"@types\/three"/);
+  });
+
+  test('the display filter is visual-only, static, and motion-aware', () => {
+    const css = source('src/styles/editorial.css');
+
+    expect(css).toMatch(
+      /\.display-filter\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?pointer-events:\s*none;/,
+    );
+    expect(css).toContain('repeating-linear-gradient(');
+    expect(css).not.toContain('@keyframes display-sweep');
+    expect(css).not.toContain('animation: display-sweep');
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.display-filter::after\s*\{[\s\S]*?animation:\s*none;/,
+    );
+  });
+
+  test('the navbar CRT toggle is minimal, accessible, and persistent', () => {
+    const topBar = source('src/components/TopBar.astro');
+    const layout = source('src/layouts/BaseLayout.astro');
+    const runtime = source('src/scripts/editorial-interface.ts');
+
+    expect(topBar).toContain('class="display-mode-toggle"');
+    expect(topBar).toContain('data-display-filter-toggle');
+    expect(topBar).toContain('aria-pressed="true"');
+    expect(layout).toContain('data-display-filter="on"');
+    expect(layout).toContain("localStorage.getItem('portfolio.display-filter.v1')");
+    expect(runtime).toContain(
+      "const DISPLAY_FILTER_STORAGE_KEY = 'portfolio.display-filter.v1'",
+    );
+    expect(runtime).toContain("root.dataset.displayFilter = enabled ? 'on' : 'off'");
+    expect(runtime).toContain("button.setAttribute('aria-pressed', String(enabled))");
   });
 
   test('there is exactly one contained live canvas in the active component graph', () => {

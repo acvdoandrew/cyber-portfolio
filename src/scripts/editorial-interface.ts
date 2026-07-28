@@ -14,6 +14,7 @@ type Palette = {
 };
 
 const STORAGE_KEY = 'portfolio.palette.v1';
+const DISPLAY_FILTER_STORAGE_KEY = 'portfolio.display-filter.v1';
 const paletteOrder: PaletteId[] = [
   'archive',
   'carbon',
@@ -134,6 +135,54 @@ const initializePalette = () => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
     event.preventDefault();
     cycle();
+  });
+};
+
+const initializeDisplayFilter = () => {
+  const root = document.documentElement;
+  const button = document.querySelector<HTMLButtonElement>(
+    '[data-display-filter-toggle]',
+  );
+  if (!button) return;
+
+  const apply = (enabled: boolean, persist = true) => {
+    root.dataset.displayFilter = enabled ? 'on' : 'off';
+    button.setAttribute('aria-pressed', String(enabled));
+
+    const label = enabled
+      ? 'Disable CRT display filter'
+      : 'Enable CRT display filter';
+    const announcement = enabled
+      ? 'CRT display filter enabled. Activate to disable.'
+      : 'CRT display filter disabled. Activate to enable.';
+
+    button.setAttribute('aria-label', label);
+    button
+      .querySelector('[data-display-filter-announcement]')
+      ?.replaceChildren(announcement);
+
+    if (persist) {
+      try {
+        localStorage.setItem(
+          DISPLAY_FILTER_STORAGE_KEY,
+          enabled ? 'on' : 'off',
+        );
+      } catch {
+        // The control remains usable when storage is unavailable.
+      }
+    }
+  };
+
+  let enabled = root.dataset.displayFilter !== 'off';
+  try {
+    enabled = localStorage.getItem(DISPLAY_FILTER_STORAGE_KEY) !== 'off';
+  } catch {
+    // Use the server-rendered default.
+  }
+
+  apply(enabled, false);
+  button.addEventListener('click', () => {
+    apply(button.getAttribute('aria-pressed') !== 'true');
   });
 };
 
@@ -478,6 +527,7 @@ const initializePortfolioJourney = () => {
 
 const initialize = () => {
   initializePalette();
+  initializeDisplayFilter();
   initializeNavigation();
   initializePortfolioJourney();
 };

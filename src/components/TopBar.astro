@@ -18,6 +18,20 @@ const navItems = [
 
     <div class="masthead__controls">
       <button
+        class="display-mode-toggle"
+        type="button"
+        data-display-filter-toggle
+        aria-pressed="true"
+        aria-label="Disable CRT display filter"
+      >
+        <span class="display-mode-toggle__pip" aria-hidden="true"></span>
+        <span>CRT</span>
+        <span class="sr-only" data-display-filter-announcement>
+          CRT display filter enabled. Activate to disable.
+        </span>
+      </button>
+
+      <button
         class="palette-cycle"
         type="button"
         data-palette-cycle
