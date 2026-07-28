@@ -30,7 +30,7 @@ const OUTPUT_DIRECTORY = join(ROOT, 'public', 'assets', 'dither');
 const ENTITY_SOURCE = join(
   ROOT,
   'artwork-source',
-  'entity-07-signal-cartographer.png',
+  'entity-08-solar-ghost-cartographer.png',
 );
 const PROJECT_ILLUSTRATION_DIRECTORY = join(
   ROOT,
@@ -834,7 +834,7 @@ const drawRecursiveFieldPoster = () => {
 const drawEntityCartographer = async (sharp) => {
   if (!sharp) {
     throw new Error(
-      'Sharp is required to decode artwork-source/entity-07-signal-cartographer.png',
+      'Sharp is required to decode artwork-source/entity-08-solar-ghost-cartographer.png',
     );
   }
 
@@ -1086,7 +1086,37 @@ const artwork = [
     mask: { thresholdScale: 0.94, thresholdOffset: 0.015 },
   },
   {
-    filename: 'entity-07-signal-cartographer.png',
+    filename: 'ares-validation-plate.png',
+    draw: () =>
+      drawProjectEngraving(encoder.sharp, 'ares-system-plate-source.png'),
+    mask: { thresholdScale: 0.94, thresholdOffset: 0.015 },
+  },
+  {
+    filename: 'edge-lease-control-plate.png',
+    draw: () =>
+      drawProjectEngraving(
+        encoder.sharp,
+        'edge-control-plane-plate-source.png',
+      ),
+    mask: { thresholdScale: 0.94, thresholdOffset: 0.015 },
+  },
+  {
+    filename: 'physics-verlet-plate.png',
+    draw: () =>
+      drawProjectEngraving(encoder.sharp, 'physics-solver-plate-source.png'),
+    mask: { thresholdScale: 0.94, thresholdOffset: 0.015 },
+  },
+  {
+    filename: 'inference-routing-plate.png',
+    draw: () =>
+      drawProjectEngraving(
+        encoder.sharp,
+        'inference-measurement-plate-source.png',
+      ),
+    mask: { thresholdScale: 0.94, thresholdOffset: 0.015 },
+  },
+  {
+    filename: 'entity-08-solar-ghost-cartographer.png',
     draw: () => drawEntityCartographer(encoder.sharp),
   },
   {

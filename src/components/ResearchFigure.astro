@@ -159,7 +159,7 @@ const underlayStyle = artwork.underlaySrc
             src={artwork.src}
             alt=""
             width="960"
-            height="960"
+            height="640"
             loading={loading}
             decoding="async"
             aria-hidden="true"
@@ -305,9 +305,10 @@ const underlayStyle = artwork.underlaySrc
   }
 
   .research-figure__mask-source {
-    z-index: 1;
-    opacity: 0.16;
-    filter: grayscale(1) contrast(1.7);
+    z-index: 2;
+    opacity: 1;
+    filter: none;
+    mix-blend-mode: difference;
   }
 
   .research-figure__technical-mask {
@@ -319,19 +320,7 @@ const underlayStyle = artwork.underlaySrc
   }
 
   .research-figure__mask {
-    z-index: 2;
-    background: var(--figure-ink);
-    -webkit-mask: var(--figure-mask) center / contain no-repeat;
-    mask: var(--figure-mask) center / contain no-repeat;
-  }
-
-  @supports (
-    (-webkit-mask-image: linear-gradient(#000, #000)) or
-      (mask-image: linear-gradient(#000, #000))
-  ) {
-    .research-figure__mask-source {
-      opacity: 0;
-    }
+    display: none;
   }
 
   .research-figure__caption {

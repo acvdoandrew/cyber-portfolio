@@ -16,10 +16,46 @@ import Footer from '../components/Footer.astro';
     <AmbientField />
     <TopBar />
     <main id="main-content" tabindex="-1">
-      <Hero />
-      <Projects />
-      <Capabilities />
-      <Contact />
+      <div class="hero-stage" data-hero-stage>
+        <div class="hero-stage__pin">
+          <Hero />
+        </div>
+      </div>
+
+      <section
+        class="portfolio-journey"
+        aria-label="Work, stack, and contact reveal"
+        data-portfolio-journey
+        data-journey-enhanced="false"
+      >
+        <div class="portfolio-journey__pin">
+          <article class="portfolio-card" data-journey-card>
+            <div class="portfolio-card__viewport" data-journey-viewport>
+              <div class="portfolio-card__track" data-journey-track>
+                <Projects />
+                <Capabilities />
+              </div>
+            </div>
+
+            <footer class="portfolio-card__chrome" aria-hidden="true">
+              <span>
+                FIELD /
+                <strong data-journey-chapter-index>01</strong>
+                <i>03</i>
+              </span>
+              <span class="portfolio-card__progress">
+                <i data-journey-progress></i>
+              </span>
+              <span data-journey-chapter>WORK</span>
+              <span data-journey-state>SCROLL TO ENTER</span>
+            </footer>
+          </article>
+
+          <div class="portfolio-journey__contact" data-contact-reveal>
+            <Contact />
+          </div>
+        </div>
+      </section>
     </main>
     <Footer />
   </div>

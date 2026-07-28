@@ -3,44 +3,77 @@ import ResearchFigure from './ResearchFigure.astro';
 import type { ResearchFigureVariant } from './ResearchFigure.astro';
 import { projects } from '../data/portfolio';
 ---
-<section class="work-section section-frame" id="work" aria-labelledby="work-title">
-  <header class="section-intro">
+
+<section
+  class="work-section"
+  id="work"
+  aria-labelledby="work-title"
+  tabindex="-1"
+  data-journey-section
+  data-journey-label="WORK"
+  data-journey-index="01"
+>
+  <header class="section-intro project-section-intro">
     <p class="section-label">01 / WORK</p>
     <div>
       <h2 id="work-title">Built, broken, still running.</h2>
-      <p>The source is there. So are the rough edges.</p>
+      <p>
+        The source is there. So are the rough edges. Each plate maps the system
+        that actually exists—not a metaphor for it.
+      </p>
     </div>
   </header>
 
-  <div class="work-grid">
-    <div class="project-index" role="list" aria-label="Select a project preview">
-      {
-        projects.map((project, index) => (
-          <article class="project-entry" role="listitem">
-            <button
-              class="project-entry__selector"
-              id={`project-tab-${project.id}`}
-              type="button"
-              aria-controls={`project-panel-${project.id}`}
-              aria-pressed={index === 0 ? 'true' : 'false'}
-              data-project-select={project.id}
-              data-project-title={project.title}
-              data-active={index === 0 ? 'true' : 'false'}
-            >
-              <span class="project-entry__topline">
-                <span>{String(index + 1).padStart(2, '0')} / {project.status}</span>
-                <span aria-hidden="true">↗</span>
-              </span>
-              <span class="project-entry__heading">
-                <strong>{project.title}</strong>
-                <span>{project.subtitle}</span>
-              </span>
-              <span class="project-entry__summary">{project.summary}</span>
-              <span class="project-entry__stack">
-                {project.stack.map((item) => <span>{item}</span>)}
-              </span>
-            </button>
-            <div class="project-entry__links">
+  <div class="project-atlas">
+    {
+      projects.map((project, index) => (
+        <article
+          class="project-plate"
+          id={`project-${project.id}`}
+          data-project-card
+          data-project-index={String(index + 1).padStart(2, '0')}
+          data-project-title={project.title}
+        >
+          <header class="project-plate__header">
+            <p>
+              <span>{String(index + 1).padStart(2, '0')} / {project.status}</span>
+              <span>{project.artwork.label}</span>
+            </p>
+            <div>
+              <h3>{project.title}</h3>
+              <p>{project.subtitle}</p>
+            </div>
+          </header>
+
+          <ResearchFigure
+            artwork={project.artwork}
+            status="VERIFIED PLATE"
+            active
+            variant={project.id as ResearchFigureVariant}
+            loading={index < 2 ? 'eager' : 'lazy'}
+          />
+
+          <div class="project-plate__copy">
+            <p class="project-plate__summary">{project.summary}</p>
+
+            <ol class="project-flow" aria-label={`${project.title} system flow`}>
+              {
+                project.flow.map((step, stepIndex) => (
+                  <li>
+                    <span>{String(stepIndex + 1).padStart(2, '0')}</span>
+                    <div>
+                      <strong>{step.label}</strong>
+                      <p>{step.detail}</p>
+                    </div>
+                  </li>
+                ))
+              }
+            </ol>
+
+            <footer class="project-plate__footer">
+              <ul aria-label={`${project.title} stack`}>
+                {project.stack.map((item) => <li>{item}</li>)}
+              </ul>
               {
                 project.links.length ? (
                   project.links.map((link) => (
@@ -49,41 +82,19 @@ import { projects } from '../data/portfolio';
                     </a>
                   ))
                 ) : (
-                  <span>LOCAL ONLY / NO PUBLIC LINK</span>
+                  <span>LOCAL CHECKPOINT / SOURCE HELD BACK</span>
                 )
               }
-            </div>
-          </article>
-        ))
-      }
-    </div>
+            </footer>
+          </div>
+        </article>
+      ))
+    }
+  </div>
 
-    <aside class="project-preview" aria-label="Selected project artwork">
-      <header class="project-preview__header">
-        <span>ORIGINAL PLATE / 1-BIT ENGRAVING</span>
-        <span>VIEW / <strong data-preview-live-label>{projects[0].title}</strong></span>
-      </header>
-      <div class="project-preview__viewport">
-        {
-          projects.map((project, index) => (
-            <div
-              id={`project-panel-${project.id}`}
-              role="region"
-              aria-labelledby={`project-tab-${project.id}`}
-              data-project-panel={project.id}
-              data-active={index === 0 ? 'true' : 'false'}
-              hidden={index !== 0}
-            >
-              <ResearchFigure
-                artwork={project.artwork}
-                status="STATIC"
-                active={index === 0}
-                variant={project.id as ResearchFigureVariant}
-              />
-            </div>
-          ))
-        }
-      </div>
-    </aside>
+  <div class="work-release" aria-hidden="true">
+    <span>NEXT FIELD / 02</span>
+    <strong>STACK</strong>
+    <span>TOOLS, RUNTIMES, FAILURE MODES</span>
   </div>
 </section>

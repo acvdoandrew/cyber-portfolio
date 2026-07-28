@@ -23,6 +23,11 @@ export interface ProjectLink {
   href: string;
 }
 
+export interface ProjectFlowStep {
+  label: string;
+  detail: string;
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -30,6 +35,7 @@ export interface Project {
   summary: string;
   status: string;
   stack: string[];
+  flow: ProjectFlowStep[];
   links: ProjectLink[];
   artwork: ArtworkSpec;
 }
@@ -127,20 +133,33 @@ export const projects: Project[] = [
     title: 'ARES',
     subtitle: 'Civilization Agent Sandbox',
     summary:
-      'I’m building this around one hard boundary: agents propose; Rust validates and owns the world. Right now it has a private frontier seed, deterministic CLI output, and eight passing tests.',
-    status: 'LOCAL_REPO / VERIFIED',
-    stack: ['Rust', 'Cargo', '8 tests', 'Deterministic', 'Frontier v0.1'],
+      'Agents submit bounded, typed proposals; Rust validates the base tick and full allocation, checks invariants, and owns the only authoritative state transition. The first settlement turn is deterministic and atomic.',
+    status: 'LOCAL_REPO / FIRST_TURN_VERIFIED',
+    stack: ['Rust', 'Cargo', '3 crates', 'Atomic commit', 'Frontier v0.1'],
+    flow: [
+      {
+        label: 'Bounded proposal',
+        detail: 'Complete six-part allocation plus the expected base tick.',
+      },
+      {
+        label: 'Rust validates',
+        detail: 'Build a candidate state, then check every invariant.',
+      },
+      {
+        label: 'Commit or reject',
+        detail: 'S(0) becomes S(1) once; rejection leaves state untouched.',
+      },
+    ],
     links: [],
     artwork: {
       kind: 'mask',
-      label: 'FRONTIER PLATE / VALIDATION BOUNDARY',
+      label: 'STATE MACHINE / RUST AUTHORITY',
       caption:
-        'A frontier observatory and its routes, flattened through the same deterministic 1-bit pipeline.',
+        'Typed proposals stop at the validation gate. Only one checked path can touch authoritative state.',
       index: '00',
-      src: '/assets/dither/ares-frontier-engraving.png',
-      underlaySrc: '/assets/dither/ares-frontier.png',
+      src: '/assets/dither/ares-validation-plate.png',
       alt:
-        'A 1-bit engraved frontier observatory layered over a technical topology of concentric terrain and branching agent paths.',
+        'A 1-bit engraved cybernetic plate showing six bounded civic proposals entering a ceramic Rust validation iris, with one authoritative pulse continuing through a spinal state lattice while rejected paths terminate.',
     },
   },
   {
@@ -151,6 +170,20 @@ export const projects: Project[] = [
       'I built a fault-tolerant control plane for distributed compute. Workers report over gRPC; the orchestrator handles leases, priorities, and recovery.',
     status: 'PUBLIC_REPO / WORKING_BUILD',
     stack: ['Rust', 'Tokio', 'Tonic', 'gRPC', 'Ratatui'],
+    flow: [
+      {
+        label: 'Workers report',
+        detail: 'GPU telemetry, uptime, version, and heartbeat state.',
+      },
+      {
+        label: 'Orchestrator leases',
+        detail: 'Capability filter, priority queue, and renewable job lease.',
+      },
+      {
+        label: 'Failure recovers',
+        detail: 'Stale nodes are evicted and expired work returns to the queue.',
+      },
+    ],
     links: [
       {
         label: 'View source',
@@ -159,14 +192,13 @@ export const projects: Project[] = [
     ],
     artwork: {
       kind: 'mask',
-      label: 'EDGE MESH / RELAY STUDY',
+      label: 'CONTROL PLANE / LEASE RECOVERY',
       caption:
-        'Relay towers report inward while the central orchestrator holds leases and recovery state.',
+        'Heartbeats converge on the orchestrator; leases move outward; abandoned work loops back for reassignment.',
       index: '01',
-      src: '/assets/dither/edge-node-engraving.png',
-      underlaySrc: '/assets/dither/edge-network.png',
+      src: '/assets/dither/edge-lease-control-plate.png',
       alt:
-        'A 1-bit engraved network of relay towers layered over the control-plane trace around a central orchestrator.',
+        'A 1-bit engraved rooftop compute garden with five ceramic GPU worker pods connected to an orchestrator, one failed node dark, and its lease visibly migrating to a healthy neighbor.',
     },
   },
   {
@@ -174,9 +206,23 @@ export const projects: Project[] = [
     title: 'High-Performance Physics Engine',
     subtitle: 'Particle Simulation',
     summary:
-      'A C++17 particle engine I built to study simulation loops, memory layout, and broad-phase collisions. It still needs honest benchmarks.',
-    status: 'PUBLIC_REPO / BENCHMARKS_TODO',
-    stack: ['C++17', 'CMake', 'SFML'],
+      'A C++17 2D particle engine with Verlet integration, boundary constraints, diagnostics, and naive O(n²) particle contacts. The spatial hash and honest benchmarks are still next.',
+    status: 'PUBLIC_REPO / SPATIAL_HASH_TODO',
+    stack: ['C++17', 'CMake', 'SFML', 'Verlet', 'O(n²) contacts'],
+    flow: [
+      {
+        label: 'Integrate',
+        detail: 'Current and previous positions advance through Verlet steps.',
+      },
+      {
+        label: 'Resolve',
+        detail: 'Boundary bounces and all-pairs particle contacts on CPU.',
+      },
+      {
+        label: 'Render + measure',
+        detail: 'SFML frame output with FPS and particle diagnostics.',
+      },
+    ],
     links: [
       {
         label: 'View source',
@@ -185,14 +231,13 @@ export const projects: Project[] = [
     ],
     artwork: {
       kind: 'mask',
-      label: 'PARTICLE APPARATUS / FRAME N',
+      label: 'SOLVER CHAMBER / CURRENT CPU PATH',
       caption:
-        'A frozen high-energy frame with the collision grid and orbital traces left visible.',
+        'Verlet trails and all-pairs contacts fill the active chamber; the dashed spatial grid remains a planned optimization.',
       index: '02',
-      src: '/assets/dither/physics-engine-engraving.png',
-      underlaySrc: '/assets/dither/physics-particles.png',
+      src: '/assets/dither/physics-verlet-plate.png',
       alt:
-        'A 1-bit engraved kinetic particle apparatus layered over orbit traces, collision vectors, and a spatial grid.',
+        'A 1-bit engraved synthetic materials lab showing a rectangular 2D particle chamber, persistent Verlet trails, wall rebounds, contact halos, and a faint inactive spatial grid.',
     },
   },
   {
@@ -200,9 +245,23 @@ export const projects: Project[] = [
     title: 'Speculative Inference Proxy',
     subtitle: 'Speculative Decoding Gateway',
     summary:
-      'A Rust/Python gateway I’m building for speculative decoding, TTFT measurements, and vLLM-compatible serving. Mock backends first; real models when the numbers hold up.',
-    status: 'PUBLIC_REPO / COMPILING',
-    stack: ['Rust', 'Python', 'Axum', 'vLLM'],
+      'A functional Rust gateway that routes identical OpenAI-compatible requests across baseline and speculation-enabled vLLM, streams SSE without buffering, and measures whether speculation actually helps.',
+    status: 'PUBLIC_REPO / VERIFIED_MVP',
+    stack: ['Rust', 'Axum', 'vLLM', 'SSE', 'OpenMetrics'],
+    flow: [
+      {
+        label: 'Route',
+        detail: 'One request selects the baseline or speculation-enabled arm.',
+      },
+      {
+        label: 'Engine owns speculation',
+        detail: 'Draft proposal and target verification stay inside vLLM.',
+      },
+      {
+        label: 'Stream + measure',
+        detail: 'Pass SSE through while recording first output and total latency.',
+      },
+    ],
     links: [
       {
         label: 'View source',
@@ -211,14 +270,13 @@ export const projects: Project[] = [
     ],
     artwork: {
       kind: 'mask',
-      label: 'DRAFT–ORACLE / VERIFICATION GATE',
+      label: 'EXPERIMENT BOUNDARY / ROUTE + MEASURE',
       caption:
-        'Draft tokens branch at verification. The accepted stream is the one that makes it through.',
+        'The proxy compares two upstream lanes; draft and target verification remain inside the speculation-enabled engine.',
       index: '03',
-      src: '/assets/dither/inference-proxy-engraving.png',
-      underlaySrc: '/assets/dither/inference-latency.png',
+      src: '/assets/dither/inference-routing-plate.png',
       alt:
-        'A 1-bit engraved pair of machine oracles layered over a latency trace as tokens cross a verification gate.',
+        'A 1-bit engraved synthetic cognition plate with one request split into baseline and speculation-enabled lanes, draft capsules verified at a coral aperture, and one measured stream leaving the proxy.',
     },
   },
 ];

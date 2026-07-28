@@ -165,78 +165,321 @@ const initializeNavigation = () => {
   });
 };
 
-const initializeProjectPreview = () => {
-  const selectors = [
-    ...document.querySelectorAll<HTMLButtonElement>('[data-project-select]'),
+const initializePortfolioJourney = () => {
+  const heroStage = document.querySelector<HTMLElement>('[data-hero-stage]');
+  const journey = document.querySelector<HTMLElement>(
+    '[data-portfolio-journey]',
+  );
+  const card = journey?.querySelector<HTMLElement>('[data-journey-card]');
+  const viewport = journey?.querySelector<HTMLElement>(
+    '[data-journey-viewport]',
+  );
+  const track = journey?.querySelector<HTMLElement>('[data-journey-track]');
+  const sections = [
+    ...(journey?.querySelectorAll<HTMLElement>('[data-journey-section]') ?? []),
   ];
-  const panels = [
-    ...document.querySelectorAll<HTMLElement>('[data-project-panel]'),
-  ];
-  const liveLabel = document.querySelector<HTMLElement>('[data-preview-live-label]');
-  const preview = document.querySelector<HTMLElement>('.project-preview');
+  const contactSection = journey?.querySelector<HTMLElement>(
+    '[data-contact-field]',
+  );
+  const chapter = journey?.querySelector<HTMLElement>('[data-journey-chapter]');
+  const chapterIndex = journey?.querySelector<HTMLElement>(
+    '[data-journey-chapter-index]',
+  );
+  const state = journey?.querySelector<HTMLElement>('[data-journey-state]');
+  const masthead = document.querySelector<HTMLElement>('[data-masthead]');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  if (!selectors.length || !panels.length) return;
+  if (
+    !heroStage ||
+    !journey ||
+    !card ||
+    !viewport ||
+    !track ||
+    !sections.length
+  ) {
+    return;
+  }
 
-  const select = (id: string) => {
-    let matched = false;
-    selectors.forEach((button) => {
-      const active = button.dataset.projectSelect === id;
-      button.setAttribute('aria-pressed', String(active));
-      button.dataset.active = String(active);
-      if (active) {
-        matched = true;
-        liveLabel?.replaceChildren(button.dataset.projectTitle ?? id);
-      }
-    });
-    if (!matched) return;
+  let frame = 0;
+  let enhanced = false;
+  let journeyTop = 0;
+  let trackTravel = 0;
+  let dwellDistance = 0;
+  let releaseDistance = 0;
+  let activeSection = -1;
+  let measuredWidth = 0;
+  let measuredHeight = 0;
 
-    panels.forEach((panel) => {
-      const active = panel.dataset.projectPanel === id;
-      panel.hidden = !active;
-      panel.dataset.active = String(active);
-    });
+  const clamp = (value: number) => Math.min(1, Math.max(0, value));
+
+  const setActiveSection = (index: number) => {
+    if (index === activeSection) return;
+    const section =
+      index === sections.length ? contactSection : sections[index];
+    if (!section) return;
+    activeSection = index;
+    chapter?.replaceChildren(section.dataset.journeyLabel ?? 'FIELD');
+    chapterIndex?.replaceChildren(
+      section.dataset.journeyIndex ??
+        String(index + 1).padStart(2, '0'),
+    );
+    journey.dataset.activeChapter = section.id;
   };
 
-  selectors.forEach((button, index) => {
-    const activate = () => select(button.dataset.projectSelect ?? '');
-    button.addEventListener('click', () => {
-      activate();
-      if (window.innerWidth <= 860) {
-        preview?.scrollIntoView({
-          block: 'start',
+  const resetMotion = () => {
+    journey.style.removeProperty('height');
+    journey.style.setProperty('--card-entry-y', '0px');
+    journey.style.setProperty('--card-release-y', '0px');
+    journey.style.setProperty('--card-scale', '1');
+    journey.style.setProperty('--card-opacity', '1');
+    journey.style.setProperty('--journey-progress', '0%');
+    journey.style.setProperty('--contact-reveal', '1');
+    journey.style.setProperty('--contact-shift', '0px');
+    journey.style.setProperty('--specimen-shift', '0px');
+    journey.style.setProperty('--specimen-opacity', '1');
+    journey.style.setProperty('--specimen-scan-y', '72%');
+    heroStage.style.setProperty('--hero-shift', '0px');
+    heroStage.style.setProperty('--hero-scale', '1');
+    heroStage.style.setProperty('--hero-opacity', '1');
+    track.style.transform = 'none';
+    state?.replaceChildren('NATIVE DOCUMENT FLOW');
+    setActiveSection(0);
+  };
+
+  const measure = () => {
+    measuredWidth = window.innerWidth;
+    measuredHeight = window.innerHeight;
+    enhanced = measuredWidth >= 900 && !reducedMotion.matches;
+    journey.dataset.journeyEnhanced = String(enhanced);
+
+    if (!enhanced) {
+      resetMotion();
+      return;
+    }
+
+    const viewportHeight = viewport.clientHeight;
+    trackTravel = Math.max(0, track.scrollHeight - viewportHeight);
+    dwellDistance = Math.max(240, measuredHeight * 0.34);
+    releaseDistance = Math.max(520, measuredHeight * 0.82);
+
+    journey.style.height = `${
+      measuredHeight + trackTravel + dwellDistance + releaseDistance
+    }px`;
+    journeyTop = journey.getBoundingClientRect().top + window.scrollY;
+    schedule();
+  };
+
+  const update = () => {
+    frame = 0;
+
+    masthead?.setAttribute(
+      'data-scrolled',
+      String(window.scrollY > Math.max(24, measuredHeight * 0.03)),
+    );
+
+    if (!enhanced) return;
+
+    const journeyRect = journey.getBoundingClientRect();
+    const heroProgress = clamp(
+      -heroStage.getBoundingClientRect().top /
+        Math.max(heroStage.offsetHeight, 1),
+    );
+    const entry = clamp(
+      (measuredHeight - journeyRect.top) / Math.max(measuredHeight, 1),
+    );
+    const localScroll = Math.max(0, window.scrollY - journeyTop);
+    const trackOffset = Math.min(trackTravel, localScroll);
+    const releaseStart = trackTravel + dwellDistance;
+    const release = clamp(
+      (localScroll - releaseStart) / Math.max(releaseDistance, 1),
+    );
+    const trackProgress = trackTravel ? trackOffset / trackTravel : 0;
+    const contactProgress = clamp(
+      (localScroll - releaseStart) / Math.max(releaseDistance * 0.72, 1),
+    );
+
+    heroStage.style.setProperty(
+      '--hero-shift',
+      `${(-heroProgress * measuredHeight * 0.055).toFixed(2)}px`,
+    );
+    heroStage.style.setProperty(
+      '--hero-scale',
+      (1 + heroProgress * 0.075).toFixed(4),
+    );
+    heroStage.style.setProperty(
+      '--hero-opacity',
+      (1 - heroProgress * 0.48).toFixed(4),
+    );
+
+    journey.style.setProperty(
+      '--card-entry-y',
+      `${((1 - entry) * measuredHeight * 0.2).toFixed(2)}px`,
+    );
+    journey.style.setProperty(
+      '--card-release-y',
+      `${(-release * measuredHeight * 1.04).toFixed(2)}px`,
+    );
+    journey.style.setProperty(
+      '--card-scale',
+      (0.95 + entry * 0.05 - release * 0.025).toFixed(4),
+    );
+    journey.style.setProperty(
+      '--card-opacity',
+      (0.4 + entry * 0.6 - release * 0.18).toFixed(4),
+    );
+    journey.style.setProperty(
+      '--journey-progress',
+      `${(trackProgress * 100).toFixed(2)}%`,
+    );
+    journey.style.setProperty(
+      '--contact-reveal',
+      contactProgress.toFixed(4),
+    );
+    journey.style.setProperty(
+      '--contact-shift',
+      `${((1 - contactProgress) * measuredHeight * 0.075).toFixed(2)}px`,
+    );
+    journey.style.setProperty(
+      '--specimen-shift',
+      `${((1 - contactProgress) * measuredHeight * 0.1).toFixed(2)}px`,
+    );
+    journey.style.setProperty(
+      '--specimen-opacity',
+      contactProgress.toFixed(4),
+    );
+    journey.style.setProperty(
+      '--specimen-scan-y',
+      `${(18 + contactProgress * 54).toFixed(2)}%`,
+    );
+    track.style.transform = `translate3d(0, ${-trackOffset.toFixed(2)}px, 0)`;
+
+    if (entry < 0.98) {
+      state?.replaceChildren('CARD APPROACH');
+    } else if (trackOffset < trackTravel - 2) {
+      state?.replaceChildren('SCROLL / INTERNAL FIELD');
+    } else if (release < 0.01) {
+      state?.replaceChildren('STACK / HOLD');
+    } else {
+      state?.replaceChildren('CONTACT / REVEAL');
+    }
+
+    if (contactProgress > 0.12) {
+      setActiveSection(sections.length);
+    } else {
+      const sectionProbe = trackOffset + viewport.clientHeight * 0.42;
+      let nextSection = 0;
+      sections.forEach((section, index) => {
+        if (section.offsetTop <= sectionProbe) {
+          nextSection = index;
+        }
+      });
+      setActiveSection(nextSection);
+    }
+  };
+
+  const schedule = () => {
+    if (frame) return;
+    frame = window.requestAnimationFrame(update);
+  };
+
+  const scrollToSection = (section: HTMLElement, focus = false) => {
+    if (!enhanced) return false;
+    const offset = Math.min(trackTravel, Math.max(0, section.offsetTop));
+    window.scrollTo({
+      top: journeyTop + offset,
+      behavior: reducedMotion.matches ? 'auto' : 'smooth',
+    });
+    if (focus) section.focus({ preventScroll: true });
+    return true;
+  };
+
+  const scrollToContact = (focus = false) => {
+    if (!enhanced || !contactSection) return false;
+    window.scrollTo({
+      top:
+        journeyTop +
+        trackTravel +
+        dwellDistance +
+        releaseDistance * 0.92,
+      behavior: reducedMotion.matches ? 'auto' : 'smooth',
+    });
+    if (focus) contactSection.focus({ preventScroll: true });
+    return true;
+  };
+
+  contactSection?.addEventListener('focusin', () => {
+    if (enhanced) scrollToContact();
+  });
+
+  document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const id = link.hash.slice(1);
+      if (!id) return;
+
+      if (id === 'home' && enhanced) {
+        event.preventDefault();
+        history.pushState(null, '', '#home');
+        window.scrollTo({
+          top: 0,
           behavior: reducedMotion.matches ? 'auto' : 'smooth',
         });
+        return;
       }
-    });
-    button.addEventListener('pointerenter', (event) => {
-      if (event.pointerType !== 'touch') activate();
-    });
-    button.addEventListener('focus', activate);
-    button.addEventListener('keydown', (event) => {
-      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+
+      if (id === 'contact' && scrollToContact(true)) {
+        event.preventDefault();
+        history.pushState(null, '', '#contact');
+        return;
+      }
+
+      const section = sections.find((candidate) => candidate.id === id);
+      if (!section || !scrollToSection(section, true)) return;
       event.preventDefault();
-
-      let nextIndex = index;
-      if (event.key === 'ArrowDown') nextIndex = (index + 1) % selectors.length;
-      if (event.key === 'ArrowUp') {
-        nextIndex = (index - 1 + selectors.length) % selectors.length;
-      }
-      if (event.key === 'Home') nextIndex = 0;
-      if (event.key === 'End') nextIndex = selectors.length - 1;
-
-      selectors[nextIndex].focus();
-      select(selectors[nextIndex].dataset.projectSelect ?? '');
+      history.pushState(null, '', `#${id}`);
     });
   });
 
-  select(selectors[0].dataset.projectSelect ?? '');
+  track.addEventListener('focusin', (event) => {
+    if (!enhanced || !(event.target instanceof HTMLElement)) return;
+    const target = event.target;
+    if (target.matches('[data-journey-section]')) return;
+    window.requestAnimationFrame(() => {
+      const targetRect = target.getBoundingClientRect();
+      const viewportRect = viewport.getBoundingClientRect();
+      const safeTop = viewportRect.top + 80;
+      const safeBottom = viewportRect.bottom - 80;
+      if (targetRect.top >= safeTop && targetRect.bottom <= safeBottom) return;
+      window.scrollBy({
+        top: targetRect.top - (viewportRect.top + viewportRect.height * 0.28),
+        behavior: reducedMotion.matches ? 'auto' : 'smooth',
+      });
+    });
+  });
+
+  const observer = new ResizeObserver(() => {
+    if (
+      measuredWidth !== window.innerWidth ||
+      measuredHeight !== window.innerHeight ||
+      enhanced
+    ) {
+      measure();
+    }
+  });
+  observer.observe(viewport);
+  observer.observe(track);
+
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', measure);
+  window.addEventListener('load', measure, { once: true });
+  reducedMotion.addEventListener('change', measure);
+  document.fonts?.ready.then(measure);
+  measure();
 };
 
 const initialize = () => {
   initializePalette();
   initializeNavigation();
-  initializeProjectPreview();
+  initializePortfolioJourney();
 };
 
 if (document.readyState === 'loading') {

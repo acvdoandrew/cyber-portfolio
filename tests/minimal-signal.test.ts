@@ -34,10 +34,24 @@ describe('minimal signal document', () => {
     expect(page).toContain('<div class="site-frame" data-site-frame>');
     expect(page).toContain('<AmbientField />');
     expect(page).toContain('<TopBar />');
+    expect(page).toContain('<div class="hero-stage" data-hero-stage>');
     expect(page).toContain('<Hero />');
-    expect(page).toContain('<Projects />');
-    expect(page).toContain('<Capabilities />');
-    expect(page).toContain('<Contact />');
+    expect(page).toContain('data-portfolio-journey');
+    expect(page).toContain('data-journey-enhanced="false"');
+    expect(page).toContain('<div class="portfolio-card__track" data-journey-track>');
+    expect(page.indexOf('<Projects />')).toBeLessThan(
+      page.indexOf('<Capabilities />'),
+    );
+    expect(page.indexOf('<Capabilities />')).toBeLessThan(
+      page.indexOf('<Contact />'),
+    );
+    expect(page).toContain(
+      '<div class="portfolio-journey__contact" data-contact-reveal>',
+    );
+    expect(page).toContain('<Capabilities />\n              </div>');
+    expect(page).toContain(
+      '<div class="portfolio-journey__contact" data-contact-reveal>\n            <Contact />',
+    );
     expect(page).not.toMatch(/Principles|CommandDeck|welcome|entry gate/i);
 
     expect(layout).toContain("import '../styles/editorial.css'");
@@ -88,7 +102,12 @@ describe('minimal signal document', () => {
     expect(hero).toContain('aria-label="Live ordered 1-bit recursive field visualization"');
     expect(hero).toContain('alt="Ordered 1-bit study of a folded recursive field');
     expect(ambient.match(/aria-hidden="true"/g)).toHaveLength(1);
-    expect(contact).not.toMatch(/entity-cameo|signal cartographer/i);
+    expect(contact).toContain('<figure class="contact-specimen">');
+    expect(contact).toContain('role="img"');
+    expect(contact).toContain(
+      'aria-label="Entity 08, the Network Gardener, an original civic-network synth tending a seed-like signal node."',
+    );
+    expect(contact).not.toMatch(/entity-cameo|<canvas/i);
   });
 });
 
@@ -127,7 +146,7 @@ describe('typed portfolio data', () => {
       'Speculative Inference Proxy',
     ]);
     expect(projects[0].links).toEqual([]);
-    expect(projects[0].summary).toMatch(/eight passing tests/);
+    expect(projects[0].summary).toMatch(/authoritative state transition/);
     expect(projects[1].links[0].href).toBe(
       'https://github.com/acvdoandrew/rust-edge-compute',
     );
@@ -137,6 +156,12 @@ describe('typed portfolio data', () => {
     expect(projects[3].links[0].href).toBe(
       'https://github.com/acvdoandrew/speculative-inference-proxy',
     );
+    expect(projects[2].summary).toMatch(/naive O\(n²\)/);
+    expect(projects[2].summary).toMatch(/spatial hash.*still next/i);
+    expect(projects[3].summary).toMatch(
+      /baseline and speculation-enabled vLLM/,
+    );
+    expect(projects.every((project) => project.flow.length === 3)).toBe(true);
     expect(projects.every((project) => project.artwork.kind === 'mask')).toBe(true);
     expect(
       projects.every((project) =>
@@ -144,37 +169,13 @@ describe('typed portfolio data', () => {
       ),
     ).toBe(true);
     expect(
-      projects.every((project) =>
-        project.artwork.underlaySrc?.startsWith('/assets/dither/'),
-      ),
+      projects.every((project) => project.artwork.underlaySrc === undefined),
     ).toBe(true);
-    expect(
-      projects.every(
-        (project) => project.artwork.src !== project.artwork.underlaySrc,
-      ),
-    ).toBe(true);
-    expect(
-      projects.map(({ artwork }) => ({
-        src: artwork.src,
-        underlaySrc: artwork.underlaySrc,
-      })),
-    ).toEqual([
-      {
-        src: '/assets/dither/ares-frontier-engraving.png',
-        underlaySrc: '/assets/dither/ares-frontier.png',
-      },
-      {
-        src: '/assets/dither/edge-node-engraving.png',
-        underlaySrc: '/assets/dither/edge-network.png',
-      },
-      {
-        src: '/assets/dither/physics-engine-engraving.png',
-        underlaySrc: '/assets/dither/physics-particles.png',
-      },
-      {
-        src: '/assets/dither/inference-proxy-engraving.png',
-        underlaySrc: '/assets/dither/inference-latency.png',
-      },
+    expect(projects.map(({ artwork }) => artwork.src)).toEqual([
+      '/assets/dither/ares-validation-plate.png',
+      '/assets/dither/edge-lease-control-plate.png',
+      '/assets/dither/physics-verlet-plate.png',
+      '/assets/dither/inference-routing-plate.png',
     ]);
     expect(
       projects.every((project) => /1-bit engraved/i.test(project.artwork.alt)),
@@ -203,38 +204,46 @@ describe('typed portfolio data', () => {
     expect(visibleCopy).toContain('Built, broken, still running.');
     expect(visibleCopy).toContain('The source is there. So are the rough edges.');
     expect(visibleCopy).toContain('What I use to build.');
-    expect(visibleCopy).toContain('Email me.');
+    expect(visibleCopy).toContain('Send a signal.');
     expect(visibleCopy).not.toMatch(
       /compact index|tools are indexed|a direct line|explore selected work|email andrew/i,
     );
   });
 });
 
-describe('centered frame and static ambient artwork', () => {
+describe('full-viewport scroll world and contained artwork', () => {
   const page = source('src/pages/index.astro');
   const ambient = source('src/components/AmbientField.astro');
   const contact = source('src/components/Contact.astro');
   const css = source('src/styles/editorial.css');
+  const fullViewportCss = css.slice(
+    css.indexOf('/* Full-viewport scroll world'),
+  );
 
-  test('the page is centered inside one semantic outer frame', () => {
+  test('the hero occupies the viewport instead of sitting inside a centered frame', () => {
     expect(page.indexOf('<AmbientField />')).toBeLessThan(
       page.indexOf('<TopBar />'),
     );
-    expect(css).toMatch(
-      /\.site-frame\s*\{[\s\S]*?isolation:\s*isolate;[\s\S]*?width:\s*min\([^;]+;[\s\S]*?border:\s*1px solid var\(--frame-accent\)/,
+    expect(fullViewportCss).toMatch(
+      /body\s*\{\s*padding:\s*0;\s*\}/,
     );
-    expect(css).toMatch(
-      /body\s*\{[\s\S]*?padding:\s*var\(--frame-gap\);[\s\S]*?background:\s*var\(--frame-field\)/,
+    expect(fullViewportCss).toMatch(
+      /\.site-frame\s*\{[\s\S]*?width:\s*100%;[\s\S]*?margin:\s*0;[\s\S]*?border:\s*0;[\s\S]*?box-shadow:\s*none;/,
     );
-    expect(css).toMatch(
-      /\.site-frame > main,[\s\S]*?\.site-frame > \.site-footer\s*\{[\s\S]*?z-index:\s*1;/,
+    expect(fullViewportCss).toMatch(
+      /\.hero-stage\s*\{[\s\S]*?height:\s*135svh;/,
     );
-    expect(css).not.toMatch(/\.site-frame\s*\{[^}]*overflow:/);
+    expect(fullViewportCss).toMatch(
+      /\.hero-stage__pin\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?height:\s*100svh;[\s\S]*?overflow:\s*clip;/,
+    );
+    expect(fullViewportCss).toMatch(
+      /\.hero-plate\s*\{[\s\S]*?width:\s*100%;[\s\S]*?height:\s*100%;[\s\S]*?min-height:\s*100svh;[\s\S]*?border:\s*0;/,
+    );
   });
 
   test('the ambient field contains only static decorative engravings', () => {
     expect(ambient.match(/aria-hidden="true"/g)).toHaveLength(1);
-    expect(ambient.match(/class="ambient-engraving /g)).toHaveLength(3);
+    expect(ambient.match(/class="ambient-engraving /g)).toHaveLength(4);
     expect(ambient).not.toMatch(
       /<(?:a|button|canvas|input|script|select|textarea)\b|tabindex=|role=|data-roaming|roaming-layer|roaming-entity/i,
     );
@@ -250,6 +259,9 @@ describe('centered frame and static ambient artwork', () => {
     expect(css).toContain(
       "url('/assets/dither/physics-engine-engraving.png')",
     );
+    expect(css).toContain(
+      "url('/assets/dither/inference-proxy-engraving.png')",
+    );
     expect(css).not.toMatch(/\.roaming-|data-roaming/);
     expect(existsSync(join(root, 'src/scripts/roaming-entity.ts'))).toBe(false);
 
@@ -258,46 +270,85 @@ describe('centered frame and static ambient artwork', () => {
     expect(ambientRule).not.toMatch(/animation|transition/);
   });
 
-  test('ENTITY_07 is a static, uncaged Contact engraving', () => {
-    expect(contact).not.toMatch(
-      /entity-07|signal cartographer|data-roaming|<figure|<canvas/i,
+  test('ENTITY_08 is isolated inside one explicit civic-biocircuit Contact specimen', () => {
+    expect(contact.match(/class="contact-specimen"/g)).toHaveLength(1);
+    expect(contact.match(/class="contact-specimen__entity"/g)).toHaveLength(1);
+    expect(contact).toContain('SPECIMEN / ENTITY_08');
+    expect(contact).toContain('NETWORK GARDENER');
+    expect(contact).toContain(
+      'CIVIC BIOCIRCUIT / SYNTHETIC ECOLOGY / OPEN CHANNEL',
     );
-    expect(css).toMatch(
-      /\.contact-section::before\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?pointer-events:\s*none;[\s\S]*?url\('\/assets\/dither\/entity-07-signal-cartographer\.png'\)/,
+    expect(contact).not.toMatch(/data-roaming|<canvas/i);
+    expect(fullViewportCss).toMatch(
+      /\.contact-section::before\s*\{\s*content:\s*none;\s*\}/,
     );
-    const entityRule =
-      css.match(/\.contact-section::before\s*\{([\s\S]*?)\}/)?.[1] ?? '';
-    expect(entityRule).not.toMatch(/animation|transition|border:/);
-  });
-
-  test('work and contact merge into the frame field around an inset paper box', () => {
-    expect(page.indexOf('<Projects />')).toBeLessThan(
-      page.indexOf('<Capabilities />'),
+    expect(fullViewportCss).toMatch(
+      /\.contact-specimen__viewport\s*\{[\s\S]*?overflow:\s*hidden;[\s\S]*?isolation:\s*isolate;/,
     );
-    expect(page.indexOf('<Capabilities />')).toBeLessThan(
-      page.indexOf('<Contact />'),
-    );
-
-    const fieldSections =
-      css.match(
-        /\.work-section,\s*\.contact-section\s*\{([\s\S]*?)\}/,
-      )?.[1] ?? '';
-    expect(fieldSections).toMatch(/color:\s*var\(--frame-ink\)/);
-    expect(fieldSections).not.toMatch(/background/);
-    expect(css).toMatch(
-      /\.capabilities-section\s*\{[\s\S]*?width:\s*min\(calc\(100% - var\(--stage-inset\) \* 2\), var\(--content-width\)\);[\s\S]*?margin:\s*var\(--stage-inset\) auto;[\s\S]*?border:\s*1px solid var\(--rule\);[\s\S]*?background:\s*var\(--paper\)/,
+    expect(fullViewportCss).toMatch(
+      /\.portfolio-journey__contact \.contact-specimen__entity\s*\{[\s\S]*?url\('\/assets\/dither\/entity-08-solar-ghost-cartographer\.png'\)[\s\S]*?contain no-repeat;/,
     );
   });
 
-  test('static engravings scale down on mobile and disappear in forced colors', () => {
+  test('one wide card pins Work and Stack while Contact fades underneath its release', () => {
+    const projectsSource = source('src/components/Projects.astro');
+    const capabilitiesSource = source('src/components/Capabilities.astro');
+
+    expect(page).toContain(
+      '<article class="portfolio-card" data-journey-card>',
+    );
+    expect(page).toContain(
+      '<div class="portfolio-card__viewport" data-journey-viewport>',
+    );
+    expect(projectsSource).toContain('data-journey-label="WORK"');
+    expect(projectsSource).toContain('data-journey-index="01"');
+    expect(capabilitiesSource).toContain('data-journey-label="STACK"');
+    expect(capabilitiesSource).toContain('data-journey-index="02"');
+    expect(contact).toContain('data-journey-label="CONTACT"');
+    expect(contact).toContain('data-journey-index="03"');
+    expect(contact).toContain('data-contact-field');
+    expect(contact).not.toContain('data-journey-section');
+    expect(projectsSource).not.toMatch(
+      /work-scroll-stage|work-scroll-panel|work-rail-marker/,
+    );
+    expect(fullViewportCss).toMatch(
+      /\.portfolio-journey__pin\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?height:\s*100svh;[\s\S]*?overflow:\s*clip;/,
+    );
+    expect(fullViewportCss).toMatch(
+      /\.portfolio-card\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?top:\s*calc\(var\(--masthead-height\) \+ var\(--journey-inset\)\);[\s\S]*?right:\s*var\(--journey-inset\);[\s\S]*?bottom:\s*var\(--journey-inset\);[\s\S]*?left:\s*var\(--journey-inset\);/,
+    );
+    expect(fullViewportCss).toMatch(
+      /\.portfolio-card__viewport\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?overflow:\s*hidden;/,
+    );
+    expect(fullViewportCss).toMatch(
+      /\.portfolio-journey__contact\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?opacity:\s*var\(--contact-reveal\);[\s\S]*?transform:\s*translate3d\(0, var\(--contact-shift\), 0\);/,
+    );
+    expect(fullViewportCss).toMatch(
+      /\.portfolio-card\s*\{[\s\S]*?z-index:\s*2;/,
+    );
+  });
+
+  test('mobile and reduced-motion users get direct document flow', () => {
     expect(css).toMatch(
       /@media \(max-width: 640px\)[\s\S]*?\.ambient-engraving\s*\{[\s\S]*?width:\s*110%;[\s\S]*?opacity:\s*0\.024;/,
     );
-    expect(css).toMatch(
-      /@media \(max-width: 640px\)[\s\S]*?\.contact-section::before\s*\{[\s\S]*?width:\s*min\(76vw, 20rem\);[\s\S]*?opacity:\s*0\.06;/,
+    expect(fullViewportCss).toMatch(
+      /@media \(max-width: 899px\)[\s\S]*?\.portfolio-journey__pin\s*\{[\s\S]*?position:\s*relative;[\s\S]*?height:\s*auto;[\s\S]*?overflow:\s*visible;/,
+    );
+    expect(fullViewportCss).toMatch(
+      /@media \(max-width: 899px\)[\s\S]*?\.portfolio-card__track\s*\{[\s\S]*?transform:\s*none !important;/,
+    );
+    expect(fullViewportCss).toMatch(
+      /@media \(max-width: 899px\)[\s\S]*?\.contact-composition\s*\{[\s\S]*?grid-template-columns:\s*1fr;/,
+    );
+    expect(fullViewportCss).toMatch(
+      /@media \(max-width: 899px\)[\s\S]*?\.portfolio-journey__contact\s*\{[\s\S]*?position:\s*relative;[\s\S]*?opacity:\s*1;[\s\S]*?transform:\s*none;/,
+    );
+    expect(fullViewportCss).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.portfolio-journey\s*\{[\s\S]*?height:\s*auto !important;/,
     );
     expect(css).toMatch(
-      /@media \(forced-colors: active\)[\s\S]*?\.ambient-engraving-field\s*\{[\s\S]*?display:\s*none;[\s\S]*?\.contact-section::before\s*\{[\s\S]*?content:\s*none;/,
+      /@media \(forced-colors: active\)[\s\S]*?\.ambient-engraving-field\s*\{[\s\S]*?display:\s*none;/,
     );
   });
 });
@@ -321,17 +372,51 @@ describe('palette interface', () => {
     );
   });
 
-  test('project preview parity covers hover, focus, click, and arrow keys', () => {
+  test('portfolio journey maps body scroll onto the pinned card track', () => {
     const runtime = source('src/scripts/editorial-interface.ts');
     const projectsSource = source('src/components/Projects.astro');
+    const css = source('src/styles/editorial.css');
 
-    expect(runtime).toMatch(/addEventListener\('pointerenter'/);
-    expect(runtime).toMatch(/addEventListener\('focus'/);
-    expect(runtime).toMatch(/addEventListener\('click'/);
-    expect(runtime).toMatch(/ArrowDown|ArrowUp/);
-    expect(projectsSource).toContain('role="list"');
-    expect(projectsSource).toContain('role="region"');
-    expect(projectsSource).toContain('aria-pressed=');
+    expect(runtime).toContain('const initializePortfolioJourney = () =>');
+    expect(runtime).toContain("'[data-portfolio-journey]'");
+    expect(runtime).toContain("'[data-journey-track]'");
+    expect(runtime).toMatch(/requestAnimationFrame/);
+    expect(runtime).toMatch(/new ResizeObserver/);
+    expect(runtime).toMatch(
+      /addEventListener\('scroll', schedule, \{ passive: true \}\)/,
+    );
+    expect(runtime).toContain("matchMedia('(prefers-reduced-motion: reduce)')");
+    expect(runtime).toContain('measuredWidth >= 900 && !reducedMotion.matches');
+    expect(runtime).toContain(
+      'trackTravel = Math.max(0, track.scrollHeight - viewportHeight)',
+    );
+    expect(runtime).toContain(
+      'track.style.transform = `translate3d(0, ${-trackOffset.toFixed(2)}px, 0)`',
+    );
+    expect(runtime).toContain("state?.replaceChildren('CARD APPROACH')");
+    expect(runtime).toContain(
+      "state?.replaceChildren('SCROLL / INTERNAL FIELD')",
+    );
+    expect(runtime).toContain("state?.replaceChildren('STACK / HOLD')");
+    expect(runtime).toContain("state?.replaceChildren('CONTACT / REVEAL')");
+    expect(runtime).toContain('const scrollToSection = (section: HTMLElement');
+    expect(runtime).toContain('const scrollToContact = (focus = false)');
+    expect(runtime).toContain("'--contact-reveal'");
+    expect(runtime).toContain('releaseDistance * 0.72');
+    expect(runtime).not.toMatch(/(?:wheel|touchmove)[\s\S]{0,100}preventDefault/);
+    expect(projectsSource).toContain('data-journey-section');
+    expect(projectsSource).toContain('data-project-card');
+    expect(projectsSource).toContain('class="project-flow"');
+    expect(projectsSource).not.toContain('aria-pressed=');
+    expect(css).toMatch(
+      /\.project-atlas\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/,
+    );
+    expect(css).toMatch(
+      /@media \(max-width: 899px\)[\s\S]*?\.project-atlas\s*\{[\s\S]*?grid-template-columns:\s*1fr/,
+    );
+    expect(css).toMatch(
+      /\.portfolio-journey:not\(\[data-journey-enhanced='true'\]\)[\s\S]*?\.portfolio-card__track\s*\{[\s\S]*?transform:\s*none !important/,
+    );
   });
 });
 
@@ -381,7 +466,11 @@ describe('art and typography assets', () => {
     ['public/assets/dither/edge-node-engraving.png', 960, 640],
     ['public/assets/dither/physics-engine-engraving.png', 960, 640],
     ['public/assets/dither/inference-proxy-engraving.png', 960, 640],
-    ['public/assets/dither/entity-07-signal-cartographer.png', 800, 1000],
+    ['public/assets/dither/ares-validation-plate.png', 960, 640],
+    ['public/assets/dither/edge-lease-control-plate.png', 960, 640],
+    ['public/assets/dither/physics-verlet-plate.png', 960, 640],
+    ['public/assets/dither/inference-routing-plate.png', 960, 640],
+    ['public/assets/dither/entity-08-solar-ghost-cartographer.png', 800, 1000],
     ['public/assets/dither/recursive-field-poster.png', 640, 480],
   ] as const;
 
@@ -396,12 +485,16 @@ describe('art and typography assets', () => {
     );
   });
 
-  test('project engravings preserve their sources and technical underlays', () => {
+  test('project plates preserve source art while old engravings remain ambient', () => {
     const illustrationSources = [
       'ares-frontier-engraving-source.png',
       'edge-node-engraving-source.png',
       'physics-engine-engraving-source.png',
       'inference-proxy-engraving-source.png',
+      'ares-system-plate-source.png',
+      'edge-control-plane-plate-source.png',
+      'physics-solver-plate-source.png',
+      'inference-measurement-plate-source.png',
     ];
     for (const filename of illustrationSources) {
       expect(
@@ -420,26 +513,43 @@ describe('art and typography assets', () => {
 
     expect(generator).toContain('drawProjectEngraving');
     expect(generator).toContain("'project-illustrations'");
+    expect(generator).toContain('ares-validation-plate.png');
+    expect(generator).toContain('edge-lease-control-plate.png');
+    expect(generator).toContain('physics-verlet-plate.png');
+    expect(generator).toContain('inference-routing-plate.png');
     expect(figure).toContain('artwork.underlaySrc');
     expect(figure).toContain('research-figure__technical-mask');
     expect(figure).toMatch(
       /\.research-figure__technical-mask\s*\{[\s\S]*?z-index:\s*1;[\s\S]*?opacity:\s*0\.18;/,
     );
     expect(figure).toMatch(
-      /\.research-figure__mask\s*\{[\s\S]*?z-index:\s*2;/,
+      /\.research-figure__mask-source\s*\{[\s\S]*?z-index:\s*2;[\s\S]*?opacity:\s*1;[\s\S]*?mix-blend-mode:\s*difference;/,
+    );
+    expect(figure).toMatch(
+      /\.research-figure__mask\s*\{[\s\S]*?display:\s*none;/,
     );
     expect(projectsSource).toContain(
       'variant={project.id as ResearchFigureVariant}',
     );
   });
 
-  test('the original ENTITY_07 source is preserved but not publicly shipped', () => {
+  test('the original and solar-ghost entity sources stay private', () => {
     expect(
       existsSync(join(root, 'artwork-source/entity-07-signal-cartographer.png')),
     ).toBe(true);
     expect(
       existsSync(
+        join(root, 'artwork-source/entity-08-solar-ghost-cartographer.png'),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
         join(root, 'public/assets/source/entity-07-signal-cartographer.png'),
+      ),
+    ).toBe(false);
+    expect(
+      existsSync(
+        join(root, 'public/assets/source/entity-08-solar-ghost-cartographer.png'),
       ),
     ).toBe(false);
   });
