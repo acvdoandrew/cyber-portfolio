@@ -1,15 +1,14 @@
 ---
 const navItems = [
-  { label: 'Work', href: '#work' },
-  { label: 'Stack', href: '#capabilities' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'work', href: '#work' },
+  { label: 'tools', href: '#capabilities' },
+  { label: 'contact', href: '#contact' },
 ];
 ---
 <header class="masthead" data-masthead>
   <div class="masthead__inner">
     <a class="wordmark" href="#home" aria-label="Andrew, return to the introduction">
-      <span class="wordmark__monogram" aria-hidden="true">A</span>
-      <span class="wordmark__name">Andrew</span>
+      <span class="wordmark__name">andrew<span aria-hidden="true">_</span></span>
     </a>
 
     <nav class="masthead__nav" id="primary-navigation" aria-label="Primary navigation">
@@ -21,13 +20,13 @@ const navItems = [
         class="display-mode-toggle"
         type="button"
         data-display-filter-toggle
-        aria-pressed="true"
-        aria-label="Disable CRT display filter"
+        aria-pressed="false"
+        aria-label="Enable CRT display filter"
       >
         <span class="display-mode-toggle__pip" aria-hidden="true"></span>
         <span>CRT</span>
         <span class="sr-only" data-display-filter-announcement>
-          CRT display filter enabled. Activate to disable.
+          CRT display filter disabled. Activate to enable.
         </span>
       </button>
 

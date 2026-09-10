@@ -6,7 +6,7 @@ export type PaletteId =
   | 'field'
   | 'alloy';
 
-export type ArtworkKind = 'shader' | 'mask' | 'diagram';
+export type ArtworkKind = 'shader' | 'mask' | 'diagram' | 'image' | 'pixels';
 
 export interface ArtworkSpec {
   kind: ArtworkKind;
@@ -14,6 +14,7 @@ export interface ArtworkSpec {
   caption: string;
   index: string;
   src?: string;
+  smallSrc?: string;
   underlaySrc?: string;
   alt: string;
 }
@@ -34,6 +35,7 @@ export interface Project {
   subtitle: string;
   summary: string;
   status: string;
+  statusLabel: string;
   stack: string[];
   flow: ProjectFlowStep[];
   links: ProjectLink[];
@@ -78,9 +80,9 @@ export const paletteMeta: Record<PaletteId, PaletteMeta> = {
   archive: {
     id: 'archive',
     label: 'Archive',
-    paper: '#E7E4DC',
-    ink: '#182521',
-    accent: '#8E2148',
+    paper: '#F2F3EE',
+    ink: '#202621',
+    accent: '#A3422B',
     colorScheme: 'light',
   },
   carbon: {
@@ -133,8 +135,9 @@ export const projects: Project[] = [
     title: 'ARES',
     subtitle: 'Civilization Agent Sandbox',
     summary:
-      'Agents submit bounded, typed proposals; Rust validates the base tick and full allocation, checks invariants, and owns the only authoritative state transition. The first settlement turn is deterministic and atomic.',
+      'A small world for AI agents. They suggest a move; Rust checks it before the world changes. Every state change is deterministic and atomic.',
     status: 'LOCAL_REPO / FIRST_TURN_VERIFIED',
+    statusLabel: 'In development',
     stack: ['Rust', 'Cargo', '3 crates', 'Atomic commit', 'Frontier v0.1'],
     flow: [
       {
@@ -152,14 +155,14 @@ export const projects: Project[] = [
     ],
     links: [],
     artwork: {
-      kind: 'mask',
+      kind: 'pixels',
       label: 'STATE MACHINE / RUST AUTHORITY',
       caption:
-        'Typed proposals stop at the validation gate. Only one checked path can touch authoritative state.',
+        'a small world, one tick at a time',
       index: '00',
-      src: '/assets/dither/ares-validation-plate.png',
+      src: '/assets/dither/studies/ares.png',
       alt:
-        'A 1-bit engraved cybernetic plate showing six bounded civic proposals entering a ceramic Rust validation iris, with one authoritative pulse continuing through a spinal state lattice while rejected paths terminate.',
+        'A 1-bit pixel study of an isometric settlement evolving in discrete ticks, with agents moving inside its circular boundary.',
     },
   },
   {
@@ -167,8 +170,9 @@ export const projects: Project[] = [
     title: 'Rust Edge Compute Node',
     subtitle: 'Distributed Compute Control Plane',
     summary:
-      'I built a fault-tolerant control plane for distributed compute. Workers report over gRPC; the orchestrator handles leases, priorities, and recovery.',
+      'A Rust control plane for a small compute cluster. I’m interested in what happens when a worker disappears.',
     status: 'PUBLIC_REPO / WORKING_BUILD',
+    statusLabel: 'Working build',
     stack: ['Rust', 'Tokio', 'Tonic', 'gRPC', 'Ratatui'],
     flow: [
       {
@@ -186,19 +190,19 @@ export const projects: Project[] = [
     ],
     links: [
       {
-        label: 'View source',
+        label: 'source',
         href: 'https://github.com/acvdoandrew/rust-edge-compute',
       },
     ],
     artwork: {
-      kind: 'mask',
+      kind: 'pixels',
       label: 'CONTROL PLANE / LEASE RECOVERY',
       caption:
-        'Heartbeats converge on the orchestrator; leases move outward; abandoned work loops back for reassignment.',
+        'connections that find another way',
       index: '01',
-      src: '/assets/dither/edge-lease-control-plate.png',
+      src: '/assets/dither/studies/rust-edge-compute.png',
       alt:
-        'A 1-bit engraved rooftop compute garden with five ceramic GPU worker pods connected to an orchestrator, one failed node dark, and its lease visibly migrating to a healthy neighbor.',
+        'A 1-bit dithered network with packets moving between six worker nodes and a central node, rerouting when a worker dims.',
     },
   },
   {
@@ -206,8 +210,9 @@ export const projects: Project[] = [
     title: 'High-Performance Physics Engine',
     subtitle: 'Particle Simulation',
     summary:
-      'A C++17 2D particle engine with Verlet integration, boundary constraints, diagnostics, and naive O(n²) particle contacts. The spatial hash and honest benchmarks are still next.',
+      'An excuse to learn what makes a simulation fast. C++17, Verlet integration, and particle collisions. Spatial hashing and benchmarks are next.',
     status: 'PUBLIC_REPO / SPATIAL_HASH_TODO',
+    statusLabel: 'In progress',
     stack: ['C++17', 'CMake', 'SFML', 'Verlet', 'O(n²) contacts'],
     flow: [
       {
@@ -225,19 +230,19 @@ export const projects: Project[] = [
     ],
     links: [
       {
-        label: 'View source',
+        label: 'source',
         href: 'https://github.com/acvdoandrew/high-performance-physics-engine',
       },
     ],
     artwork: {
-      kind: 'mask',
+      kind: 'pixels',
       label: 'SOLVER CHAMBER / CURRENT CPU PATH',
       caption:
-        'Verlet trails and all-pairs contacts fill the active chamber; the dashed spatial grid remains a planned optimization.',
+        'particles, constraints, and a lot of debugging',
       index: '02',
-      src: '/assets/dither/physics-verlet-plate.png',
+      src: '/assets/dither/studies/physics-engine.png',
       alt:
-        'A 1-bit engraved synthetic materials lab showing a rectangular 2D particle chamber, persistent Verlet trails, wall rebounds, contact halos, and a faint inactive spatial grid.',
+        'A 1-bit pixel study of particles moving through a bounded field, leaving short trails and marking nearby contacts.',
     },
   },
   {
@@ -245,8 +250,9 @@ export const projects: Project[] = [
     title: 'Speculative Inference Proxy',
     subtitle: 'Speculative Decoding Gateway',
     summary:
-      'A functional Rust gateway that routes identical OpenAI-compatible requests across baseline and speculation-enabled vLLM, streams SSE without buffering, and measures whether speculation actually helps.',
+      'I’m testing whether speculative decoding is worth the extra machinery. This proxy compares both paths and measures the wait.',
     status: 'PUBLIC_REPO / VERIFIED_MVP',
+    statusLabel: 'Working MVP',
     stack: ['Rust', 'Axum', 'vLLM', 'SSE', 'OpenMetrics'],
     flow: [
       {
@@ -264,19 +270,19 @@ export const projects: Project[] = [
     ],
     links: [
       {
-        label: 'View source',
+        label: 'source',
         href: 'https://github.com/acvdoandrew/speculative-inference-proxy',
       },
     ],
     artwork: {
-      kind: 'mask',
+      kind: 'pixels',
       label: 'EXPERIMENT BOUNDARY / ROUTE + MEASURE',
       caption:
-        'The proxy compares two upstream lanes; draft and target verification remain inside the speculation-enabled engine.',
+        'two paths, one measured stream',
       index: '03',
-      src: '/assets/dither/inference-routing-plate.png',
+      src: '/assets/dither/studies/inference-proxy.png',
       alt:
-        'A 1-bit engraved synthetic cognition plate with one request split into baseline and speculation-enabled lanes, draft capsules verified at a coral aperture, and one measured stream leaving the proxy.',
+        'A 1-bit dithered study of two moving token streams passing through a verification aperture into a single ordered output.',
     },
   },
 ];

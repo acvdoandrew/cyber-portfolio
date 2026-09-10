@@ -38,6 +38,8 @@ const statusText =
     shader: 'LIVE / 60 FPS',
     mask: 'STATIC / 1-BIT',
     diagram: 'STATIC / CODE',
+    image: 'PROJECT STUDY',
+    pixels: 'PIXEL STUDY',
   }[artwork.kind];
 
 const taxonomyItems = Array.isArray(taxonomy)
@@ -48,6 +50,8 @@ const taxonomyItems = Array.isArray(taxonomy)
         shader: ['FOLDED SPACE', 'ORBITAL FLOW', 'ORDERED 1-BIT DITHER'],
         mask: ['BAYER 4×4', 'TRANSPARENT MASK'],
         diagram: ['CODE-NATIVE', 'SYSTEM TRACE'],
+        image: ['SCULPTURAL STUDY'],
+        pixels: ['ORDERED 1-BIT DITHER'],
       }[artwork.kind];
 
 const maskStyle = artwork.src

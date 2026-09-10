@@ -8,7 +8,7 @@ interface Props {
 
 const {
   title = 'Andrew — programmer building strange systems',
-  description = 'I build weird systems in Rust, C++, and Python: distributed compute, simulations, security tooling, and AI infrastructure. You can inspect the work yourself.',
+  description = 'Andrew’s corner of the web. Rust, C++, Python, small experiments, and things still in progress.',
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -37,11 +37,11 @@ const schema = {
 };
 ---
 <!doctype html>
-<html lang="en" data-palette="archive" data-display-filter="on">
+<html lang="en" data-palette="archive" data-display-filter="off">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#E7E4DC" />
+    <meta name="theme-color" content="#F2F3EE" />
     <meta name="color-scheme" content="light" />
     <meta name="description" content={description} />
     <meta name="author" content="Andrew" />
@@ -49,13 +49,6 @@ const schema = {
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link
-      rel="preload"
-      href="/fonts/BodoniModa-Variable-Latin.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
     <link
       rel="preload"
       href="/fonts/IBMPlexMono-Regular-Latin.woff2"
@@ -83,7 +76,7 @@ const schema = {
     <script is:inline>
       (() => {
         const palettes = {
-          archive: { paper: '#E7E4DC', scheme: 'light' },
+          archive: { paper: '#F2F3EE', scheme: 'light' },
           carbon: { paper: '#090A09', scheme: 'dark' },
           signal: { paper: '#050806', scheme: 'dark' },
           radiant: { paper: '#0B0905', scheme: 'dark' },
@@ -94,9 +87,9 @@ const schema = {
           const stored = localStorage.getItem('portfolio.palette.v1');
           const id = stored && Object.hasOwn(palettes, stored) ? stored : 'archive';
           const displayFilter =
-            localStorage.getItem('portfolio.display-filter.v1') === 'off'
-              ? 'off'
-              : 'on';
+            localStorage.getItem('portfolio.display-filter.v1') === 'on'
+              ? 'on'
+              : 'off';
           const palette = palettes[id];
           document.documentElement.dataset.palette = id;
           document.documentElement.dataset.displayFilter = displayFilter;
@@ -109,7 +102,7 @@ const schema = {
             ?.setAttribute('content', palette.scheme);
         } catch {
           document.documentElement.dataset.palette = 'archive';
-          document.documentElement.dataset.displayFilter = 'on';
+          document.documentElement.dataset.displayFilter = 'off';
         }
       })();
     </script>

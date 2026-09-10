@@ -89,8 +89,8 @@ describe('minimal signal document', () => {
 
     expect(topBar).toContain('class="display-mode-toggle"');
     expect(topBar).toContain('data-display-filter-toggle');
-    expect(topBar).toContain('aria-pressed="true"');
-    expect(layout).toContain('data-display-filter="on"');
+    expect(topBar).toContain('aria-pressed="false"');
+    expect(layout).toContain('data-display-filter="off"');
     expect(layout).toContain("localStorage.getItem('portfolio.display-filter.v1')");
     expect(runtime).toContain(
       "const DISPLAY_FILTER_STORAGE_KEY = 'portfolio.display-filter.v1'",
@@ -99,20 +99,24 @@ describe('minimal signal document', () => {
     expect(runtime).toContain("button.setAttribute('aria-pressed', String(enabled))");
   });
 
-  test('there is exactly one contained live canvas in the active component graph', () => {
+  test('each animated artwork has one independently contained canvas', () => {
     const activeSources = [
       source('src/pages/index.astro'),
       source('src/layouts/BaseLayout.astro'),
       source('src/components/Hero.astro'),
       source('src/components/Projects.astro'),
+      source('src/components/ProjectArtwork.astro'),
       source('src/components/Capabilities.astro'),
       source('src/components/Contact.astro'),
+      source('src/components/ContactIntelligence.astro'),
       source('src/components/TopBar.astro'),
       source('src/components/Footer.astro'),
       source('src/components/AmbientField.astro'),
     ].join('\n');
 
-    expect((activeSources.match(/<canvas/g) ?? []).length).toBe(1);
+    expect((activeSources.match(/<canvas/g) ?? []).length).toBe(3);
+    expect((activeSources.match(/data-study-canvas/g) ?? []).length).toBe(1);
+    expect((activeSources.match(/data-intelligence-canvas/g) ?? []).length).toBe(1);
     expect((activeSources.match(/data-recursive-field/g) ?? []).length).toBe(1);
     expect(activeSources).not.toMatch(/from ['"]three['"]|gpu-runtime|entity-runtime/);
     expect(activeSources).not.toMatch(/roaming-layer|data-roaming|roaming-entity/);
@@ -132,15 +136,16 @@ describe('minimal signal document', () => {
     expect(hero).toContain('<h1 id="hero-title">');
     expect(projectsSource).toContain('<h2 id="work-title">');
     expect(capabilitiesSource).toContain('<h2 id="capabilities-title">');
-    expect(contact).toContain('<h2 id="contact-title">');
+    expect(contact).toContain('<h2 id="contact-title"');
     expect(hero).toContain('aria-label="Live ordered 1-bit recursive field visualization"');
     expect(hero).toContain('alt="Ordered 1-bit study of a folded recursive field');
     expect(ambient.match(/aria-hidden="true"/g)).toHaveLength(1);
-    expect(contact).toContain('<figure class="contact-specimen">');
-    expect(contact).toContain('role="img"');
-    expect(contact).toContain(
-      'aria-label="Entity 08, the Network Gardener, an original civic-network synth tending a seed-like signal node."',
-    );
+    expect(contact).toContain('<ContactIntelligence />');
+    const intelligence = source('src/components/ContactIntelligence.astro');
+    expect(intelligence).toContain('role="img"');
+    expect(intelligence).toContain('aria-label="An uploaded intelligence leaning');
+    expect(intelligence).toContain('aria-describedby="intelligence-invitation"');
+    expect(source('src/components/ContactTerminal.astro')).toContain('data-intelligence-pause');
     expect(contact).not.toMatch(/entity-cameo|<canvas/i);
   });
 });
@@ -163,7 +168,7 @@ describe('typed portfolio data', () => {
         accent: accent.toUpperCase(),
       })),
     ).toEqual([
-      { id: 'archive', paper: '#E7E4DC', ink: '#182521', accent: '#8E2148' },
+      { id: 'archive', paper: '#F2F3EE', ink: '#202621', accent: '#A3422B' },
       { id: 'carbon', paper: '#090A09', ink: '#F0EEE2', accent: '#D85D3F' },
       { id: 'signal', paper: '#050806', ink: '#E6F2E9', accent: '#00D985' },
       { id: 'radiant', paper: '#0B0905', ink: '#F2D66C', accent: '#F05A2A' },
@@ -180,7 +185,7 @@ describe('typed portfolio data', () => {
       'Speculative Inference Proxy',
     ]);
     expect(projects[0].links).toEqual([]);
-    expect(projects[0].summary).toMatch(/authoritative state transition/);
+    expect(projects[0].summary).toMatch(/Rust checks.*world changes/);
     expect(projects[1].links[0].href).toBe(
       'https://github.com/acvdoandrew/rust-edge-compute',
     );
@@ -190,30 +195,33 @@ describe('typed portfolio data', () => {
     expect(projects[3].links[0].href).toBe(
       'https://github.com/acvdoandrew/speculative-inference-proxy',
     );
-    expect(projects[2].summary).toMatch(/naive O\(n²\)/);
-    expect(projects[2].summary).toMatch(/spatial hash.*still next/i);
-    expect(projects[3].summary).toMatch(
-      /baseline and speculation-enabled vLLM/,
-    );
+    expect(projects[2].stack).toContain('O(n²) contacts');
+    expect(projects[2].summary).toMatch(/Spatial hashing and benchmarks are next/);
+    expect(projects[3].flow[1].detail).toContain('vLLM');
     expect(projects.every((project) => project.flow.length === 3)).toBe(true);
-    expect(projects.every((project) => project.artwork.kind === 'mask')).toBe(true);
+    expect(projects.every((project) => project.artwork.kind === 'pixels')).toBe(true);
     expect(
       projects.every((project) =>
-        project.artwork.src?.startsWith('/assets/dither/'),
+        project.artwork.src?.startsWith('/assets/dither/studies/'),
       ),
     ).toBe(true);
     expect(
       projects.every((project) => project.artwork.underlaySrc === undefined),
     ).toBe(true);
     expect(projects.map(({ artwork }) => artwork.src)).toEqual([
-      '/assets/dither/ares-validation-plate.png',
-      '/assets/dither/edge-lease-control-plate.png',
-      '/assets/dither/physics-verlet-plate.png',
-      '/assets/dither/inference-routing-plate.png',
+      '/assets/dither/studies/ares.png',
+      '/assets/dither/studies/rust-edge-compute.png',
+      '/assets/dither/studies/physics-engine.png',
+      '/assets/dither/studies/inference-proxy.png',
     ]);
-    expect(
-      projects.every((project) => /1-bit engraved/i.test(project.artwork.alt)),
-    ).toBe(true);
+    for (const { artwork } of projects) {
+      expect(artwork.alt).toContain('1-bit');
+      const path = join(root, 'public', artwork.src!);
+      expect(existsSync(path)).toBe(true);
+      expect(statSync(path).size).toBeLessThan(20 * 1024);
+      expect(pngDimensions(join('public', artwork.src!))).toEqual({ width: 288, height: 192 });
+    }
+    expect(source('src/components/ProjectArtwork.astro')).not.toContain('<img');
   });
 
   test('capabilities remain a compact five-row index', () => {
@@ -231,14 +239,16 @@ describe('typed portfolio data', () => {
     const visibleCopy = [
       source('src/components/Hero.astro'),
       source('src/components/Projects.astro'),
+      source('src/components/ProjectArtwork.astro'),
       source('src/components/Capabilities.astro'),
       source('src/components/Contact.astro'),
+      source('src/components/ContactIntelligence.astro'),
     ].join('\n');
 
-    expect(visibleCopy).toContain('Built, broken, still running.');
-    expect(visibleCopy).toContain('The source is there. So are the rough edges.');
-    expect(visibleCopy).toContain('What I use to build.');
-    expect(visibleCopy).toContain('Send a signal.');
+    expect(visibleCopy).toContain('hi, i’m andrew.');
+    expect(visibleCopy).toContain('a few projects.');
+    expect(visibleCopy).toContain('usually within reach.');
+    expect(visibleCopy).not.toContain('Send a signal.');
     expect(visibleCopy).not.toMatch(
       /compact index|tools are indexed|a direct line|explore selected work|email andrew/i,
     );
@@ -304,24 +314,18 @@ describe('full-viewport scroll world and contained artwork', () => {
     expect(ambientRule).not.toMatch(/animation|transition/);
   });
 
-  test('ENTITY_08 is isolated inside one explicit civic-biocircuit Contact specimen', () => {
-    expect(contact.match(/class="contact-specimen"/g)).toHaveLength(1);
-    expect(contact.match(/class="contact-specimen__entity"/g)).toHaveLength(1);
-    expect(contact).toContain('SPECIMEN / ENTITY_08');
-    expect(contact).toContain('NETWORK GARDENER');
-    expect(contact).toContain(
-      'CIVIC BIOCIRCUIT / SYNTHETIC ECOLOGY / OPEN CHANNEL',
-    );
-    expect(contact).not.toMatch(/data-roaming|<canvas/i);
-    expect(fullViewportCss).toMatch(
-      /\.contact-section::before\s*\{\s*content:\s*none;\s*\}/,
-    );
-    expect(fullViewportCss).toMatch(
-      /\.contact-specimen__viewport\s*\{[\s\S]*?overflow:\s*hidden;[\s\S]*?isolation:\s*isolate;/,
-    );
-    expect(fullViewportCss).toMatch(
-      /\.portfolio-journey__contact \.contact-specimen__entity\s*\{[\s\S]*?url\('\/assets\/dither\/entity-08-solar-ghost-cartographer\.png'\)[\s\S]*?contain no-repeat;/,
-    );
+  test('the uploaded intelligence is contained in Contact with an accessible still fallback', () => {
+    const intelligence = source('src/components/ContactIntelligence.astro');
+    expect(contact).toContain('<ContactIntelligence />');
+    expect(intelligence.match(/<canvas/g)).toHaveLength(1);
+    expect(intelligence).toContain('data-intelligence-pose="terminal"');
+    expect(intelligence).not.toContain('<img');
+    expect(intelligence).toContain('/assets/dither/intelligence-terminal.png');
+    expect(intelligence).toContain('image-rendering: pixelated');
+    expect(source('src/scripts/contact-intelligence.ts')).toContain('prefers-reduced-motion: reduce');
+    expect(intelligence).not.toMatch(/data-roaming/);
+    expect(pngDimensions('public/assets/dither/intelligence-terminal.png')).toEqual({ width: 384, height: 256 });
+    expect(source('src/scripts/contact-intelligence.ts')).not.toMatch(/texImage2D|sampler2D|becoming\.webp/);
   });
 
   test('one wide card pins Work and Stack while Contact fades underneath its release', () => {
@@ -441,7 +445,7 @@ describe('palette interface', () => {
     expect(projectsSource).toContain('data-journey-section');
     expect(projectsSource).toContain('data-project-card');
     expect(projectsSource).toContain('class="project-flow"');
-    expect(projectsSource).not.toContain('aria-pressed=');
+    expect(projectsSource.match(/<article[\s\S]*?>/)?.[0]).not.toContain('aria-pressed=');
     expect(css).toMatch(
       /\.project-atlas\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/,
     );
@@ -563,7 +567,7 @@ describe('art and typography assets', () => {
       /\.research-figure__mask\s*\{[\s\S]*?display:\s*none;/,
     );
     expect(projectsSource).toContain(
-      'variant={project.id as ResearchFigureVariant}',
+      '<ProjectArtwork artwork={project.artwork} index={index} variant={project.id} />',
     );
   });
 
@@ -636,7 +640,9 @@ describe('art and typography assets', () => {
       source('src/layouts/BaseLayout.astro'),
       source('src/components/Hero.astro'),
       source('src/components/Projects.astro'),
+      source('src/components/ProjectArtwork.astro'),
       source('src/components/Contact.astro'),
+      source('src/components/ContactIntelligence.astro'),
       source('src/components/AmbientField.astro'),
       source('src/styles/editorial.css'),
     ].join('\n');

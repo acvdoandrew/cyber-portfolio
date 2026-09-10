@@ -1,6 +1,5 @@
 ---
-import ResearchFigure from './ResearchFigure.astro';
-import type { ResearchFigureVariant } from './ResearchFigure.astro';
+import ProjectArtwork from './ProjectArtwork.astro';
 import { projects } from '../data/portfolio';
 ---
 
@@ -14,14 +13,11 @@ import { projects } from '../data/portfolio';
   data-journey-index="01"
 >
   <header class="section-intro project-section-intro">
-    <p class="section-label">01 / WORK</p>
+    <p class="section-label">~/work</p>
     <div>
-      <h2 id="work-title">Built, broken, still running.</h2>
-      <p>
-        The source is there. So are the rough edges. Each plate maps the system
-        that actually exists—not a metaphor for it.
-      </p>
+      <h2 id="work-title">a few projects.</h2>
     </div>
+    <button class="study-pause" type="button" data-studies-pause aria-pressed="false" hidden>Pause studies</button>
   </header>
 
   <div class="project-atlas">
@@ -34,67 +30,56 @@ import { projects } from '../data/portfolio';
           data-project-index={String(index + 1).padStart(2, '0')}
           data-project-title={project.title}
         >
-          <header class="project-plate__header">
-            <p>
-              <span>{String(index + 1).padStart(2, '0')} / {project.status}</span>
-              <span>{project.artwork.label}</span>
-            </p>
-            <div>
-              <h3>{project.title}</h3>
-              <p>{project.subtitle}</p>
+          <div class="project-entry">
+            <header class="project-plate__header">
+              <p>
+                <span>{String(index + 1).padStart(2, '0')} / {project.subtitle}</span>
+              </p>
+              <div>
+                <h3>{project.title}</h3>
+              </div>
+            </header>
+
+            <div class="project-plate__copy">
+              <p class="project-plate__summary">{project.summary}</p>
+
+              <footer class="project-plate__footer">
+                {
+                  project.links.length ? (
+                    project.links.map((link) => (
+                      <a href={link.href} target="_blank" rel="noopener noreferrer">
+                        {link.label} <span aria-hidden="true">↗</span>
+                      </a>
+                    ))
+                  ) : (
+                    <span>private repo / in progress</span>
+                  )
+                }
+              </footer>
+
+              <details class="project-details">
+                <summary>notes<span class="sr-only"> — {project.title}</span></summary>
+                <ol class="project-flow" aria-label={`${project.title} system flow`}>
+                  {
+                    project.flow.map((step, stepIndex) => (
+                      <li>
+                        <span>{String(stepIndex + 1).padStart(2, '0')}</span>
+                        <div>
+                          <strong>{step.label}</strong>
+                          <p>{step.detail}</p>
+                        </div>
+                      </li>
+                    ))
+                  }
+                </ol>
+                <p class="project-stack-note" aria-label={`${project.title} stack`}>{project.stack.join(' / ')}</p>
+              </details>
             </div>
-          </header>
-
-          <ResearchFigure
-            artwork={project.artwork}
-            status="VERIFIED PLATE"
-            active
-            variant={project.id as ResearchFigureVariant}
-            loading={index < 2 ? 'eager' : 'lazy'}
-          />
-
-          <div class="project-plate__copy">
-            <p class="project-plate__summary">{project.summary}</p>
-
-            <ol class="project-flow" aria-label={`${project.title} system flow`}>
-              {
-                project.flow.map((step, stepIndex) => (
-                  <li>
-                    <span>{String(stepIndex + 1).padStart(2, '0')}</span>
-                    <div>
-                      <strong>{step.label}</strong>
-                      <p>{step.detail}</p>
-                    </div>
-                  </li>
-                ))
-              }
-            </ol>
-
-            <footer class="project-plate__footer">
-              <ul aria-label={`${project.title} stack`}>
-                {project.stack.map((item) => <li>{item}</li>)}
-              </ul>
-              {
-                project.links.length ? (
-                  project.links.map((link) => (
-                    <a href={link.href} target="_blank" rel="noopener noreferrer">
-                      {link.label} <span aria-hidden="true">↗</span>
-                    </a>
-                  ))
-                ) : (
-                  <span>LOCAL CHECKPOINT / SOURCE HELD BACK</span>
-                )
-              }
-            </footer>
           </div>
+
+          <ProjectArtwork artwork={project.artwork} index={index} variant={project.id} />
         </article>
       ))
     }
-  </div>
-
-  <div class="work-release" aria-hidden="true">
-    <span>NEXT FIELD / 02</span>
-    <strong>STACK</strong>
-    <span>TOOLS, RUNTIMES, FAILURE MODES</span>
   </div>
 </section>

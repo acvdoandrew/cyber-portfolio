@@ -163,8 +163,8 @@ const capture = async (
     if (result.cls >= 0.05) {
       throw new Error(`${name}: CLS ${result.cls} exceeds 0.05.`);
     }
-    if (result.canvases !== 1) {
-      throw new Error(`${name}: expected one canvas, saw ${result.canvases}.`);
+    if (result.canvases !== 6) {
+      throw new Error(`${name}: expected the hero, four project studies, and contact canvases, saw ${result.canvases}.`);
     }
     if (result.overflow > 0) {
       throw new Error(`${name}: horizontal overflow is ${result.overflow}px.`);

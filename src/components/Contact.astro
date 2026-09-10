@@ -1,5 +1,9 @@
+---
+import ContactIntelligence from './ContactIntelligence.astro';
+import ContactTerminal from './ContactTerminal.astro';
+---
 <section
-  class="contact-section contact-release-field section-frame"
+  class="contact-section contact-release-field section-frame contact-desk"
   id="contact"
   aria-labelledby="contact-title"
   tabindex="-1"
@@ -7,58 +11,46 @@
   data-journey-label="CONTACT"
   data-journey-index="03"
 >
-  <div class="contact-composition">
-    <div class="contact-copy">
-      <header class="section-intro">
-        <p class="section-label">03 / CONTACT</p>
-        <div>
-          <h2 id="contact-title">Send a signal.</h2>
-          <p>
-            Working on infrastructure, security, or an odd technical problem?
-            Tell me what you’re building and where it’s stuck.
-          </p>
-        </div>
-      </header>
-
-      <div class="contact-links" aria-label="Contact methods">
-        <a href="mailto:acvdoandrew@gmail.com">
-          <span>01 / Email</span>
-          <strong>acvdoandrew@gmail.com</strong>
-          <span aria-hidden="true">↗</span>
-        </a>
-        <a href="https://github.com/acvdoandrew" target="_blank" rel="noopener noreferrer">
-          <span>02 / Source</span>
-          <strong>github.com/acvdoandrew</strong>
-          <span aria-hidden="true">↗</span>
-        </a>
-        <a href="https://x.com/etobyte" target="_blank" rel="noopener noreferrer">
-          <span>03 / Shortwave</span>
-          <strong>x.com/etobyte</strong>
-          <span aria-hidden="true">↗</span>
-        </a>
-        <p class="contact-note">
-          <span class="contact-note__pip" aria-hidden="true"></span>
-          RECEIVING / REAL PROBLEMS / PLAIN TEXT
-        </p>
-      </div>
+  <div class="contact-composition contact-desk__layout">
+    <p class="section-label">~/contact</p>
+    <h2 id="contact-title" class="sr-only">contact.txt</h2>
+    <div class="contact-scene" data-contact-scene>
+      <ContactIntelligence />
+      <ContactTerminal />
     </div>
-
-    <figure class="contact-specimen">
-      <div
-        class="contact-specimen__viewport"
-        role="img"
-        aria-label="Entity 08, the Network Gardener, an original civic-network synth tending a seed-like signal node."
-      >
-        <span class="contact-specimen__grid" aria-hidden="true"></span>
-        <span class="contact-specimen__orbit" aria-hidden="true"></span>
-        <span class="contact-specimen__entity" aria-hidden="true"></span>
-        <span class="contact-specimen__scan" aria-hidden="true"></span>
-      </div>
-      <figcaption>
-        <span>SPECIMEN / ENTITY_08</span>
-        <strong>NETWORK GARDENER</strong>
-        <span>CIVIC BIOCIRCUIT / SYNTHETIC ECOLOGY / OPEN CHANNEL</span>
-      </figcaption>
-    </figure>
   </div>
 </section>
+
+<style>
+  .contact-section.contact-desk {
+    padding: 0;
+    overflow: clip;
+  }
+  .contact-composition.contact-desk__layout {
+    position: relative;
+    display: flex;
+    min-height: calc(100svh - var(--masthead-height));
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+  }
+  .contact-desk__layout > .section-label {
+    position: absolute;
+    top: 2rem;
+    left: 5vw;
+    color: var(--frame-muted);
+  }
+  .contact-scene {
+    position: relative;
+    display: flow-root;
+    width: min(100%, 46rem, calc((100svh - var(--masthead-height) - 14rem) * 1.35));
+  }
+  @media (max-width: 899px) {
+    .contact-composition.contact-desk__layout {
+      min-height: 0;
+      padding: 5rem 1rem 4rem;
+    }
+    .contact-scene { width: min(100%, 40rem); }
+  }
+</style>

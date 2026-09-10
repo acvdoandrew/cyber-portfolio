@@ -26,9 +26,9 @@ const paletteOrder: PaletteId[] = [
 
 const palettes: Record<PaletteId, Palette> = {
   archive: {
-    paper: '#E7E4DC',
-    ink: '#182521',
-    accent: '#8E2148',
+    paper: '#F2F3EE',
+    ink: '#202621',
+    accent: '#A3422B',
     scheme: 'light',
   },
   carbon: {
@@ -173,9 +173,9 @@ const initializeDisplayFilter = () => {
     }
   };
 
-  let enabled = root.dataset.displayFilter !== 'off';
+  let enabled = root.dataset.displayFilter === 'on';
   try {
-    enabled = localStorage.getItem(DISPLAY_FILTER_STORAGE_KEY) !== 'off';
+    enabled = localStorage.getItem(DISPLAY_FILTER_STORAGE_KEY) === 'on';
   } catch {
     // Use the server-rendered default.
   }

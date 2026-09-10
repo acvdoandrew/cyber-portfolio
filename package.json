@@ -13,6 +13,8 @@
   "private": true,
   "scripts": {
     "art:generate": "node scripts/generate-dither-assets.mjs",
+    "art:studies": "bun scripts/render-project-study-posters.ts",
+    "art:intelligence": "bun scripts/render-intelligence-poster.ts",
     "dev": "astro dev",
     "build": "astro check && astro build",
     "test": "bun test",

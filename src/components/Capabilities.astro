@@ -11,10 +11,9 @@ import { capabilities } from '../data/portfolio';
   data-journey-index="02"
 >
   <header class="section-intro">
-    <p class="section-label">02 / STACK</p>
+    <p class="section-label">~/tools</p>
     <div>
-      <h2 id="capabilities-title">What I use to build.</h2>
-      <p>Things I’ve used to build, debug, and measure real systems.</p>
+      <h2 id="capabilities-title">usually within reach.</h2>
     </div>
   </header>
 
@@ -22,10 +21,9 @@ import { capabilities } from '../data/portfolio';
     {
       capabilities.map((capability, index) => (
         <article class="capability-row">
-          <p class="capability-row__number">C_{String(index + 1).padStart(2, '0')}</p>
+          <p class="capability-row__number">{String(index + 1).padStart(2, '0')}</p>
           <div>
             <h3>{capability.title}</h3>
-            <p>{capability.summary}</p>
           </div>
           <ul aria-label={`${capability.title} tools`}>
             {capability.stack.map((item) => <li>{item}</li>)}
