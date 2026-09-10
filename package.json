@@ -22,5 +22,8 @@
     "visual:regression": "node scripts/capture-visual-regressions.mjs",
     "astro": "astro"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "22"
+  }
 }
