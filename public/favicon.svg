@@ -1,4 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" fill="#182521"/>
-  <path d="M14 49 31.5 13 50 49M21 36h22" fill="none" stroke="#e7e4dc" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="miter"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <title>andrew's terminal</title>
+  <rect width="16" height="16" rx="3" fill="#15211e" shape-rendering="geometricPrecision"/>
+  <path d="M4 5h3v1H4zM7 6h1v5H7zM4 7h3v1H4zM3 8h1v2H3zM4 10h3v1H4z" fill="#f0eee2"/>
+  <path d="M10 10h3v1h-3z" fill="#d85d3f"/>
 </svg>

@@ -1,12 +1,12 @@
 {
-  "name": "Andrew — programmer building strange systems",
-  "short_name": "Andrew",
-  "description": "I build weird systems in Rust, C++, and Python. You can inspect the work yourself.",
+  "name": "andrew@home",
+  "short_name": "andrew",
+  "description": "A small corner of the internet for my code, experiments, and things I’m still figuring out.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#E7E4DC",
-  "theme_color": "#182521",
+  "background_color": "#F2F3EE",
+  "theme_color": "#202621",
   "icons": [
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+    { "src": "/favicon.svg?v=2", "sizes": "any", "type": "image/svg+xml" }
   ]
 }
