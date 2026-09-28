@@ -354,3 +354,22 @@ export const contactLinks: ContactLink[] = [
     external: true,
   },
 ];
+
+export type ChannelId = 'home' | 'work' | 'tools' | 'contact';
+
+export interface Channel {
+  id: ChannelId;
+  number: string;
+  label: string;
+  path: string;
+  /** The title card's line when switching in. */
+  card: string;
+}
+
+/** The deck's four channels. Each owns the whole viewport; nothing scrolls between them. */
+export const channels: Channel[] = [
+  { id: 'home', number: '00', label: 'home', path: '~/home', card: 'hello, operator' },
+  { id: 'work', number: '01', label: 'work', path: '~/work', card: 'things i built' },
+  { id: 'tools', number: '02', label: 'tools', path: '~/tools', card: 'within reach' },
+  { id: 'contact', number: '03', label: 'contact', path: '~/contact', card: 'someone is here' },
+];

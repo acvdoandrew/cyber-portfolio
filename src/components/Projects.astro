@@ -1,85 +1,142 @@
 ---
 import ProjectArtwork from './ProjectArtwork.astro';
 import { projects } from '../data/portfolio';
+
+const shortNames: Record<string, string> = {
+  ares: 'ares',
+  'rust-edge-compute': 'edge',
+  'physics-engine': 'physics',
+  'inference-proxy': 'inference',
+};
+const pad = (value: number) => String(value).padStart(2, '0');
+const stateKey = (label: string) => label.toLowerCase().replace(/\s+/g, '-');
+// One rule per project, so the right panel shows before the router has run.
+const unitRules = projects
+  .map((project) => `html.js[data-unit="${project.id}"] [data-unit-panel="${project.id}"]{display:grid}`)
+  .join('');
 ---
 
 <section
-  class="work-section"
+  class="view view--work"
   id="work"
   aria-labelledby="work-title"
-  tabindex="-1"
-  data-journey-section
-  data-journey-label="WORK"
-  data-journey-index="01"
+  data-view="work"
 >
-  <header class="section-intro project-section-intro">
-    <p class="section-label">~/work</p>
-    <div>
-      <h2 id="work-title">a few projects.</h2>
-    </div>
-    <button class="study-pause" type="button" data-studies-pause aria-pressed="false" hidden>Pause studies</button>
-  </header>
+  <div class="units-rail">
+    <h2 id="work-title" class="rail-title" tabindex="-1">
+      <span class="rail-title__n" aria-hidden="true">01</span>
+      <span>work</span>
+      <code aria-hidden="true">ls ~/work</code>
+    </h2>
+    <p class="display units-rail__heading">
+      <span class="display__line" data-text="a few">a few</span>{' '}
+      <span class="display__line" data-text="projects.">projects.</span>
+    </p>
 
-  <div class="project-atlas">
-    {
-      projects.map((project, index) => (
-        <article
-          class="project-plate"
-          id={`project-${project.id}`}
-          data-project-card
-          data-project-index={String(index + 1).padStart(2, '0')}
-          data-project-title={project.title}
+    <div class="units" role="tablist" aria-label="Projects" aria-orientation="vertical" data-units>
+      {projects.map((project, index) => (
+        <a
+          class="unit-tab"
+          href={`#${project.id}`}
+          role="tab"
+          id={`tab-${project.id}`}
+          aria-controls={project.id}
+          aria-selected={index === 0 ? 'true' : 'false'}
+          tabindex={index === 0 ? 0 : -1}
+          data-route
+          data-unit-tab={project.id}
+          data-state={stateKey(project.statusLabel)}
         >
-          <div class="project-entry">
-            <header class="project-plate__header">
-              <p>
-                <span>{String(index + 1).padStart(2, '0')} / {project.subtitle}</span>
-              </p>
-              <div>
-                <h3>{project.title}</h3>
-              </div>
-            </header>
+          <span class="unit-tab__n" aria-hidden="true">{pad(index + 1)}</span>
+          <span class="unit-tab__name">{shortNames[project.id] ?? project.id}</span>
+          <span class="unit-tab__state">
+            <span class="lamp" aria-hidden="true"></span>
+            {project.statusLabel}
+          </span>
+        </a>
+      ))}
+    </div>
 
-            <div class="project-plate__copy">
-              <p class="project-plate__summary">{project.summary}</p>
-
-              <footer class="project-plate__footer">
-                {
-                  project.links.length ? (
-                    project.links.map((link) => (
-                      <a href={link.href} target="_blank" rel="noopener noreferrer">
-                        {link.label} <span aria-hidden="true">↗</span>
-                      </a>
-                    ))
-                  ) : (
-                    <span>private repo / in progress</span>
-                  )
-                }
-              </footer>
-
-              <details class="project-details">
-                <summary>notes<span class="sr-only"> — {project.title}</span></summary>
-                <ol class="project-flow" aria-label={`${project.title} system flow`}>
-                  {
-                    project.flow.map((step, stepIndex) => (
-                      <li>
-                        <span>{String(stepIndex + 1).padStart(2, '0')}</span>
-                        <div>
-                          <strong>{step.label}</strong>
-                          <p>{step.detail}</p>
-                        </div>
-                      </li>
-                    ))
-                  }
-                </ol>
-                <p class="project-stack-note" aria-label={`${project.title} stack`}>{project.stack.join(' / ')}</p>
-              </details>
-            </div>
-          </div>
-
-          <ProjectArtwork artwork={project.artwork} index={index} variant={project.id} />
-        </article>
-      ))
-    }
+    <p class="units-rail__meta">
+      <span>{pad(projects.length)} units online</span>
+      <span class="units-rail__keys" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> select</span>
+    </p>
+    <button class="study-pause" type="button" data-studies-pause aria-pressed="false" hidden>Pause studies</button>
   </div>
+
+  {projects.map((project, index) => (
+    <article
+      class="unit"
+      id={project.id}
+      role="tabpanel"
+      aria-labelledby={`project-${project.id}-title`}
+      data-unit-panel={project.id}
+    >
+      <header class="unit__head">
+        <span class="tab" aria-hidden="true">unit {pad(index + 1)} <small>{project.id}</small></span>
+        <h3 id={`project-${project.id}-title`} class="display unit__title">
+          <span class="display__line" data-text={project.title}>{project.title}</span>
+        </h3>
+        <p class="unit__subtitle">{project.subtitle}</p>
+        <p class="unit__status" data-state={stateKey(project.statusLabel)}>
+          <span class="unit__status-label">
+            <span class="lamp" aria-hidden="true"></span>
+            {project.statusLabel}
+          </span>
+          <code>{project.status}</code>
+        </p>
+      </header>
+
+      <div class="unit__monitor">
+        <ProjectArtwork artwork={project.artwork} index={index} variant={project.id} />
+      </div>
+
+      <div class="unit__info">
+        <p class="unit__summary">{project.summary}</p>
+
+        <div class="unit__block">
+          <p class="hud-label">sequence</p>
+          <ol class="sequence" aria-label={`${project.title} system flow`}>
+            {project.flow.map((step, stepIndex) => (
+              <li>
+                <span class="sequence__n" aria-hidden="true">{pad(stepIndex + 1)}</span>
+                <strong class="sequence__label">{step.label}</strong>
+                <span class="sequence__detail">{step.detail}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div class="unit__block">
+          <p class="hud-label">stack</p>
+          <ul class="chips" aria-label={`${project.title} stack`}>
+            {project.stack.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+
+        <footer class="unit__links">
+          {
+            project.links.length ? (
+              project.links.map((link) => (
+                <a class="btn frame" href={link.href} target="_blank" rel="noopener noreferrer">
+                  {link.label} <span class="arrow-ne" aria-hidden="true"></span>
+                  <span class="sr-only"> for {project.title} (opens in a new tab)</span>
+                </a>
+              ))
+            ) : (
+              <p class="hazard">
+                <span class="hazard__stripes" aria-hidden="true"></span>
+                <span class="hazard__text">
+                  private repo
+                  <small>in progress, no public link yet</small>
+                </span>
+              </p>
+            )
+          }
+        </footer>
+      </div>
+    </article>
+  ))}
 </section>
+
+<style is:inline set:html={unitRules}></style>

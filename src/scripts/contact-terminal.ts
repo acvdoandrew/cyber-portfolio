@@ -4,7 +4,6 @@ document.querySelectorAll<HTMLElement>('[data-contact-terminal]').forEach((termi
   if (terminal.dataset.initialized) return;
   terminal.dataset.initialized = 'true';
   const scene = terminal.closest<HTMLElement>('[data-contact-scene]');
-  const journey = terminal.closest<HTMLElement>('[data-portfolio-journey]');
   const lines = [...terminal.querySelectorAll<HTMLElement>('[data-type-line]')];
   const schedule = typingTimeline(lines.map((line) => Number(line.dataset.typeLength)));
   const button = terminal.querySelector<HTMLButtonElement>('[data-terminal-skip]');
@@ -16,11 +15,10 @@ document.querySelectorAll<HTMLElement>('[data-contact-terminal]').forEach((termi
   let started = false;
   let complete = false;
 
+  // Start once the terminal is properly on screen, not at its first pixel.
   const visible = () => {
     const rect = terminal.getBoundingClientRect();
-    const revealed = !journey || journey.dataset.journeyEnhanced !== 'true'
-      || Number(journey.style.getPropertyValue('--contact-reveal')) > 0.45;
-    return revealed && !document.hidden && rect.bottom > 0 && rect.top < innerHeight;
+    return !document.hidden && rect.bottom > innerHeight * 0.15 && rect.top < innerHeight * 0.8;
   };
 
   const stop = () => { cancelAnimationFrame(frame); frame = 0; previous = 0; };
@@ -80,11 +78,9 @@ document.querySelectorAll<HTMLElement>('[data-contact-terminal]').forEach((termi
   window.addEventListener('pageshow', sync, { signal: events.signal });
   const intersection = new IntersectionObserver(sync);
   intersection.observe(terminal);
-  const reveal = new MutationObserver(sync);
-  if (journey) reveal.observe(journey, { attributes: true, attributeFilter: ['style', 'data-journey-enhanced'] });
   window.addEventListener('pagehide', (event) => {
     stop();
-    if (!event.persisted) { events.abort(); intersection.disconnect(); reveal.disconnect(); }
+    if (!event.persisted) { events.abort(); intersection.disconnect(); }
   }, { signal: events.signal });
   sync();
 });

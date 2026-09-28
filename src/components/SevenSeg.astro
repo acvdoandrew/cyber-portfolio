@@ -1,0 +1,13 @@
+---
+import { sevenSegMarkup } from '../scripts/console/seven-seg';
+
+interface Props {
+  text: string;
+  height?: number;
+  class?: string;
+  [key: `data-${string}`]: string | boolean | undefined;
+}
+
+const { text, height = 28, class: className, ...data } = Astro.props;
+---
+<span class:list={['seg-wrap', className]} {...data} set:html={sevenSegMarkup(text, { height })} />

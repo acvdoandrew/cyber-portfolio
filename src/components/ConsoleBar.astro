@@ -1,0 +1,25 @@
+---
+import Ticker from './Ticker.astro';
+import { projects } from '../data/portfolio';
+
+const year = new Date().getFullYear();
+const log = [
+  'andrew@home',
+  'boston / cambridge',
+  ...projects.map((project) => `${project.title} — ${project.statusLabel}`),
+  'strange links welcome',
+  'try typing “overdrive”',
+].join('  //  ');
+---
+<footer class="deck-status" data-deck-status>
+  <Ticker class="deck-status__log" label="log" text={log} />
+  <p class="deck-status__info">
+    <span>T+<b data-info-uptime>00:00:00</b></span>
+    <span><b data-info-fps>--</b>fps</span>
+    <span class="deck-status__keys" aria-hidden="true">
+      <kbd>0</kbd>–<kbd>3</kbd> channel <kbd>←</kbd><kbd>→</kbd> cycle
+    </span>
+    <span>© {year} Andrew</span>
+  </p>
+  <button class="deck-status__reboot" type="button" data-reboot>sudo reboot</button>
+</footer>

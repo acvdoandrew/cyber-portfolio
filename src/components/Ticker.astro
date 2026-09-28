@@ -1,0 +1,20 @@
+---
+interface Props {
+  text: string;
+  label?: string;
+  class?: string;
+}
+
+const { text, label, class: className } = Astro.props;
+// Roughly constant reading speed, whatever the length.
+const duration = Math.max(24, Math.round(text.length * 0.32));
+---
+<div class:list={['ticker', className]} aria-hidden="true" style={`--ticker-duration: ${duration}s`}>
+  {label && <span class="tab">{label}</span>}
+  <div class="ticker__window">
+    <div class="ticker__track">
+      <span>{text}</span>
+      <span>{text}</span>
+    </div>
+  </div>
+</div>

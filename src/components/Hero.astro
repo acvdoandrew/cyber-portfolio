@@ -1,70 +1,204 @@
-<section class="hero-plate" id="home" aria-labelledby="hero-title" data-recursive-figure>
-  <header class="hero-plate__header">
-    <p class="plate-label">Independent programmer</p>
-    <p class="field-status" aria-live="polite">
-      <span class="field-status__pip" aria-hidden="true"></span>
-      <span data-field-status>INITIALIZING</span>
+---
+import { contactLinks, projects } from '../data/portfolio';
+
+const pad = (value: number) => String(value).padStart(2, '0');
+const shortNames: Record<string, string> = {
+  ares: 'ares',
+  'rust-edge-compute': 'edge',
+  'physics-engine': 'physics',
+  'inference-proxy': 'inference',
+};
+
+const C = 300;
+const LENS = 225;
+const polar = (radius: number, degrees: number) => {
+  const angle = (degrees * Math.PI) / 180;
+  return [C + Math.sin(angle) * radius, C - Math.cos(angle) * radius] as const;
+};
+const f = (value: number) => value.toFixed(2);
+
+const ticks = Array.from({ length: 120 }, (_, index) => {
+  const major = index % 10 === 0;
+  const mid = index % 5 === 0;
+  const [x1, y1] = polar(296, index * 3);
+  const [x2, y2] = polar(major ? 279 : mid ? 285 : 289, index * 3);
+  return { x1: f(x1), y1: f(y1), x2: f(x2), y2: f(y2), minor: !major && !mid };
+});
+
+const bearings = Array.from({ length: 12 }, (_, index) => {
+  const [x, y] = polar(261, index * 30);
+  return { x: f(x), y: f(y), label: String(index * 30).padStart(3, '0') };
+});
+
+const [sweepX0, sweepY0] = polar(236, -26);
+const [sweepX1, sweepY1] = polar(236, 26);
+const sweep = `M${f(sweepX0)} ${f(sweepY0)} A236 236 0 0 1 ${f(sweepX1)} ${f(sweepY1)}`;
+
+// Crosshair arms with a gap at the center and a small rangefinder scale.
+const cross: string[] = [];
+for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+  cross.push(`M${C + dx * 34} ${C + dy * 34}L${C + dx * LENS} ${C + dy * LENS}`);
+  for (let step = 50; step < LENS; step += 25) {
+    const size = step % 50 === 0 ? 6 : 3;
+    const x = C + dx * step;
+    const y = C + dy * step;
+    cross.push(dx ? `M${x} ${y - size}L${x} ${y + size}` : `M${x - size} ${y}L${x + size} ${y}`);
+  }
+}
+const brackets = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
+  .map(([sx, sy]) => `M${C + sx * 18} ${C + sy * 10}L${C + sx * 18} ${C + sy * 18}L${C + sx * 10} ${C + sy * 18}`)
+  .join('');
+const notches = [0, 90, 180, 270].map((degrees) => {
+  const [tipX, tipY] = polar(300, degrees);
+  const [leftX, leftY] = polar(312, degrees - 2.4);
+  const [rightX, rightY] = polar(312, degrees + 2.4);
+  return `M${f(tipX)} ${f(tipY)}L${f(leftX)} ${f(leftY)}L${f(rightX)} ${f(rightY)}Z`;
+});
+
+---
+<section
+  class="view view--home"
+  id="home"
+  aria-labelledby="hero-title"
+  data-view="home"
+>
+  <div class="home__copy">
+    <p class="hero__prompt">
+      <span>~ /home/andrew</span>
+      <span class="caret" aria-hidden="true"></span>
     </p>
-  </header>
-
-  <div class="hero-plate__body">
-    <div class="hero-plate__copy">
-      <p class="hero-kicker"><span aria-hidden="true">~</span> /home/andrew</p>
-      <h1 id="hero-title">
-        hi, i’m andrew.
-      </h1>
-      <p class="hero-lede">
-        I write code to figure things out.<br />
-        Mostly Rust, C++, and Python.
-      </p>
-      <p class="hero-note">Lately: small worlds, distributed systems, and AI.</p>
-      <div class="hero-actions" aria-label="Introduction links">
-        <a class="text-action" href="#work">projects/ <span aria-hidden="true">↓</span></a>
-        <a class="text-action" href="#contact">
-          contact.txt <span aria-hidden="true">↗</span>
-        </a>
+    <h1 id="hero-title" class="display hero__title" data-hero-title tabindex="-1">
+      <span class="display__line" data-text="hi, i’m">hi, i’m</span>{' '}
+      <span class="display__line" data-text="andrew.">andrew.</span>
+    </h1>
+    <p class="hero__role">
+      <span>Independent programmer</span>
+      <span aria-hidden="true">//</span>
+      <span>Boston / Cambridge</span>
+    </p>
+    <p class="hero__lede">I write code to figure things out.</p>
+    <dl class="kv">
+      <div>
+        <dt>Mostly</dt>
+        <dd>Rust, C++, and Python.</dd>
       </div>
+      <div>
+        <dt>Lately</dt>
+        <dd>small worlds, distributed systems, and AI.</dd>
+      </div>
+    </dl>
+    <div class="hero__actions">
+      <a class="btn frame" href="#work" data-route>open work <kbd aria-hidden="true">1</kbd></a>
+      <a class="btn frame" href="#contact" data-route>contact <kbd aria-hidden="true">3</kbd></a>
     </div>
-
-    <figure class="recursive-figure">
-      <p class="recursive-figure__notation sr-only" aria-label="Shader field notation">
-        z ← |z| / clamp(z · z, 0.12, 4) − (0.79, 0.57)
-        <span aria-hidden="true">·</span>
-        I(x,y,t) = 𝟙[f(z,t) &gt; B₄(x,y)]
-      </p>
-      <div class="recursive-figure__stage">
-        <img
-          class="recursive-figure__poster"
-          data-recursive-poster
-          src="/assets/dither/recursive-field-poster.png"
-          alt="Ordered 1-bit study of a folded recursive field forming concentric filaments."
-          width="960"
-          height="720"
-        />
-        <canvas
-          class="recursive-figure__canvas"
-          data-recursive-field
-          role="img"
-          aria-label="Live ordered 1-bit recursive field visualization"
-        >
-          Live ordered 1-bit recursive field visualization.
-        </canvas>
-      </div>
-      <figcaption>
-        <span>01 / recursive field</span>
-        <span>move your cursor</span>
-      </figcaption>
-    </figure>
   </div>
 
-  <footer class="hero-plate__footer">
-    <div>
-      <p class="plate-title">Boston / Cambridge</p>
-      <p class="plate-taxonomy">a few things below <span aria-hidden="true">↓</span></p>
+  <figure
+    class="scope"
+    data-scope
+    data-recursive-figure
+    data-recursive-field-stage
+  >
+    <div class="scope__lens">
+      <img
+        class="scope__poster"
+        data-recursive-poster
+        src="/assets/dither/recursive-field-poster.png"
+        alt="Ordered 1-bit study of a folded recursive field forming concentric filaments."
+        width="640"
+        height="480"
+      />
+      <canvas
+        class="scope__canvas"
+        data-recursive-field
+        role="img"
+        aria-label="Live ordered 1-bit recursive field visualization"
+      >
+        Live ordered 1-bit recursive field visualization.
+      </canvas>
     </div>
-    <p class="plate-number" aria-label="Plate 01">01</p>
-  </footer>
+
+    <svg class="scope__reticle" viewBox="0 0 600 600" aria-hidden="true" focusable="false">
+      <circle class="r-ring" cx={C} cy={C} r="296" />
+      <g>
+        {ticks.map((tick) => (
+          <line class:list={['r-tick', { 'r-minor': tick.minor }]} x1={tick.x1} y1={tick.y1} x2={tick.x2} y2={tick.y2} />
+        ))}
+      </g>
+      {notches.map((d) => <path d={d} fill="currentColor" />)}
+      {bearings.map((bearing) => (
+        <text class="r-label" x={bearing.x} y={bearing.y}>{bearing.label}</text>
+      ))}
+      <circle class="r-dash r-spin-slow" cx={C} cy={C} r="244" />
+      <g class="r-spin"><path class="r-sweep" d={sweep} /></g>
+      <path class="r-cross" d={cross.join('')} />
+      <path class="r-cross" d={brackets} style="opacity: 0.9" />
+      <circle class="r-ring" cx={C} cy={C} r="4" />
+      <line class="r-track" data-scope-track x1={C} y1={C} x2={C} y2={C} />
+    </svg>
+
+    <div class="scope__target" data-scope-target aria-hidden="true">
+      <i></i>
+      <span><b data-scope-mode>SCANNING</b><span data-scope-readout>X +0.000 Y +0.000</span></span>
+    </div>
+
+    <figcaption class="scope__notes">
+      <span class="scope__note scope__note--tl" aria-hidden="true">
+        <b>FIELD 01</b>
+        <span>recursive / 1-bit</span>
+      </span>
+      <span class="scope__note scope__note--tr" aria-hidden="true">
+        <span class="lamp lamp--blink"></span>
+        <span data-field-status>INITIALIZING</span>
+      </span>
+      <span class="scope__note scope__note--bl" aria-hidden="true">
+        z ← |z| / clamp(z·z, 0.12, 4) − c
+      </span>
+      <span class="scope__note scope__note--br" aria-hidden="true" data-scope-hint>
+        move your cursor
+      </span>
+    </figcaption>
+  </figure>
+
+  <aside class="home__rail" aria-label="System status">
+    <section class="rail-block">
+      <h2 class="rail-block__head">
+        <span>units online</span>
+        <span class="rail-block__count" aria-hidden="true">{pad(projects.length)}</span>
+      </h2>
+      <ol class="rail-units">
+        {projects.map((project, index) => (
+          <li>
+            <a href={`#${project.id}`} data-route data-state={project.statusLabel.toLowerCase().replace(/\s+/g, '-')}>
+              <span class="rail-units__n" aria-hidden="true">{pad(index + 1)}</span>
+              <span class="rail-units__name">{shortNames[project.id] ?? project.id}</span>
+              <span class="lamp" aria-hidden="true"></span>
+              <span class="rail-units__state">{project.statusLabel}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="rail-block">
+      <h2 class="rail-block__head"><span>location</span></h2>
+      <dl class="rail-kv">
+        <div><dt>base</dt><dd>Boston / Cambridge</dd></div>
+        <div><dt>zone</dt><dd data-utc-offset>ET</dd></div>
+        <div><dt>status</dt><dd><span class="lamp lamp--on" aria-hidden="true"></span> open to talk</dd></div>
+      </dl>
+    </section>
+
+    <section class="rail-block rail-block--channel">
+      <h2 class="rail-block__head"><span>channel 03</span></h2>
+      <p>Something on the contact channel is trying to look like a person.</p>
+      <a class="rail-link" href="#contact" data-route>go see <span class="arrow-ne" aria-hidden="true"></span></a>
+      <p class="rail-block__mail"><a href={contactLinks[0].href}>{contactLinks[0].value}</a></p>
+    </section>
+  </aside>
+
   <script>
     import '../scripts/recursive-field';
+    import '../scripts/console/scope';
   </script>
 </section>

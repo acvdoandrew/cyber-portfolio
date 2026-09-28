@@ -1,56 +1,20 @@
 ---
 import ContactIntelligence from './ContactIntelligence.astro';
 import ContactTerminal from './ContactTerminal.astro';
+import ReviewPanel from './ReviewPanel.astro';
 ---
 <section
-  class="contact-section contact-release-field section-frame contact-desk"
+  class="view view--contact"
   id="contact"
   aria-labelledby="contact-title"
-  tabindex="-1"
-  data-contact-field
-  data-journey-label="CONTACT"
-  data-journey-index="03"
+  data-view="contact"
 >
-  <div class="contact-composition contact-desk__layout">
-    <p class="section-label">~/contact</p>
-    <h2 id="contact-title" class="sr-only">contact.txt</h2>
+  <h2 id="contact-title" class="sr-only" tabindex="-1">Contact</h2>
+  <div class="contact__stage">
     <div class="contact-scene" data-contact-scene>
       <ContactIntelligence />
       <ContactTerminal />
     </div>
   </div>
+  <ReviewPanel />
 </section>
-
-<style>
-  .contact-section.contact-desk {
-    padding: 0;
-    overflow: clip;
-  }
-  .contact-composition.contact-desk__layout {
-    position: relative;
-    display: flex;
-    min-height: calc(100svh - var(--masthead-height));
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1.5rem;
-  }
-  .contact-desk__layout > .section-label {
-    position: absolute;
-    top: 2rem;
-    left: 5vw;
-    color: var(--frame-muted);
-  }
-  .contact-scene {
-    position: relative;
-    display: flow-root;
-    width: min(100%, 46rem, calc((100svh - var(--masthead-height) - 14rem) * 1.35));
-  }
-  @media (max-width: 899px) {
-    .contact-composition.contact-desk__layout {
-      min-height: 0;
-      padding: 5rem 1rem 4rem;
-    }
-    .contact-scene { width: min(100%, 40rem); }
-  }
-</style>

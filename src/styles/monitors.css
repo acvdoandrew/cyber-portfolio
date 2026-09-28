@@ -1,0 +1,419 @@
+/* Scope: the recursive field behind a targeting reticle. */
+.scope {
+  position: relative;
+  width: min(100%, 620px, calc(100vh - var(--chrome-h) - 72px));
+  width: min(100%, 620px, calc(100dvh - var(--chrome-h) - 72px));
+  min-width: 240px;
+  aspect-ratio: 1;
+  justify-self: center;
+  color: var(--line);
+  touch-action: pan-y;
+}
+
+.scope__lens {
+  position: absolute;
+  inset: 12.5%;
+  overflow: hidden;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--line) 7%, var(--screen)), var(--screen) 70%);
+  box-shadow:
+    inset 0 0 50px rgb(0 0 0 / 0.55),
+    0 0 0 1px var(--rule);
+}
+
+.scope__lens::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: var(--line);
+  content: '';
+  mask: url('/assets/dither/recursive-field-poster.png') center / cover no-repeat;
+  -webkit-mask: url('/assets/dither/recursive-field-poster.png') center / cover no-repeat;
+}
+
+.scope__lens::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.22) 0 1px, transparent 1px 3px);
+  content: '';
+  pointer-events: none;
+}
+
+.scope[data-field-renderer='webgl2'] .scope__lens::before {
+  visibility: hidden;
+}
+
+.scope__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+.scope__canvas {
+  --ink: var(--field-ink);
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  filter:
+    drop-shadow(0 0 1.5px var(--glow))
+    drop-shadow(0 0 calc(var(--glow-px) * 0.9) var(--glow-soft));
+}
+
+html[data-palette='archive'] .scope__canvas,
+html[data-palette='alloy'] .scope__canvas {
+  filter: none;
+}
+
+.scope__reticle {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  color: var(--line);
+  pointer-events: none;
+}
+
+.scope__reticle .r-ring,
+.scope__reticle .r-tick,
+.scope__reticle .r-cross {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.scope__reticle .r-minor {
+  opacity: 0.5;
+}
+
+.scope__reticle .r-cross {
+  opacity: 0.4;
+}
+
+.scope__reticle .r-label {
+  fill: var(--hud);
+  font: 600 14px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.scope__reticle .r-spin {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: spin 11s linear infinite;
+}
+
+.scope__reticle .r-spin-slow {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: spin 90s linear infinite reverse;
+}
+
+.scope__reticle .r-sweep {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: square;
+  filter: drop-shadow(0 0 4px var(--glow));
+}
+
+.scope__reticle .r-dash {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 2 7;
+  opacity: 0.7;
+}
+
+.scope__reticle .r-track {
+  stroke: var(--cool);
+  stroke-width: 1.25;
+  stroke-dasharray: 5 5;
+  opacity: 0.8;
+  vector-effect: non-scaling-stroke;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.scope__target {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  color: var(--cool);
+  transform: translate3d(var(--tx, 0px), var(--ty, 0px), 0);
+  pointer-events: none;
+}
+
+.scope__target i {
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid currentColor;
+  box-shadow: 0 0 var(--glow-px) color-mix(in srgb, currentColor 60%, transparent);
+  transform: rotate(45deg);
+}
+
+.scope__target i::after {
+  position: absolute;
+  inset: 7px;
+  background: currentColor;
+  content: '';
+}
+
+.scope__target > span {
+  position: absolute;
+  top: -44px;
+  left: 18px;
+  display: grid;
+  gap: 4px;
+  padding: 6px 9px;
+  border: 1px solid currentColor;
+  background: color-mix(in srgb, var(--paper) 78%, transparent);
+  font: 600 12px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.scope__target[data-side='left'] > span {
+  right: 18px;
+  left: auto;
+}
+
+.scope__target b {
+  font-weight: 600;
+}
+
+.scope__notes {
+  position: absolute;
+  inset: 0;
+  color: var(--muted);
+  font: 500 12px/1.35 var(--font-mono);
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+.scope__note {
+  position: absolute;
+  display: grid;
+  gap: 4px;
+  max-width: 22ch;
+}
+
+.scope__note b {
+  color: var(--hud);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+}
+
+.scope__note--tl {
+  top: 0;
+  left: 0;
+}
+
+.scope__note--tr {
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--hud);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+}
+
+.scope__note--tr .lamp {
+  color: var(--ink);
+}
+
+.scope[data-field-status='paused'] .scope__note--tr .lamp,
+.scope[data-field-status='still'] .scope__note--tr .lamp {
+  color: var(--line);
+}
+
+.scope[data-field-status='fallback'] .scope__note--tr .lamp {
+  color: var(--muted);
+}
+
+.scope__note--bl {
+  bottom: 0;
+  left: 0;
+  max-width: 26ch;
+}
+
+.scope__note--br {
+  right: 0;
+  bottom: 0;
+  justify-items: end;
+  color: var(--cool);
+  text-align: right;
+}
+
+
+/* Monitor: a pixel study behind glass. */
+.monitor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+}
+
+.monitor__screen {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--line) 8%, var(--screen)), var(--screen) 72%);
+  box-shadow:
+    inset 0 0 0 1px var(--rule),
+    inset 0 0 60px rgb(0 0 0 / 0.5);
+}
+
+.monitor__screen::before {
+  position: absolute;
+  z-index: 3;
+  inset: 10px;
+  --k: 18px;
+  background:
+    linear-gradient(var(--line), var(--line)) 0 0 / var(--k) 2px no-repeat,
+    linear-gradient(var(--line), var(--line)) 0 0 / 2px var(--k) no-repeat,
+    linear-gradient(var(--line), var(--line)) 100% 0 / var(--k) 2px no-repeat,
+    linear-gradient(var(--line), var(--line)) 100% 0 / 2px var(--k) no-repeat,
+    linear-gradient(var(--line), var(--line)) 0 100% / var(--k) 2px no-repeat,
+    linear-gradient(var(--line), var(--line)) 0 100% / 2px var(--k) no-repeat,
+    linear-gradient(var(--line), var(--line)) 100% 100% / var(--k) 2px no-repeat,
+    linear-gradient(var(--line), var(--line)) 100% 100% / 2px var(--k) no-repeat;
+  content: '';
+  pointer-events: none;
+}
+
+.monitor__screen::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background:
+    linear-gradient(transparent 0 46%, color-mix(in srgb, var(--line) 10%, transparent) 50%, transparent 54%) 0 0 / 100% 300% no-repeat,
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 0.26) 0 1px, transparent 1px 3px);
+  content: '';
+  pointer-events: none;
+  animation: monitor-scan 5.5s linear infinite;
+}
+
+@keyframes monitor-scan {
+  from {
+    background-position: 0 100%, 0 0;
+  }
+  to {
+    background-position: 0 -200%, 0 0;
+  }
+}
+
+.project-study__stage {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+}
+
+.project-study__stage canvas,
+.project-study__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--monitor-ink);
+  image-rendering: pixelated;
+}
+
+.project-study__stage canvas {
+  opacity: 0;
+  filter:
+    drop-shadow(0 0 1px var(--glow))
+    drop-shadow(0 0 calc(var(--glow-px) * 0.8) var(--glow-soft));
+}
+
+[data-study-renderer='canvas'] .project-study__stage canvas {
+  opacity: 1;
+}
+
+[data-study-renderer='canvas'] .project-study__poster {
+  visibility: hidden;
+}
+
+.project-study__poster {
+  background: var(--monitor-ink);
+  mask: var(--study-poster) center / contain no-repeat;
+  -webkit-mask: var(--study-poster) center / contain no-repeat;
+}
+
+.monitor__label,
+.monitor__readout {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--hud);
+  font: 600 12px/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.monitor__label {
+  top: 20px;
+  left: 22px;
+  right: 22px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.monitor__readout {
+  right: 22px;
+  bottom: 20px;
+  color: var(--muted);
+}
+
+.monitor__readout .lamp {
+  color: var(--line);
+}
+
+[data-study-motion='live'] .monitor__readout .lamp {
+  animation: lamp-blink 1.1s steps(1, end) infinite;
+}
+
+[data-study-motion='still'] .monitor__readout .lamp,
+[data-study-motion='offscreen'] .monitor__readout .lamp {
+  color: var(--dim);
+  box-shadow: none;
+}
+
+.monitor figcaption {
+  display: flex;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.monitor figcaption span:first-child {
+  color: var(--hud);
+}
+

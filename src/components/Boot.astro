@@ -1,0 +1,87 @@
+---
+import Ticker from './Ticker.astro';
+import { hexDisc, hexDumpLine, hexPath } from '../scripts/console/format';
+import { projects } from '../data/portfolio';
+
+const built = new Date();
+const revision = `${String(built.getFullYear()).slice(2)}.${String(built.getMonth() + 1).padStart(2, '0')}`;
+const entry = (lead: string, status: string) => ({
+  lead: `${lead} ${'.'.repeat(Math.max(3, 26 - lead.length))} `,
+  status,
+});
+const lines = [
+  { lead: `ANDREW@HOME  REV ${revision}  BOSTON / CAMBRIDGE`, status: '' },
+  entry('BOOT SEQUENCE', 'OK'),
+  entry('MOUNT ~/work', 'OK'),
+  entry('LINK rustc', 'OK'),
+  entry('LINK clang++', 'OK'),
+  entry('LINK python3', 'OK'),
+  entry('INDEX PROJECTS', `${projects.length} FOUND`),
+  entry('CONTACT CHANNEL', 'OPEN'),
+  entry('CURSOR', 'READY'),
+].map((line, index) => ({ ...line, index, chars: line.lead.length + line.status.length }));
+
+const cells = hexDisc(250, 21).map((cell) => ({
+  d: hexPath(cell.x, cell.y, 19.5),
+  distance: cell.distance.toFixed(3),
+  noise: cell.noise.toFixed(3),
+  kind: cell.noise > 0.93 ? 'hot' : cell.distance < 0.3 ? 'lit' : '',
+}));
+const ringLength = (2 * Math.PI * 274).toFixed(1);
+const ticks = Array.from({ length: 72 }, (_, index) => {
+  const angle = (index / 72) * Math.PI * 2 - Math.PI / 2;
+  const outer = index % 6 === 0 ? 296 : 288;
+  return {
+    x1: (Math.cos(angle) * 280).toFixed(2),
+    y1: (Math.sin(angle) * 280).toFixed(2),
+    x2: (Math.cos(angle) * outer).toFixed(2),
+    y2: (Math.sin(angle) * outer).toFixed(2),
+    t: (index / 72).toFixed(3),
+  };
+});
+const dump = Array.from({ length: 18 }, (_, row) => hexDumpLine(row, 0));
+---
+<div class="boot" data-boot-screen aria-hidden="true">
+  <div class="boot__frame">
+    <div class="boot__head">
+      <span>system start</span>
+      <span>boot --user andrew</span>
+    </div>
+    <div class="boot__rule"></div>
+
+    <div class="boot__body">
+      <ol class="boot__log">
+        {lines.map((line) => (
+          <li style={`--i: ${line.index}; --chars: ${line.chars}`}>{line.lead}{line.status && <b>{line.status}</b>}</li>
+        ))}
+      </ol>
+
+      <svg class="boot__disc" viewBox="-300 -300 600 600" focusable="false">
+        {cells.map((cell) => (
+          <path
+            class:list={['b-cell', cell.kind && `b-cell--${cell.kind}`]}
+            d={cell.d}
+            style={`--d: ${cell.distance}; --n: ${cell.noise}`}
+          />
+        ))}
+        <circle class="b-ring" r="274" style={`--len: ${ringLength}`} />
+        {ticks.map((tick) => (
+          <line class="b-tick" x1={tick.x1} y1={tick.y1} x2={tick.x2} y2={tick.y2} style={`--t: ${tick.t}`} />
+        ))}
+      </svg>
+
+      <pre class="boot__dump" data-boot-dump>{dump.map((line, index) => <span style={`--i: ${index}`}>{line}</span>)}</pre>
+    </div>
+
+    <div class="boot__foot">
+      <div class="boot__foot-rule"></div>
+      <Ticker text={`andrew@home  //  video: 1-bit  //  ${projects.length} projects indexed  //  all systems nominal`} />
+      <p class="boot__skip">press any key</p>
+    </div>
+  </div>
+  <div class="boot__flash"></div>
+</div>
+
+<script>
+  import '../scripts/console/boot';
+</script>

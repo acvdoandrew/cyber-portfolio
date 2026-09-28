@@ -7,7 +7,7 @@ export const TERMINAL_ENTITY_WIDTH = 384;
 export const TERMINAL_ENTITY_HEIGHT = 256;
 export type IntelligencePose = 'portrait' | 'terminal';
 type Vec3 = readonly [number, number, number];
-type Region = 'head' | 'body' | 'hand' | 'drift';
+type Region = 'head' | 'eye' | 'body' | 'hand' | 'drift';
 interface Particle {
   x: number;
   y: number;
@@ -22,6 +22,22 @@ const fract = (value: number) => value - Math.floor(value);
 const hash = (x: number, y: number) => fract(Math.sin(x * 127.1 + y * 311.7) * 43758.5453);
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const gaussian = (x: number, y: number, rx: number, ry: number) => Math.exp(-((x / rx) ** 2 + (y / ry) ** 2) * 2);
+const smooth = (value: number) => {
+  const t = clamp(value);
+  return t * t * (3 - 2 * t);
+};
+// Key light from the upper left, shared by every lit surface so the figure reads as one body.
+const KEY: Vec3 = [-0.5, 0.45, 0.74];
+const KEY_LENGTH = Math.hypot(...KEY);
+const shade = (nx: number, ny: number, nz: number) => {
+  const length = Math.hypot(nx, ny, nz) || 1;
+  return clamp(0.16 + Math.max(0, (nx * KEY[0] + ny * KEY[1] + nz * KEY[2]) / (length * KEY_LENGTH)) * 0.88);
+};
+/** The terminal pose's head sits at the model's portrait offset until the final shift. */
+const TERMINAL_OFFSET = -0.20;
+const EYE_X = 0.104;
+const EYE_Y = 0.054;
+const HEAD_YAW = -0.36;
 
 function facialRelief(x: number, y: number) {
   const eyes = gaussian(x - 0.104, y - 0.054, 0.059, 0.032)
@@ -35,8 +51,12 @@ function facialRelief(x: number, y: number) {
     - eyes * 0.027 - gaussian(x, y + 0.174, 0.096, 0.008) * 0.012;
 }
 
-/** Anatomical surfaces and filaments, generated from coordinates, never a texture. */
-export function createIntelligenceGeometry(pose: IntelligencePose = 'portrait'): readonly Particle[] {
+/**
+ * Anatomical surfaces and filaments, generated from coordinates, never a texture.
+ * `whole` keeps the cranium closed and drops the loose filaments: the byte entity
+ * uses it as the finished form its bytes are trying to reach.
+ */
+export function createIntelligenceGeometry(pose: IntelligencePose = 'portrait', whole = false): readonly Particle[] {
   const particles: Particle[] = [];
   const add = (x: number, y: number, z: number, light: number, region: Region, seed?: number) => {
     particles.push({ x, y, z, light: clamp(light), region, seed: seed ?? hash(particles.length, 8) });
@@ -64,7 +84,7 @@ export function createIntelligenceGeometry(pose: IntelligencePose = 'portrait'):
       z += facialRelief(x, dy) * front;
       const seed = hash(latitude + 10, longitude + 5);
       const openSide = clamp((x - 0.015) / 0.22);
-      if (seed < openSide * 0.4) continue;
+      if (!whole && seed < openSide * 0.4) continue;
       const normalLight = clamp(0.16 + Math.max(0, (dzdx * 0.5 - dzdy * 0.45 + 0.74)
         / Math.hypot(dzdx, dzdy, 1)) * 0.88);
       const light = normalLight * (1 - eyes * front * 0.86) * (1 - mouth * front * 0.85);
@@ -76,6 +96,70 @@ export function createIntelligenceGeometry(pose: IntelligencePose = 'portrait'):
       add(x - 0.20, dy + 0.67, z, light, 'head', seed);
     }
   }
+
+  // Ears and lit pupils share the cranium's three-quarter turn.
+  const headPoint = (x: number, y: number, z: number, light: number, region: Region, seed?: number) => {
+    add(x * Math.cos(HEAD_YAW) + z * Math.sin(HEAD_YAW) - 0.20, y + 0.67,
+      z * Math.cos(HEAD_YAW) - x * Math.sin(HEAD_YAW), light, region, seed);
+  };
+  for (const side of [-1, 1]) {
+    for (let lat = 1; lat < 16; lat++) for (let lon = 0; lon < 22; lon++) {
+      const theta = lat / 16 * Math.PI;
+      const phi = lon / 22 * TAU;
+      const seed = hash(lat + side * 40, lon + 90);
+      if (!whole && side > 0 && seed < 0.25) continue;
+      const ny = Math.cos(theta);
+      const nx = Math.sin(theta) * Math.cos(phi);
+      const nz = Math.sin(theta) * Math.sin(phi);
+      // The rim of the ear catches light; its hollow falls into shadow.
+      headPoint(side * (0.252 + 0.018 + nx * 0.022), 0.01 + ny * 0.068, -0.03 + nz * 0.045,
+        shade(side * nx, ny, nz) * (0.7 + Math.abs(nx) * 0.3), 'head', seed);
+    }
+    // A lit pupil inside a dark iris ring, so the gaze reads even at one pixel per point.
+    for (let ring = 0; ring < 9; ring++) for (let i = 0; i < 24; i++) {
+      const angle = i / 24 * TAU;
+      const radius = ring / 8 * 0.032;
+      headPoint(side * EYE_X + Math.cos(angle) * radius, EYE_Y - 0.004 + Math.sin(angle) * radius * 0.75, 0.214,
+        ring < 5 ? 1 : 0.02, 'eye', hash(ring + side * 3, i) * 0.5);
+    }
+  }
+
+  /** A true 3D tube: lit from its surface normal, with the hidden back half omitted. */
+  const limb = (path: Vec3[], radii: number[], rings: number, steps: number, region: Region, strength: number) => {
+    for (let step = 0; step <= steps; step++) {
+      const t = step / steps * (path.length - 1);
+      const index = Math.min(path.length - 2, Math.floor(t));
+      const f = smooth(t - index) * 0.35 + (t - index) * 0.65;
+      const a = path[index];
+      const b = path[index + 1];
+      const radius = radii[index] + (radii[index + 1] - radii[index]) * f;
+      const tx = b[0] - a[0];
+      const ty = b[1] - a[1];
+      const tz = b[2] - a[2];
+      const tl = Math.hypot(tx, ty, tz) || 1;
+      // Normal frame: the tangent crossed with the view axis, or with up when the tube points at the viewer.
+      let nx = -ty / tl;
+      let ny = tx / tl;
+      let nz = 0;
+      if (Math.hypot(nx, ny) < 0.3) {
+        nx = 0; ny = -tz / tl; nz = ty / tl;
+      }
+      const nl = Math.hypot(nx, ny, nz) || 1;
+      nx /= nl; ny /= nl; nz /= nl;
+      const bx = (ty * nz - tz * ny) / tl;
+      const by = (tz * nx - tx * nz) / tl;
+      const bz = (tx * ny - ty * nx) / tl;
+      for (let ring = 0; ring < rings; ring++) {
+        const phase = ring / rings * TAU;
+        const ox = nx * Math.cos(phase) + bx * Math.sin(phase);
+        const oy = ny * Math.cos(phase) + by * Math.sin(phase);
+        const oz = nz * Math.cos(phase) + bz * Math.sin(phase);
+        if (oz < -0.25) continue;
+        add(a[0] + tx * f + ox * radius, a[1] + ty * f + oy * radius, a[2] + tz * f + oz * radius,
+          shade(ox, oy, oz) * strength, region);
+      }
+    }
+  };
 
   const tube = (path: Vec3[], radii: number[], strands: number, steps: number, region: Region, strength: number) => {
     for (let strand = 0; strand < strands; strand++) {
@@ -98,6 +182,40 @@ export function createIntelligenceGeometry(pose: IntelligencePose = 'portrait'):
     }
   };
 
+  if (pose === 'terminal') {
+    const o = TERMINAL_OFFSET;
+    // Neck: narrow under the jaw, flaring into the trapezius.
+    // Kept dim: it sits in the jaw's shadow.
+    limb([[o, 0.43, -0.04], [o, 0.30, -0.035], [o, 0.17, 0]], [0.088, 0.084, 0.125], 36, 60, 'body', 0.66);
+
+    // Shoulders and upper chest as a lit relief: trapezius slope, clavicles, pectorals.
+    const top = (ax: number) => ax < 0.40
+      ? 0.21 - 0.095 * smooth((ax - 0.07) / 0.33)
+      : 0.115 - 0.09 * (1 - Math.sqrt(Math.max(0, 1 - ((ax - 0.40) / 0.075) ** 2)));
+    const surface = (x: number, y: number) => {
+      const ax = Math.abs(x);
+      return 0.13 * Math.sqrt(Math.max(0, 1 - (x / 0.5) ** 2))
+        + gaussian(ax - 0.17, y + 0.03, 0.2, 0.13) * 0.035
+        + gaussian(ax - 0.2, y - (0.135 - ax * 0.12), 0.34, 0.025) * 0.012
+        - gaussian(x, y + 0.02, 0.07, 0.26) * 0.008
+        + gaussian(ax - 0.42, y - 0.06, 0.12, 0.14) * 0.03;
+    };
+    for (let gy = 0; gy < 70; gy++) {
+      const y = 0.22 - gy / 69 * 0.36;
+      for (let gx = 0; gx <= 150; gx++) {
+        const x = (gx / 150 * 2 - 1) * 0.49;
+        const ax = Math.abs(x);
+        if (y > top(ax) || ax > 0.475 - Math.max(0, 0.02 - y) * 0.35) continue;
+        const z = surface(x, y);
+        const dzdx = (surface(x + 0.003, y) - surface(x - 0.003, y)) / 0.006;
+        const dzdy = (surface(x, y + 0.003) - surface(x, y - 0.003)) / 0.006;
+        // Depth falloff toward the terminal hides the chest before the rim cuts it.
+        add(o + x, y, z, shade(-dzdx, -dzdy, 1) * (0.62 + clamp((y + 0.14) / 0.36) * 0.3), 'body', hash(gx + 300, gy));
+      }
+    }
+  }
+
+  if (pose !== 'terminal') {
   tube([[-0.20, 0.42, 0], [-0.19, 0.29, -0.018], [-0.17, 0.17, -0.035]],
     [0.092, 0.080, 0.12], 32, 55, 'body', 0.95);
 
@@ -118,30 +236,45 @@ export function createIntelligenceGeometry(pose: IntelligencePose = 'portrait'):
       add(x, y, z, (0.48 + Math.sin(angle) * 0.15) * fade, 'body');
     }
   }
+  }
 
   if (pose === 'terminal') {
-    // Both forearms reach over the rim; curled fingers rest on its front edge.
+    // Shoulders roll into upper arms; elbows splay out and the forearms come forward to the rim.
     for (const side of [-1, 1]) {
-      const cx = side * 0.74 - 0.20;
-      tube([[side * 0.30 - 0.20, 0.15, 0], [side * 0.64 - 0.20, 0.095, 0.05], [cx, -0.055, 0.21]],
-        [0.078, 0.062, 0.044], 30, 75, 'body', 0.88);
-      for (let lat = 1; lat < 34; lat++) for (let lon = 0; lon < 50; lon++) {
-        const theta = lat / 34 * Math.PI;
-        const phi = lon / 50 * TAU;
-        const x = Math.sin(theta) * Math.cos(phi) * 0.103;
-        const y = Math.cos(theta) * 0.058;
-        const z = Math.sin(theta) * Math.sin(phi) * 0.065;
-        if (z < -0.012) continue;
-        add(cx + x, -0.078 + y, 0.235 + z, 0.51 + Math.sin(phi) * 0.19, 'hand');
+      const o = TERMINAL_OFFSET;
+      const cx = side * 0.74 + o;
+      for (let lat = 1; lat < 22; lat++) for (let lon = 0; lon < 40; lon++) {
+        const theta = lat / 22 * Math.PI;
+        const phi = lon / 40 * TAU;
+        const nx = Math.sin(theta) * Math.cos(phi);
+        const ny = Math.cos(theta);
+        const nz = Math.sin(theta) * Math.sin(phi);
+        if (nz < -0.1) continue;
+        add(o + side * 0.43 + nx * 0.08, 0.055 + ny * 0.068, 0.02 + nz * 0.07, shade(nx, ny, nz) * 0.92, 'body');
+      }
+      limb([[o + side * 0.42, 0.06, 0.02], [o + side * 0.58, -0.01, 0.03], [o + side * 0.66, -0.075, 0.07]],
+        [0.074, 0.062, 0.055], 30, 70, 'body', 0.9);
+      limb([[o + side * 0.66, -0.075, 0.07], [o + side * 0.71, -0.08, 0.15], [cx - side * 0.01, -0.075, 0.21]],
+        [0.055, 0.05, 0.044], 30, 50, 'hand', 0.9);
+
+      // The back of the hand, knuckles raised, fingers curling down over the edge.
+      for (let lat = 1; lat < 30; lat++) for (let lon = 0; lon < 46; lon++) {
+        const theta = lat / 30 * Math.PI;
+        const phi = lon / 46 * TAU;
+        const nx = Math.sin(theta) * Math.cos(phi);
+        const ny = Math.cos(theta);
+        const nz = Math.sin(theta) * Math.sin(phi);
+        if (nz < -0.1) continue;
+        add(cx + nx * 0.088, -0.078 + ny * 0.05, 0.235 + nz * 0.05, shade(nx, ny * 0.6 + 0.4, nz), 'hand');
       }
       for (let finger = 0; finger < 4; finger++) {
-        const x = cx + (finger - 1.5) * 0.041;
-        const length = 0.10 + Math.sin((finger + 0.5) / 4 * Math.PI) * 0.044;
-        tube([[x, -0.10, 0.27], [x + side * 0.006, -0.145, 0.30], [x + side * 0.004, -0.10 - length, 0.285]],
-          [0.023, 0.020, 0.013], 15, 34, 'hand', 1.03);
+        const x = cx + (finger - 1.5) * 0.04 - side * 0.006;
+        const length = 0.085 + Math.sin((finger + 0.5) / 4 * Math.PI) * 0.042;
+        limb([[x, -0.095, 0.265], [x + side * 0.004, -0.12, 0.305], [x + side * 0.006, -0.10 - length, 0.3]],
+          [0.021, 0.018, 0.013], 14, 34, 'hand', 1.05);
       }
-      tube([[cx - side * 0.080, -0.066, 0.25], [cx - side * 0.132, -0.10, 0.29], [cx - side * 0.123, -0.165, 0.295]],
-        [0.025, 0.021, 0.014], 16, 34, 'hand', 0.98);
+      limb([[cx - side * 0.075, -0.07, 0.25], [cx - side * 0.125, -0.10, 0.285], [cx - side * 0.12, -0.16, 0.29]],
+        [0.024, 0.02, 0.014], 14, 34, 'hand', 1);
     }
   } else {
   // A lifted forearm and open palm, assembled from the same filament geometry.
@@ -171,7 +304,7 @@ export function createIntelligenceGeometry(pose: IntelligencePose = 'portrait'):
   }
 
   // Disconnected paths off the unfinished half of the cranium.
-  for (let strand = 0; strand < 38; strand++) {
+  for (let strand = 0; strand < (whole ? 0 : 38); strand++) {
     const startY = 0.47 + hash(strand, 18) * 0.5;
     for (let step = 0; step < 48; step++) {
       const t = step / 47;
@@ -186,7 +319,74 @@ export function createIntelligenceGeometry(pose: IntelligencePose = 'portrait'):
 
 const geometry = createIntelligenceGeometry();
 const terminalGeometry = createIntelligenceGeometry('terminal');
+let wholeGeometry: readonly Particle[] | null = null;
 const depthBuffers = new WeakMap<PixelField, Float32Array>();
+
+type Point2 = readonly [number, number];
+export interface TerminalLandmarks {
+  /** Center of the face, following the head's turn. */
+  face: Point2;
+  /** Center of the skull and its projected half-width, in pixels. */
+  head: Point2;
+  headRadius: number;
+  neck: Point2;
+  shoulders: readonly [Point2, Point2];
+  hands: readonly [Point2, Point2];
+  /** The terminal's top edge; only the hands cross it. */
+  rim: number;
+}
+
+const safeInputs = (seconds: number, pointer: readonly [number, number]) => ({
+  time: Number.isFinite(seconds) ? Math.max(0, seconds) : 8,
+  pointerX: Number.isFinite(pointer[0]) ? clamp(pointer[0], -0.5, 0.5) : 0,
+  pointerY: Number.isFinite(pointer[1]) ? clamp(pointer[1], -0.5, 0.5) : 0,
+});
+
+/** The head's look and nod in the terminal pose, shared by particles and landmarks. */
+function turnHead(x: number, y: number, z: number, time: number, pointerX: number, pointerY: number): Vec3 {
+  const look = Math.sin(time * 0.27) * 0.055 + pointerX * 0.5;
+  const headX = x * Math.cos(look) + z * Math.sin(look);
+  z = z * Math.cos(look) - x * Math.sin(look);
+  const pitch = 0.20 - pointerY * 0.3 + Math.sin(time * 0.38) * 0.025;
+  const headY = (y - 0.60) * Math.cos(pitch) - z * Math.sin(pitch);
+  z = z * Math.cos(pitch) + (y - 0.60) * Math.sin(pitch);
+  return [headX, 0.60 + headY, z];
+}
+
+function projectTerminal(x: number, y: number, z: number, width: number, height: number, time: number): Point2 & { z: number } {
+  const yaw = Math.sin(time * 0.14) * 0.018;
+  const rotatedX = x * Math.cos(yaw) + z * Math.sin(yaw);
+  const rotatedZ = z * Math.cos(yaw) - x * Math.sin(yaw);
+  const perspective = 1 / (1 - rotatedZ * 0.17);
+  const scale = width * 0.3516;
+  return Object.assign([width * 0.5 + rotatedX * scale * perspective, height * 0.6055 - y * scale * perspective] as const, { z: rotatedZ });
+}
+
+/** Where the terminal pose's head, shoulders and hands land in a field of this size. */
+export function terminalLandmarks(
+  width: number,
+  height: number,
+  seconds: number,
+  pointer: readonly [number, number] = [0, 0],
+): TerminalLandmarks {
+  const { time, pointerX, pointerY } = safeInputs(seconds, pointer);
+  const project = (point: Vec3, head = false) => {
+    const [x, y, z] = head ? turnHead(point[0], point[1], point[2], time, pointerX, pointerY) : point;
+    const [px, py] = projectTerminal(x, y, z, width, height, time);
+    return [px, py] as const;
+  };
+  const head = project([0, 0.67, 0], true);
+  const edge = project([0.265, 0.67, 0], true);
+  return {
+    face: project([0, 0.67, 0.24], true),
+    head,
+    headRadius: Math.abs(edge[0] - head[0]),
+    neck: project([0, 0.27, 0]),
+    shoulders: [project([-0.43, 0.09, 0.02]), project([0.43, 0.09, 0.02])],
+    hands: [project([-0.74, -0.08, 0.235]), project([0.74, -0.08, 0.235])],
+    rim: width * 0.443,
+  };
+}
 
 /** Render directly into the low-resolution intensity field before 1-bit quantization. */
 export function drawIntelligence(
@@ -196,6 +396,32 @@ export function drawIntelligence(
   pointer: readonly [number, number] = [0, 0],
   pose: IntelligencePose = 'portrait',
 ) {
+  return render(field, pose === 'terminal' ? terminalGeometry : geometry, seconds, attention, pointer, pose, false);
+}
+
+/**
+ * The finished terminal figure, fully coherent and with its cranium closed:
+ * the shape the byte entity keeps trying to assemble.
+ */
+export function drawEntityTarget(
+  field: PixelField,
+  seconds: number,
+  attention = 0,
+  pointer: readonly [number, number] = [0, 0],
+) {
+  wholeGeometry ??= createIntelligenceGeometry('terminal', true);
+  return render(field, wholeGeometry, seconds, attention, pointer, 'terminal', true);
+}
+
+function render(
+  field: PixelField,
+  model: readonly Particle[],
+  seconds: number,
+  attention: number,
+  pointer: readonly [number, number],
+  pose: IntelligencePose,
+  whole: boolean,
+) {
   field.clear();
   let depth = depthBuffers.get(field);
   if (!depth) {
@@ -203,11 +429,9 @@ export function drawIntelligence(
     depthBuffers.set(field, depth);
   }
   depth.fill(-Infinity);
-  const time = Number.isFinite(seconds) ? Math.max(0, seconds) : 8;
+  const { time, pointerX, pointerY } = safeInputs(seconds, pointer);
   const focus = Number.isFinite(attention) ? clamp(attention) : 0;
-  const pointerX = Number.isFinite(pointer[0]) ? clamp(pointer[0], -0.5, 0.5) : 0;
-  const pointerY = Number.isFinite(pointer[1]) ? clamp(pointer[1], -0.5, 0.5) : 0;
-  const coherence = Math.max(pose === 'terminal' ? 0.68 : 0, manifestationAt(time, focus).coherence);
+  const coherence = whole ? 1 : Math.max(pose === 'terminal' ? 0.68 : 0, manifestationAt(time, focus).coherence);
   const yaw = pose === 'terminal' ? Math.sin(time * 0.14) * 0.018 : Math.sin(time * 0.16) * 0.08 + pointerX * 0.28;
   const cosine = Math.cos(yaw);
   const sine = Math.sin(yaw);
@@ -215,8 +439,10 @@ export function drawIntelligence(
   const uncertain = 1 - coherence;
   const scan = (time * 0.06) % 1;
 
-  for (const particle of pose === 'terminal' ? terminalGeometry : geometry) {
-    const priority = particle.region === 'head' ? 0.21 : particle.region === 'hand' ? 0.14 : 0;
+  for (const particle of model) {
+    const face = particle.region === 'head' || particle.region === 'eye';
+    if (particle.region === 'eye' && (pose !== 'terminal' || fract(time / 5.3 + 0.35) < 0.028)) continue;
+    const priority = face ? 0.21 : particle.region === 'hand' ? 0.14 : 0;
     const remaining = clamp(coherence + priority);
     if (particle.seed > remaining + 0.025) continue;
     const loose = Math.max(0, particle.seed - remaining + 0.17) / 0.17;
@@ -225,9 +451,11 @@ export function drawIntelligence(
     let x = particle.x;
     let y = particle.y;
     let z = particle.z;
-    const drift = pose === 'terminal' && particle.region === 'hand' ? 0.003 : particle.region === 'head'
+    const drift = particle.region === 'eye' ? 0 : pose === 'terminal' && particle.region === 'hand' ? 0.003 : face
       ? uncertain * (0.018 + loose * 0.08)
-      : uncertain * (0.055 + loose * 0.38) + tail * 0.028;
+      : pose === 'terminal'
+        ? uncertain * (0.02 + loose * 0.22)
+        : uncertain * (0.055 + loose * 0.38) + tail * 0.028;
     x += Math.sin(time * 0.45 + phase + y * 6) * drift;
     y += Math.cos(time * 0.34 + phase) * drift * 0.38;
     z += Math.sin(time * 0.3 + phase) * drift * 0.2;
@@ -235,15 +463,13 @@ export function drawIntelligence(
       x += Math.sin(time * 0.52) * 0.015 + pointerX * focus * 0.028;
       y += Math.cos(time * 0.52) * 0.008 + pointerY * focus * 0.04;
     }
-    if (pose === 'terminal' && (particle.region === 'head' || particle.region === 'drift')) {
-      const look = Math.sin(time * 0.27) * 0.055 + pointerX * 0.5;
-      const headX = x * Math.cos(look) + z * Math.sin(look);
-      z = z * Math.cos(look) - x * Math.sin(look);
-      x = headX;
-      const pitch = 0.20 - pointerY * 0.3 + Math.sin(time * 0.38) * 0.025;
-      const headY = (y - 0.60) * Math.cos(pitch) - z * Math.sin(pitch);
-      z = z * Math.cos(pitch) + (y - 0.60) * Math.sin(pitch);
-      y = 0.60 + headY;
+    if (particle.region === 'eye') {
+      // Pupils glance toward the pointer a beat ahead of the head.
+      x += pointerX * 0.016;
+      y -= pointerY * 0.01;
+    }
+    if (pose === 'terminal' && (face || particle.region === 'drift')) {
+      [x, y, z] = turnHead(x, y, z, time, pointerX, pointerY);
     }
     const rotatedX = x * cosine + z * sine;
     const rotatedZ = z * cosine - x * sine;
@@ -252,16 +478,19 @@ export function drawIntelligence(
     const py = field.height * (pose === 'terminal' ? 0.6055 : 0.43) - y * scale * perspective;
     // The opaque terminal conceals the body. Only the resting hands cross the rim.
     if (pose === 'terminal' && particle.region !== 'hand' && py > field.width * 0.443 - 1.5) continue;
-    const scanLight = Math.exp(-Math.pow((py / field.height - scan) / 0.032, 2)) * 0.11;
+    // A finished target must hold still; the scan band belongs to the old dissolving render.
+    const scanLight = whole ? 0 : Math.exp(-Math.pow((py / field.height - scan) / 0.032, 2)) * 0.11;
     const intensity = clamp(particle.light * (0.87 + coherence * 0.24) + scanLight);
     const radius = 0.8 + particle.seed * 0.45;
-    if (particle.region === 'head') {
+    if (face) {
+      // Lit pupils sit deep in the sockets but must survive the brow when the head tips down.
+      const z = particle.region === 'eye' ? rotatedZ + 0.06 : rotatedZ;
       for (let iy = Math.max(0, Math.floor(py - radius)); iy <= Math.min(field.height - 1, py + radius); iy++) {
         for (let ix = Math.max(0, Math.floor(px - radius)); ix <= Math.min(field.width - 1, px + radius); ix++) {
           const distance = Math.hypot(ix - px, iy - py) / radius;
           const index = ix + iy * field.width;
-          if (distance < 1 && rotatedZ > depth[index]) {
-            depth[index] = rotatedZ;
+          if (distance < 1 && z > depth[index]) {
+            depth[index] = z;
             field.values[index] = intensity * (1 - distance * distance * 0.65);
           }
         }

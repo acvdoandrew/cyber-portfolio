@@ -30,6 +30,7 @@ const FRAGMENT_SOURCE = /* glsl */ `#version 300 es
   uniform float u_time;
   uniform vec3 u_paper;
   uniform vec3 u_ink;
+  uniform float u_paperAlpha;
 
   out vec4 outColor;
 
@@ -173,7 +174,7 @@ const FRAGMENT_SOURCE = /* glsl */ `#version 300 es
 
     float threshold = bayer4(fragment) * 0.86 + 0.07;
     float bit = step(threshold, value);
-    outColor = vec4(mix(u_paper, u_ink, bit), 1.0);
+    outColor = vec4(mix(u_paper, u_ink, bit), mix(u_paperAlpha, 1.0, bit));
   }
 `;
 
@@ -205,6 +206,7 @@ interface ProgramState {
   time: WebGLUniformLocation;
   paper: WebGLUniformLocation;
   ink: WebGLUniformLocation;
+  paperAlpha: WebGLUniformLocation;
 }
 
 interface StatusDetail {
@@ -330,6 +332,8 @@ class RecursiveFieldRuntime {
   private pointerY = 0;
   private paper: Color = DEFAULT_PAPER;
   private ink: Color = DEFAULT_INK;
+  /** 0 lets the page show through between lit pixels, so CSS can bloom them. */
+  private paperAlpha = 1;
   private quality: FieldQuality = 'standard';
   private slowFrames = 0;
   private layoutKey = '';
@@ -571,8 +575,9 @@ class RecursiveFieldRuntime {
       const time = gl.getUniformLocation(program, 'u_time');
       const paper = gl.getUniformLocation(program, 'u_paper');
       const ink = gl.getUniformLocation(program, 'u_ink');
+      const paperAlpha = gl.getUniformLocation(program, 'u_paperAlpha');
 
-      if (!resolution || !pointer || !time || !paper || !ink) {
+      if (!resolution || !pointer || !time || !paper || !ink || !paperAlpha) {
         gl.deleteBuffer(buffer);
         gl.deleteVertexArray(vertexArray);
         throw new FieldInitializationError(
@@ -591,6 +596,7 @@ class RecursiveFieldRuntime {
         time,
         paper,
         ink,
+        paperAlpha,
       };
     } catch (error) {
       if (program) gl.deleteProgram(program);
@@ -618,6 +624,10 @@ class RecursiveFieldRuntime {
 
     this.paper = parseColor(paperValue, DEFAULT_PAPER);
     this.ink = parseColor(inkValue, DEFAULT_INK);
+    const alpha = Number.parseFloat(
+      readCustomProperty(styles, ['--field-paper-alpha']),
+    );
+    this.paperAlpha = Number.isFinite(alpha) ? clamp(alpha, 0, 1) : 1;
     this.canvas.dataset.fieldPalette =
       document.documentElement.dataset.palette ?? 'archive';
   }
@@ -707,6 +717,7 @@ class RecursiveFieldRuntime {
     );
     gl.uniform3f(state.paper, this.paper[0], this.paper[1], this.paper[2]);
     gl.uniform3f(state.ink, this.ink[0], this.ink[1], this.ink[2]);
+    gl.uniform1f(state.paperAlpha, this.paperAlpha);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.bindVertexArray(null);
 

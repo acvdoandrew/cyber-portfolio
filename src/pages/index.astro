@@ -1,62 +1,32 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import AmbientField from '../components/AmbientField.astro';
-import TopBar from '../components/TopBar.astro';
+import Boot from '../components/Boot.astro';
+import HexGround from '../components/HexGround.astro';
+import ConsoleHeader from '../components/ConsoleHeader.astro';
 import Hero from '../components/Hero.astro';
 import Projects from '../components/Projects.astro';
 import Capabilities from '../components/Capabilities.astro';
 import Contact from '../components/Contact.astro';
-import Footer from '../components/Footer.astro';
+import ConsoleBar from '../components/ConsoleBar.astro';
+import TitleCard from '../components/TitleCard.astro';
+import Overdrive from '../components/Overdrive.astro';
 ---
 <BaseLayout
   title="andrew@home"
   description="A small corner of the internet for my code, experiments, and things I’m still figuring out."
 >
-  <div class="site-frame" data-site-frame>
-    <AmbientField />
-    <TopBar />
-    <main id="main-content" tabindex="-1">
-      <div class="hero-stage" data-hero-stage>
-        <div class="hero-stage__pin">
-          <Hero />
-        </div>
-      </div>
-
-      <section
-        class="portfolio-journey"
-        aria-label="Work, stack, and contact reveal"
-        data-portfolio-journey
-        data-journey-enhanced="false"
-      >
-        <div class="portfolio-journey__pin">
-          <article class="portfolio-card" data-journey-card>
-            <div class="portfolio-card__viewport" data-journey-viewport>
-              <div class="portfolio-card__track" data-journey-track>
-                <Projects />
-                <Capabilities />
-              </div>
-            </div>
-
-            <footer class="portfolio-card__chrome" aria-hidden="true">
-              <span>
-                FIELD /
-                <strong data-journey-chapter-index>01</strong>
-                <i>03</i>
-              </span>
-              <span class="portfolio-card__progress">
-                <i data-journey-progress></i>
-              </span>
-              <span data-journey-chapter>WORK</span>
-              <span data-journey-state>SCROLL TO ENTER</span>
-            </footer>
-          </article>
-
-          <div class="portfolio-journey__contact" data-contact-reveal>
-            <Contact />
-          </div>
-        </div>
-      </section>
+  <Boot />
+  <HexGround />
+  <div class="deck" data-deck>
+    <ConsoleHeader />
+    <main id="main-content" class="stage" tabindex="-1" data-stage>
+      <Hero />
+      <Projects />
+      <Capabilities />
+      <Contact />
     </main>
-    <Footer />
+    <ConsoleBar />
   </div>
+  <TitleCard />
+  <Overdrive />
 </BaseLayout>

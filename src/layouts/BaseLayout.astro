@@ -1,5 +1,6 @@
 ---
-import '../styles/editorial.css';
+import '../styles/console.css';
+import { channels, projects } from '../data/portfolio';
 
 interface Props {
   title?: string;
@@ -11,6 +12,8 @@ const {
   description = 'A small corner of the internet for my code, experiments, and things I’m still figuring out.',
 } = Astro.props;
 
+const channelIds = channels.map((channel) => channel.id);
+const unitIds = projects.map((project) => project.id);
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const socialImage = new URL('/og.png', Astro.site);
 const schema = {
@@ -37,12 +40,12 @@ const schema = {
 };
 ---
 <!doctype html>
-<html lang="en" data-palette="archive" data-display-filter="off">
+<html lang="en" data-palette="radiant" data-display-filter="off" data-channel="home" data-unit={unitIds[0]}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#F2F3EE" />
-    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#0B0905" />
+    <meta name="color-scheme" content="dark" />
     <meta name="description" content={description} />
     <meta name="author" content="Andrew" />
     <meta name="robots" content="index, follow" />
@@ -52,6 +55,13 @@ const schema = {
     <link
       rel="preload"
       href="/fonts/IBMPlexMono-Regular-Latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/IBMPlexMono-SemiBold-Latin.woff2"
       as="font"
       type="font/woff2"
       crossorigin
@@ -72,9 +82,32 @@ const schema = {
     <meta name="twitter:image" content={socialImage} />
 
     <title>{title}</title>
+    <script is:inline define:vars={{ channelIds, unitIds }}>
+      // Pick the channel before first paint, so a deep link never flashes Home.
+      // The router in console/interface keeps these attributes current afterwards.
+      (() => {
+        const root = document.documentElement;
+        let key = location.hash.slice(1);
+        try {
+          key = decodeURIComponent(key);
+        } catch {
+          // Keep the raw hash.
+        }
+        key = key.trim().toLowerCase();
+        const name = { capabilities: 'tools', top: 'home' }[key] ?? key;
+        const unit = name.startsWith('project-') ? name.slice(8) : name;
+        if (channelIds.includes(name)) root.dataset.channel = name;
+        else if (unitIds.includes(unit)) {
+          root.dataset.channel = 'work';
+          root.dataset.unit = unit;
+        }
+      })();
+    </script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
     <script is:inline>
       (() => {
+        const root = document.documentElement;
+        root.classList.add('js');
         const palettes = {
           archive: { paper: '#F2F3EE', scheme: 'light' },
           carbon: { paper: '#090A09', scheme: 'dark' },
@@ -85,15 +118,15 @@ const schema = {
         };
         try {
           const stored = localStorage.getItem('portfolio.palette.v1');
-          const id = stored && Object.hasOwn(palettes, stored) ? stored : 'archive';
+          const id = stored && Object.hasOwn(palettes, stored) ? stored : 'radiant';
           const displayFilter =
             localStorage.getItem('portfolio.display-filter.v1') === 'on'
               ? 'on'
               : 'off';
           const palette = palettes[id];
-          document.documentElement.dataset.palette = id;
-          document.documentElement.dataset.displayFilter = displayFilter;
-          document.documentElement.style.colorScheme = palette.scheme;
+          root.dataset.palette = id;
+          root.dataset.displayFilter = displayFilter;
+          root.style.colorScheme = palette.scheme;
           document
             .querySelector('meta[name="theme-color"]')
             ?.setAttribute('content', palette.paper);
@@ -101,8 +134,20 @@ const schema = {
             .querySelector('meta[name="color-scheme"]')
             ?.setAttribute('content', palette.scheme);
         } catch {
-          document.documentElement.dataset.palette = 'archive';
-          document.documentElement.dataset.displayFilter = 'off';
+          root.dataset.palette = 'radiant';
+          root.dataset.displayFilter = 'off';
+        }
+        // The boot sequence plays once per session, never over a deep link,
+        // and never for reduced motion or data saver.
+        try {
+          const quiet =
+            matchMedia('(prefers-reduced-motion: reduce)').matches ||
+            navigator.connection?.saveData === true ||
+            location.hash.length > 1 ||
+            sessionStorage.getItem('andrew.boot.v1') === 'done';
+          if (!quiet) root.dataset.boot = 'run';
+        } catch {
+          // Without storage the page simply starts booted.
         }
       })();
     </script>
@@ -110,9 +155,14 @@ const schema = {
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <slot />
+    <div class="fx" aria-hidden="true">
+      <div class="fx__scan"></div>
+      <div class="fx__grain"></div>
+      <div class="fx__vignette"></div>
+    </div>
     <div class="display-filter" aria-hidden="true"></div>
     <script>
-      import '../scripts/editorial-interface';
+      import '../scripts/console/interface';
     </script>
   </body>
 </html>

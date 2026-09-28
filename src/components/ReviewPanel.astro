@@ -1,0 +1,39 @@
+---
+import { REVIEW_CHECKS } from '../scripts/entity/forms';
+
+const pad = (value: number) => String(value).padStart(2, '0');
+---
+<aside class="review" data-review aria-label="Form review">
+  <header class="review__head">
+    <span class="tab" aria-hidden="true">review <small>3 checks</small></span>
+    <span class="review__query">is this a person?</span>
+  </header>
+
+  <ol class="checks" aria-hidden="true">
+    {REVIEW_CHECKS.map((check, index) => (
+      <li class="check" data-check={check.id} data-vote="pending">
+        <span class="check__n">{pad(index + 1)}</span>
+        <span class="check__name">{check.label}</span>
+        <b class="check__vote" data-check-vote>· · ·</b>
+        <span class="check__reason" data-check-reason>looking</span>
+      </li>
+    ))}
+  </ol>
+
+  <p class="review__verdict" data-verdict="REVIEWING">
+    <span class="sr-only">Verdict: </span><span data-review-verdict>REVIEWING</span>
+  </p>
+
+  <dl class="review__readout" aria-hidden="true">
+    <div><dt>attempt</dt><dd data-review-attempt>01</dd></div>
+    <div><dt>form</dt><dd data-review-form>SYMBOL</dd></div>
+    <div><dt>match</dt><dd><span data-review-match>0.00</span><span class="review__meter"><i data-review-meter></i></span></dd></div>
+    <div><dt>bytes</dt><dd data-review-bytes>0</dd></div>
+  </dl>
+
+  <ol class="review__log" aria-label="Recent attempts" data-review-log>
+    <li>awaiting first attempt</li>
+  </ol>
+
+  <button class="review__pause" type="button" data-intelligence-pause aria-label="Pause the entity" aria-pressed="false" hidden>pause entity</button>
+</aside>

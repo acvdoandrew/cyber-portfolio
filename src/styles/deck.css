@@ -1,0 +1,622 @@
+/* Deck -------------------------------------------------------------------
+   One screen, four channels. The header carries the only navigation; the
+   status strip carries the log and the telemetry. Views swap in place. */
+
+:root {
+  --pad: clamp(14px, 1.8vw, 28px);
+  --chrome-h: 136px;
+}
+
+.deck {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 100vh;
+  padding: 10px var(--pad) 0;
+}
+
+html.js .deck {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+}
+
+/* Header ----------------------------------------------------------------- */
+
+.deck-top {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(12px, 2vw, 28px);
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--line);
+}
+
+.deck-top::after {
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 0;
+  left: 0;
+  height: 7px;
+  background:
+    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 120px) 0 0 / 100% 7px no-repeat,
+    repeating-linear-gradient(90deg, var(--rule) 0 1px, transparent 1px 24px) 0 0 / 100% 4px no-repeat;
+  content: '';
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.deck-id {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.deck-id__tag {
+  --c: 11px;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 40px;
+  background: var(--line);
+  color: var(--on-line);
+  font: 600 23px/1 var(--font-mono);
+  clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%);
+}
+
+.deck-id__tag.glitching {
+  animation: tag-glitch 380ms steps(1, end);
+}
+
+@keyframes tag-glitch {
+  0% { transform: translateX(-3px); background: var(--ink); }
+  20% { transform: translateX(2px) skewX(-8deg); background: var(--line); }
+  40% { transform: translateX(-1px); background: var(--bone); }
+  60% { transform: none; background: var(--line); opacity: 0.4; }
+  80% { opacity: 1; }
+}
+
+.deck-id__text {
+  display: grid;
+  gap: 5px;
+}
+
+.deck-id__name {
+  color: var(--hud);
+  font: 600 17px/1 var(--font-mono);
+  letter-spacing: 0.34em;
+}
+
+.deck-id__path {
+  color: var(--muted);
+  font: 500 13px/1 var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+/* Channel keys: the whole navigation. */
+.channels {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.channel {
+  --c: 9px;
+  display: inline-flex;
+  align-items: stretch;
+  min-height: 38px;
+  border: 1px solid var(--rule);
+  color: var(--muted);
+  font: 600 13px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+}
+
+.channel__n {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  padding: 0 8px;
+  background: var(--faint);
+  color: var(--hud);
+}
+
+.channel__label {
+  display: flex;
+  align-items: center;
+  padding: 0 18px 0 12px;
+}
+
+.channel:hover {
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.channel[aria-current='page'] {
+  border-color: var(--line);
+  background: var(--line);
+  color: var(--on-line);
+  clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%);
+}
+
+.channel[aria-current='page'] .channel__n {
+  background: color-mix(in srgb, var(--paper) 18%, transparent);
+  color: var(--on-line);
+}
+
+.deck-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deck-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--muted);
+  font: 600 12px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease;
+}
+
+.deck-button:hover {
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.deck-button .lamp {
+  width: 7px;
+  height: 7px;
+  color: var(--dim);
+  box-shadow: none;
+}
+
+.deck-button[aria-pressed='true'] .lamp {
+  color: var(--line);
+  box-shadow: 0 0 var(--glow-px) var(--line);
+}
+
+.swatch {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+}
+
+.swatch i {
+  width: 7px;
+  height: 12px;
+}
+
+.swatch i:nth-child(1) { background: var(--paper); }
+.swatch i:nth-child(2) { background: var(--bone); }
+.swatch i:nth-child(3) { background: var(--line); }
+
+.deck-clock {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.deck-clock__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font: 600 12px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+}
+
+.beat {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.beat i {
+  width: 10px;
+  height: 4px;
+  background: var(--line);
+  opacity: 0.18;
+}
+
+.beat[data-beat='0'] i:nth-child(1),
+.beat[data-beat='1'] i:nth-child(2),
+.beat[data-beat='2'] i:nth-child(3),
+.beat[data-beat='3'] i:nth-child(4) {
+  opacity: 1;
+}
+
+/* Stage + views ------------------------------------------------------------ */
+
+.stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  padding-block: 24px 14px;
+}
+
+html.js .stage {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+
+.view {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  /* A typed-in hash scrolls the stage to the view; keep the stage's own top padding. */
+  scroll-margin-top: 24px;
+}
+
+/* Without the runtime every view is a section of one long page. */
+html:not(.js) .view + .view {
+  margin-top: 72px;
+  padding-top: 24px;
+  border-top: 2px solid var(--line);
+}
+
+html.js .view {
+  display: none;
+  height: 100%;
+}
+
+html.js[data-channel='home'] .view--home,
+html.js[data-channel='work'] .view--work,
+html.js[data-channel='tools'] .view--tools,
+html.js[data-channel='contact'] .view--contact {
+  display: grid;
+}
+
+/* A view powering on: its panels flicker in one after another. */
+.view[data-entering] > *,
+[data-unit-panel][data-entering] > * {
+  animation: power-on 720ms var(--ease-out) both;
+}
+
+.view[data-entering] > :nth-child(2),
+[data-unit-panel][data-entering] > :nth-child(2) { animation-delay: 70ms; }
+.view[data-entering] > :nth-child(3),
+[data-unit-panel][data-entering] > :nth-child(3) { animation-delay: 140ms; }
+.view[data-entering] > :nth-child(n + 4),
+[data-unit-panel][data-entering] > :nth-child(n + 4) { animation-delay: 210ms; }
+
+.view[data-entering] .monitor__screen,
+[data-unit-panel][data-entering] .monitor__screen {
+  animation: crt-on 820ms var(--ease-out) 120ms both;
+}
+
+@keyframes power-on {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
+  28% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.3;
+  }
+  56% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes crt-on {
+  0% {
+    transform: scale(0.04, 0.006);
+    filter: brightness(4);
+  }
+  32% {
+    transform: scale(1, 0.006);
+    filter: brightness(3);
+  }
+  58% {
+    transform: scale(1, 1);
+    filter: brightness(1.7);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+/* Shared small headings inside views: number block, name, command. */
+.rail-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--hud);
+  font: 600 14px/1 var(--font-mono);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.rail-title__n {
+  --c: 7px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 26px;
+  background: var(--line);
+  color: var(--on-line);
+  letter-spacing: 0;
+  clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%);
+}
+
+.rail-title code {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+/* Status strip ------------------------------------------------------------ */
+
+.deck-status {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 20px;
+  min-height: 38px;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.deck-status .ticker {
+  min-height: 24px;
+}
+
+.deck-status .tab {
+  min-height: 22px;
+  font-size: 12px;
+}
+
+.deck-status__info {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  white-space: nowrap;
+}
+
+.deck-status__info b {
+  color: var(--hud);
+  font-weight: 600;
+}
+
+.deck-status__keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.deck-status__keys kbd + kbd {
+  margin-left: -1px;
+}
+
+.deck-status__reboot {
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: 600 12px/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.deck-status__reboot:hover {
+  color: var(--line);
+}
+
+/* Title card between channels --------------------------------------------- */
+
+.cut {
+  position: fixed;
+  /* Under the scanline layer, so the card shares the screen's texture. */
+  z-index: 55;
+  overflow: hidden;
+  inset: 0;
+  display: none;
+  align-items: center;
+  padding: 0 clamp(24px, 12vw, 220px);
+  background: var(--paper);
+  pointer-events: none;
+}
+
+.cut[data-cut='on'] {
+  display: flex;
+  animation: cut-card 640ms steps(1, end) forwards;
+}
+
+.cut__card {
+  position: relative;
+  display: grid;
+  gap: 12px;
+}
+
+.cut__ghost {
+  position: absolute;
+  right: -0.06em;
+  bottom: -0.2em;
+  color: transparent;
+  font: 600 clamp(240px, 52vw, 820px)/1 var(--font-display);
+  letter-spacing: -0.08em;
+  -webkit-text-stroke: 2px var(--rule);
+  pointer-events: none;
+}
+
+.cut[data-cut='on'] .cut__ghost {
+  animation: cut-ghost 640ms var(--ease-out) both;
+}
+
+@keyframes cut-ghost {
+  from { transform: translateX(6%); }
+  to { transform: none; }
+}
+
+.cut__kicker {
+  color: var(--hud);
+  font: 600 13px/1 var(--font-mono);
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+}
+
+.cut__kicker b {
+  font-weight: 600;
+}
+
+.cut__title {
+  color: var(--bone);
+  font: 600 clamp(64px, 13vw, 200px)/0.9 var(--font-display);
+  letter-spacing: -0.05em;
+  text-shadow: var(--title-glow);
+}
+
+.cut__line {
+  padding-top: 14px;
+  border-top: 2px solid var(--line);
+  color: var(--muted);
+  font: 500 clamp(14px, 1.4vw, 20px)/1.2 var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.cut[data-cut='on'] .cut__title {
+  animation: cut-title 640ms var(--ease-out) both;
+}
+
+@keyframes cut-card {
+  0% { opacity: 1; clip-path: inset(0 0 0 0); }
+  62% { opacity: 1; clip-path: inset(0 0 0 0); }
+  70% { clip-path: inset(34% 0 34% 0); }
+  78% { clip-path: inset(49.6% 0 49.6% 0); opacity: 1; }
+  100% { clip-path: inset(49.6% 0 49.6% 0); opacity: 0; }
+}
+
+@keyframes cut-title {
+  0% { transform: scaleX(1.18); opacity: 0; }
+  12% { transform: scaleX(0.96); opacity: 1; }
+  24% { transform: none; }
+}
+
+/* Narrower desks: the header sheds decoration before it crowds the channel keys. */
+@media (max-width: 1260px) {
+  .palette-cycle__name {
+    display: none;
+  }
+
+  .channel__label {
+    padding: 0 12px 0 10px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .deck-clock,
+  .deck-status__keys {
+    display: none;
+  }
+}
+
+/* Mobile: the channel keys become a dock; the view scrolls inside the stage. */
+@media (max-width: 899px) {
+  :root {
+    --dock-h: 64px;
+  }
+
+  .deck {
+    padding-top: 8px;
+  }
+
+  .deck-top {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .deck-tools {
+    justify-content: end;
+  }
+
+  .deck-clock,
+  .palette-cycle__name {
+    display: none;
+  }
+
+  .channels {
+    position: fixed;
+    z-index: 40;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    border-top: 2px solid var(--line);
+    background: var(--paper);
+  }
+
+  .channel {
+    flex-direction: column;
+    justify-content: center;
+    min-height: 46px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+  }
+
+  .channel__n {
+    min-width: 0;
+    padding: 4px 0 2px;
+    background: none;
+  }
+
+  .channel__label {
+    justify-content: center;
+    padding: 0 0 4px;
+  }
+
+  .deck-status {
+    display: none;
+  }
+
+  html.js .stage {
+    padding-bottom: calc(var(--dock-h) + 28px + env(safe-area-inset-bottom));
+  }
+
+  html.js .view {
+    height: auto;
+  }
+
+  .cut__title {
+    font-size: clamp(56px, 20vw, 120px);
+  }
+}
+
+@media (max-width: 420px) {
+  .deck-id__text {
+    display: none;
+  }
+}

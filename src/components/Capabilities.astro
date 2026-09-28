@@ -1,35 +1,48 @@
 ---
 import { capabilities } from '../data/portfolio';
+
+const pad = (value: number) => String(value).padStart(2, '0');
+const stateLabel = (state: string) => state.replace(/_/g, ' ');
 ---
 <section
-  class="capabilities-section section-frame"
-  id="capabilities"
-  aria-labelledby="capabilities-title"
-  tabindex="-1"
-  data-journey-section
-  data-journey-label="STACK"
-  data-journey-index="02"
+  class="view view--tools"
+  id="tools"
+  aria-labelledby="tools-title"
+  data-view="tools"
 >
-  <header class="section-intro">
-    <p class="section-label">~/tools</p>
-    <div>
-      <h2 id="capabilities-title">usually within reach.</h2>
-    </div>
+  <header class="tools__head">
+    <p class="rail-title" aria-hidden="true">
+      <span class="rail-title__n">02</span>
+      <span>tools</span>
+      <code>which -a</code>
+    </p>
+    <h2 id="tools-title" class="display tools__title" tabindex="-1">
+      <span class="display__line" data-text="usually">usually</span>{' '}
+      <span class="display__line" data-text="within reach.">within reach.</span>
+    </h2>
+    <p class="tools__note">What I reach for, grouped by what it’s for. The state is how settled each one is.</p>
+    <ul class="tools__legend" aria-label="States">
+      {capabilities.map((capability) => (
+        <li data-state={capability.state}><span class="lamp" aria-hidden="true"></span>{stateLabel(capability.state)}</li>
+      ))}
+    </ul>
   </header>
 
-  <div class="capability-index">
-    {
-      capabilities.map((capability, index) => (
-        <article class="capability-row">
-          <p class="capability-row__number">{String(index + 1).padStart(2, '0')}</p>
-          <div>
-            <h3>{capability.title}</h3>
-          </div>
-          <ul aria-label={`${capability.title} tools`}>
-            {capability.stack.map((item) => <li>{item}</li>)}
-          </ul>
-        </article>
-      ))
-    }
-  </div>
+  <ol class="systems">
+    {capabilities.map((capability, index) => (
+      <li class="system" data-state={capability.state}>
+        <span class="system__id" aria-hidden="true">{pad(index + 1)}</span>
+        <div class="system__text">
+          <h3 class="system__title">{capability.title}</h3>
+          <p class="system__summary">{capability.summary}</p>
+        </div>
+        <p class="system__state">
+          <span class="sr-only">State: </span>{stateLabel(capability.state)}
+        </p>
+        <ul class="chips system__tools" aria-label={`${capability.title} tools`}>
+          {capability.stack.map((item) => <li>{item}</li>)}
+        </ul>
+      </li>
+    ))}
+  </ol>
 </section>

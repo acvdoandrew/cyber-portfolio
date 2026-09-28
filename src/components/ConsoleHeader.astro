@@ -1,0 +1,68 @@
+---
+import SevenSeg from './SevenSeg.astro';
+import { channels } from '../data/portfolio';
+---
+<header class="deck-top" data-deck-header>
+  <a class="deck-id" href="#home" data-route aria-label="andrew@home, home channel">
+    <span class="deck-id__tag" aria-hidden="true" data-scene-number>00</span>
+    <span class="deck-id__text" aria-hidden="true">
+      <span class="deck-id__name">ANDREW</span>
+      <span class="deck-id__path" data-scene-path>~/home</span>
+    </span>
+  </a>
+
+  <nav class="channels" aria-label="Channels">
+    {channels.map((channel) => (
+      <a
+        class="channel"
+        href={`#${channel.id}`}
+        data-route
+        data-channel-link={channel.id}
+        data-number={channel.number}
+        data-path={channel.path}
+        data-card={channel.card}
+        aria-current={channel.id === 'home' ? 'page' : undefined}
+      >
+        <span class="channel__n" aria-hidden="true">{channel.number}</span>
+        <span class="channel__label">{channel.label}</span>
+      </a>
+    ))}
+  </nav>
+
+  <div class="deck-tools">
+    <button
+      class="deck-button display-mode-toggle"
+      type="button"
+      data-display-filter-toggle
+      aria-pressed="false"
+      aria-label="Enable CRT display filter"
+    >
+      <span class="lamp" aria-hidden="true"></span>
+      <span aria-hidden="true">CRT</span>
+      <span class="sr-only" data-display-filter-announcement>
+        CRT display filter disabled. Activate to enable.
+      </span>
+    </button>
+
+    <button
+      class="deck-button palette-cycle"
+      type="button"
+      data-palette-cycle
+      aria-label="Current palette radiant. Activate for field."
+    >
+      <span class="swatch" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="palette-cycle__name" aria-hidden="true" data-palette-current>radiant</span>
+      <span class="sr-only" data-palette-announcement>
+        Current palette radiant. Activate for field.
+      </span>
+    </button>
+
+    <div class="deck-clock" aria-hidden="true">
+      <SevenSeg text="--:--:--" height={24} data-clock />
+      <span class="deck-clock__meta">
+        <span>BOSTON · ET</span>
+        <span class="beat" data-beat="0"><i></i><i></i><i></i><i></i></span>
+      </span>
+    </div>
+  </div>
+</header>

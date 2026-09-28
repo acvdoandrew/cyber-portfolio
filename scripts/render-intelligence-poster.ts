@@ -1,24 +1,23 @@
 import { mkdir } from 'node:fs/promises';
 import sharp from 'sharp';
-import { PixelField } from '../src/scripts/project-studies/scenes';
-import { writeDither } from '../src/scripts/project-studies/dither';
-import { drawIntelligence, INTELLIGENCE_WIDTH, INTELLIGENCE_HEIGHT, TERMINAL_ENTITY_WIDTH, TERMINAL_ENTITY_HEIGHT } from '../src/scripts/intelligence-geometry';
+import { ByteField } from '../src/scripts/entity/bytes';
+import { ENTITY_CELL, ENTITY_HEIGHT, ENTITY_RIM, ENTITY_WIDTH, FormBuilder } from '../src/scripts/entity/forms';
 
-const field = new PixelField(INTELLIGENCE_WIDTH, INTELLIGENCE_HEIGHT);
-const output = new Uint8ClampedArray(field.values.length * 4);
-drawIntelligence(field, 8);
-writeDither(field.values, output, [255, 255, 255], INTELLIGENCE_WIDTH, INTELLIGENCE_HEIGHT);
+// The settled body, as the byte renderer draws it: the still before the runtime arrives.
+const builder = new FormBuilder();
+const bytes = new ByteField({
+  width: ENTITY_WIDTH,
+  height: ENTITY_HEIGHT,
+  cell: ENTITY_CELL,
+  ingress: { y: ENTITY_RIM + 2, left: ENTITY_WIDTH * 0.07, right: ENTITY_WIDTH * 0.93 },
+});
+bytes.setTarget(builder.build({ form: 'anatomy', time: 8, attention: 0, pointer: [0, -0.16] }));
+bytes.settle();
+const white = [255, 255, 255] as const;
+const pixels = new Uint8ClampedArray(ENTITY_WIDTH * ENTITY_HEIGHT * 4);
+bytes.render(pixels, { settled: white, flight: white, discard: white });
 await mkdir('public/assets/dither', { recursive: true });
-await sharp(Buffer.from(output.buffer), {
-  raw: { width: INTELLIGENCE_WIDTH, height: INTELLIGENCE_HEIGHT, channels: 4 },
-}).png().toFile('public/assets/dither/intelligence-pixels.png');
-console.log('public/assets/dither/intelligence-pixels.png');
-
-const terminal = new PixelField(TERMINAL_ENTITY_WIDTH, TERMINAL_ENTITY_HEIGHT);
-const terminalPixels = new Uint8ClampedArray(terminal.values.length * 4);
-drawIntelligence(terminal, 8, 0.7, [0, -0.2], 'terminal');
-writeDither(terminal.values, terminalPixels, [255, 255, 255], terminal.width, terminal.height);
-await sharp(Buffer.from(terminalPixels.buffer), {
-  raw: { width: terminal.width, height: terminal.height, channels: 4 },
-}).png().toFile('public/assets/dither/intelligence-terminal.png');
-console.log('public/assets/dither/intelligence-terminal.png');
+await sharp(Buffer.from(pixels.buffer), {
+  raw: { width: ENTITY_WIDTH, height: ENTITY_HEIGHT, channels: 4 },
+}).png({ palette: true }).toFile('public/assets/dither/entity-bytes.png');
+console.log('public/assets/dither/entity-bytes.png');
